@@ -1,0 +1,143 @@
+
+
+
+
+
+
+Transactions With account creations:
+    Token Program: initializeAccount 
+    with an initial tranfer of 0.0120392 (rent +0.01)
+    https://solscan.io/tx/2aqUeFZU2xarqX6gAhuCa5h7iT9YccVSPFhWzA5WMQEjoXX66fgVbjLJFoM3ks7gghmn9ty9wW7dULbEMAJ5f8qP 
+
+
+    System Program: createAccountWithSeed
+    with an initial tranfer of 0.50203928 (rent +0.5)
+    https://solscan.io/tx/4F7pD5wyLZC9FzxN6EeEYFStSFf3BJ8hg8BDfLUp2jaEtRtiWWTz9jGF97to3LmgaXG5kax9bsbWiFfdZ21uKXa5
+
+
+    Associated Token Account Program: createIdempotent
+    with just the rent 0.00203928
+    https://solscan.io/tx/GNupfFqwebosm8Jd4nGH2yv5vrK2gFhUFENSsSkVW1p8FuBeztAreT8bQdWtyWSRTvHTytUW15ydtj52H2sdBfc
+
+
+
+    This one creates 2 account A and B
+    A with 0.00203928 (rent)
+    B with 0.00204928 (rent + 0.00.001)
+    Transer 0.00001 from B to A
+    then swap with the A as a source
+    WTF
+    https://solscan.io/tx/2tPgb49dL4vB6GRo7GcXwoPwjop1j64JuKeuJ3K4LRJeoKJHgYs2no3nm6Rc94xPvnhErU8KgurMXv5ECZ8uQi3K
+
+
+    Associated Token Account Program: CreateIdempotent (with inner)
+    https://solscan.io/tx/3XJ6AXH7Hivq1GdkLSzK77C2eVNLo669PvqvszAmqvis5bYd7gHFky7Wg2zxKXBdc8XHoK4kJ2VSf23bYc7hTzR5
+
+
+    Associated Token Account Program: create (with inner)
+    https://solscan.io/tx/3NJ5TtX44rh9gFDcUw92n2BSiSY6bCJqgtKCGWziZaKWFgQFu7SjqAj1EfHwgtEi86GPD4MchTgdEoXSwdGDqhu1
+
+
+    Jupiter qui créé des accounts:
+    https://solscan.io/tx/3J2GJwmTzj4Vtz7VaQ5zNqvEcu7A9jWQ3dU3xwGyETgrzD4hTxPWwMYFvbuGKRDNzcouTzdc226E6Gp936n19VC1
+
+
+    Sanctum Router: StakeWrappedSol,  Sanctum Multi-Validator SPL Stake Pool Program ...
+    https://solscan.io/tx/21daxvjvBRvf1BuXGPnGtCGRwvQdZuG7JqLvdbP9JwnZ4dLV277kFSqZU1F1T2LN9DSsxPaMYvCLZjYq5HNZB7Bv
+
+
+    #4.5 - Sanctum Program: SwapExactIn
+    https://solscan.io/tx/DL4GgYRwgwTdfF7F7yKnnzrtXhhtNoprxZ3XPoFJseBWSzs3cLK4XBP2RLU2BTGazVBv9DE94uhxm5xcE9iBUV5
+
+    Multisig. Buying 2 differents TOKEN with 2 unrelated swaps:
+    https://solscan.io/tx/2E6CJYhu4eytdfSS2Ju4GJ2TsCn3LAnJT8LmqYLpb87fuMhhX37nV2GN2WDTBXrYYoK42Siw9htYceS3B6WhRiMc
+
+
+	
+    Token creation : 
+    https://solscan.io/tx/3nXwACe94CBkhjomBArkf1rBqKn4FC1oJhJsiCPBSFjnqi4Yze4tbxMoAMaGUS4joSJ86vmuLaM3kN4XHyLamQ5J
+
+    Pumpfun token creation:
+    https://solscan.io/tx/3Ztx2ocuAFoqjtCfVoUNhJMNyc1w7RyTJWWBDTiWvpr79fePvkWDPQ2S4S2azoAfU5BzBgSpGTJqeFBzbJA85Ehw
+
+
+Subscribe or stream :
+    transaction
+    mint/burn
+    dev sold/buy
+    catch walles moves
+
+listen to new post from dev on socials
+
+add twitch ex
+
+
+browser extension
+    APM Overlay
+    catch info on coins being looked to show overlay on the clip
+
+    Detecting the coin’s mint before the trade and polling prices every 5 seconds to spot pumps, dumps, moonshots, or rugs—then slapping on cheeky overlays like “Missed the 100x” or “Dodged a Rug”
+
+
+Include failed transactions in the overlay: "Dang! trade order failed ;°"
+
+Create a list of fully parametrized special effects library for the clip overalys
+
+
+Transform swap detectiong into copy trade bot
+
+Faire du referal pour les sites d'api ?
+
+
+Weird trans
+
+https://solscan.io/tx/x925x6uSjXLZqXgfWitq9ADJ1PXrBT4rLbwgwa5rZk9T74M13vZkxzpyk8L5QsRpiNYHdh1zUz8kUjyD9xFwwHV
+
+Actual split and merge during inner transactions.
+https://solscan.io/tx/4RpgaGrGQxxumRBahJB2faJ8ipymcdw32QnJTeay3a4gfrurcskYNtqGXX9aeTgF4g1vafpQQS7WhFXDaRgcouGR
+
+3 branch split:
+5Dto27bN8RRzzF17qhnjvgQGp3r1YciAMPBcthp7dDy7PqCyXcjX8HWjrkuP3e7N7RpU76CVfoV6cTsxc5UL9SpK
+
+
+
+This one just does some transfert before and after the actual swapping:
+    Kamino Actions Authority = "2bhkQ6uVn32ddiG4Fe3DVbLsrExdb3ubaY6i1G4szEmq"
+    Kamino Program           = "6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc"
+
+TO INTEGRATE IN THE FUTURE
+    JUPITER_LAB_PERPETUALS = "PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu"
+    DOVE = "DoVEsk76QybCEHQGzkvYPWLQu9gzNoZZZt3TPiL597e"
+
+
+
+Parsing instruction logic :
+
+Your Parsing Method
+
+    Step 1: Start with the wrapper (Jupiter)—look at inner instructions.
+    Step 2: Find the first inner swap—check transfers after it:
+        Two transfers: USER → POOL (source), POOL → USER (destination).
+    Step 3: Identify USER and POOL:
+        USER accounts: Used in instructions before the first swap (e.g., signer, fee accounts).
+        POOL accounts: Swap-specific, not pre-used.
+    Step 4: Wrapper’s source—USER → POOL transfer’s source.
+    Step 5: First inner swap:
+        User source: USER → POOL transfer’s source.
+        User destination: POOL → USER transfer’s destination.
+        Pool source: POOL → USER transfer’s source.
+        Pool destination: USER → POOL transfer’s destination.
+    Step 6: Repeat for each inner swap—same logic.
+    Step 7: Last inner swap—destination matches wrapper’s destination—check signer if transfers are missing (e.g., Pumpfun).
+
+Key Notes
+
+    USER: Signer (FQALtCrik9t..., idx 0), fee accounts (pre-swap).
+    Solscan labels: Trustworthy—guides USER identification.
+
+
+
+
+Check how to find owners fo system transfer executed by program
+program can "invoke_signed" to sign for the pda. But I need to find which program is the owner?
+https://solana.stackexchange.com/questions/10481/does-pda-owned-by-system-program-safe

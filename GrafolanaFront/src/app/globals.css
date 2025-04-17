@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    background-color: #000;
+    color: #00FFA3;
+}
+
+.navbar{
+    background-color: #222;
+}
+
+.wallet-adapter-button-trigger {
+    background: rgb(100, 26, 230) !important;
+    border-radius: 8px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+.wallet-adapter-dropdown-list,
+.wallet-adapter-button {
+    font-family: inherit !important;
+}
+
+.video-preview {
+    
+}
+
+
+#clip {
+    padding: 20px;
+    background-color: #222;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(93, 94, 94);
+}
+
+.text-color-buy{
+    color: #00ffa3;
+}
+
+.text-color-sell{
+    color: #DC1FFF;
+}
+
+
+.buy-order {
+    border-width: 2px;
+    border-color: rgb(183, 249, 225);
+    color: #000 !important;
+    background-color: #00FFA3;
+    padding: 8px;
+  }
+  
+.buy-order:hover {
+    box-shadow: 0px 0px 15px rgba(0, 255, 163, 1);
+}
+
+.sell-order {
+    border-width: 2px;
+    border-color: rgb(243, 181, 255);
+    color: #000 ;
+    background-color: #DC1FFF;
+    padding: 8px;
+}
+
+.sell-order:hover {
+    box-shadow: 0px 0px 15px #DC1FFF;
+}
+
+
+.table-transactions {
+    background-color: #000;
+    color: rgb(93, 94, 94);
+    border-collapse: separate;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(93, 94, 94);
+}
+
+.table-transactions > thead {
+    background-color: #222;
+}
+
+.transaction-overlay {
+    height: 50px;
+    border-radius:25px;
+    border-width: 5px !important;
+    font-weight: bold;
+}

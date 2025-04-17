@@ -1,0 +1,79 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Flask (With Cache)",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/GrafolanaBack/app.py",
+        "env": {
+          "FLASK_APP": "${workspaceFolder}/GrafolanaBack/app.py",
+          "FLASK_ENV": "development",
+          "PYTHONPATH": "${workspaceFolder}"
+        },
+        "args": [
+          "run",
+          "--no-debugger",
+          "--no-reload"
+        ],
+        "jinja": true,
+        "justMyCode": false
+      },
+      {
+        "name": "Python: Flask (No Cache)",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/GrafolanaBack/app.py",
+        "env": {
+          "FLASK_APP": "${workspaceFolder}/GrafolanaBack/app.py",
+          "FLASK_ENV": "development",
+          "PYTHONPATH": "${workspaceFolder}"
+        },
+        "args": [
+          "run",
+          "--no-debugger",
+          "--no-reload",
+          "--no-cache"
+        ],
+        "jinja": true,
+        "justMyCode": false
+      },
+      {
+        "name": "Python: Unittest",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "unittest",
+        "console": "integratedTerminal",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        },
+        "args": [
+          "discover",
+          "-s",
+          "${workspaceFolder}/GrafolanaBack",
+          "-p",
+          "test*.py"
+        ],
+        "justMyCode": false
+      },
+      {
+        "name": "Python: Create Config",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/GrafolanaBack/createconfig.py",
+        "console": "integratedTerminal",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        },
+        "args": [],
+        "justMyCode": false
+      },
+      {
+          "name": "Clear Cache",
+          "type": "python",
+          "request": "launch",
+          "program": "${workspaceFolder}/GrafolanaBack/clear_cache.py",
+          "console": "integratedTerminal"
+      }
+    ]
+  }

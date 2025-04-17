@@ -1,0 +1,13 @@
+base58==2.1.1
+Flask==3.1.0
+flask_Cors==5.0.0
+Requests==2.32.3
+solana==0.36.6
+solders==0.26.0
+diskcache==5.6.3
+networkx==3.4.2
+aiohttp==3.11.14
+SQLAlchemy==2.0.31
+alembic==1.13.1
+psycopg2-binary==2.9.10
+python-dotenv==1.1.0

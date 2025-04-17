@@ -1,0 +1,42 @@
+from spl.token.constants import WRAPPED_SOL_MINT
+
+# PROGRAMS
+TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+
+SYSTEM_PROGRAM = "11111111111111111111111111111111"
+STAKE_PROGRAM = "Stake11111111111111111111111111111111111111"
+COMPUTE_BUDGET_PROGRAM = "ComputeBudget111111111111111111111111111111"
+
+WRAPPED_SOL_ADDRESS = str(WRAPPED_SOL_MINT)
+
+SOL = "SOL"
+
+# USD STABLE
+USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+FDUSD = "9zNQRsGLjNKwCUU5Gq5LR8beUCPzQMVMqKAi3SSZh54u"
+
+UNRECOGNIZED = "Unrecognized"
+
+# Define list reference coins for trade classification, including native SOL as "SOL"
+REFERENCE_COINS = {
+    SOL,
+    WRAPPED_SOL_ADDRESS,
+    USDC,
+    USDT,
+    FDUSD,
+}
+
+# List of USD stable used get price of coins traded with anchor token found in the swap chain
+USD_STABLE = {
+    USDC,
+    USDT,
+    FDUSD,
+}
+
+
+MINTTO = "MINTTO"
+BURN = "BURN"
+FEE = "FEE"
+PRIORITYFEE = "PRIORITYFEE"
