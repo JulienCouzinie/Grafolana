@@ -1,7 +1,10 @@
 import logging
+import time
 from typing import Dict, List, Optional, Set, Tuple, Any
 import networkx as nx
 
+from GrafolanaBack.domain.prices.sol_price_service import SOLPriceService
+from GrafolanaBack.domain.prices.sol_price_utils import round_timestamp_to_minute
 from GrafolanaBack.domain.transaction.models.account import AccountType, AccountVertex, AccountVersion
 from GrafolanaBack.domain.transaction.models.graph import TransactionGraph, TransferProperties, TransferType
 from GrafolanaBack.domain.transaction.config.constants import REFERENCE_COINS, SOL, WRAPPED_SOL_ADDRESS
@@ -163,7 +166,7 @@ class GraphService:
         return patterns
     
     @staticmethod
-    def _derive_usd_price_ratio(context: TransactionContext) -> Dict[str, Any]:
+    def _derive_usd_price_ratio(context: TransactionContext, sol_price: float) -> Dict[str, Any]:
         """
         Derive USD prices ratio for all tokens based on swaps and reference prices.
         It's only considered a ratio as it doesn't take into account the number of decimals for each mint
@@ -179,8 +182,8 @@ class GraphService:
         mint_price_map = {}
 
         swap_edges = [(u, v, data) for u, v, data in context.graph.graph.edges(data=True) if data["transfer_type"] == TransferType.SWAP]
-        
-        sol_usd_price = get_sol_price(context.blocktime*1000)
+
+        sol_usd_price = sol_price
         reference_prices = {mint: get_token_price(mint, sol_usd_price) for mint in REFERENCE_COINS}
         # Initialize the mint price map with reference prices
         for mint,price in reference_prices.items():
@@ -421,7 +424,9 @@ class GraphService:
 
         GraphService.set_graph_data(context, graph_data)
 
-        graph_data["transactions"][context.transaction_signature] ["mint_usd_price_ratio"] = GraphService._derive_usd_price_ratio(context)
+        sol_price_service = SOLPriceService()
+        sol_usd_price = sol_price_service.get_sol_price(context.blocktime*1000)
+        graph_data["transactions"][context.transaction_signature] ["mint_usd_price_ratio"] = GraphService._derive_usd_price_ratio(context, sol_usd_price)
         
         return graph_data
 
@@ -441,34 +446,14 @@ class GraphService:
 
         graph_data = GraphService._get_empty_graph_data()
 
-        # Pre-compute all USD price ratios concurrently
-        usd_price_ratio_map: Dict[str, Any] = dict()
-        
-        def compute_price_ratio(context):
-            # Compute USD price ratio for a single context
-            return context.transaction_signature, GraphService._derive_usd_price_ratio(context)
-        
-        # Process all price ratios concurrently using ThreadPoolExecutor (suitable for I/O bound operations)
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            # Submit all contexts for price ratio computation
-            future_to_context = {
-                executor.submit(compute_price_ratio, context): context 
-                for context in graphspace.transaction_contexts.values()
-            }
-            
-            # Collect results as they complete
-            for future in concurrent.futures.as_completed(future_to_context):
-                try:
-                    tx_sig, price_ratio = future.result()
-                    usd_price_ratio_map[tx_sig] = price_ratio
-                except Exception as exc:
-                    context = future_to_context[future]
-                    log.error(f"Error computing price ratio for transaction {context.transaction_signature}: {exc}")
+        all_timestamps = [context.blocktime*1000 for context in graphspace.transaction_contexts.values()]
+
+        sol_price_service = SOLPriceService()
+        sol_usd_price = sol_price_service.get_sol_prices_batch(all_timestamps)
         
         # Now build the graph data sequentially using the pre-computed price ratios
         for context in graphspace.transaction_contexts.values():
             GraphService.set_graph_data(context, graph_data)
-            if context.transaction_signature in usd_price_ratio_map:
-                graph_data["transactions"][context.transaction_signature]["mint_usd_price_ratio"] = usd_price_ratio_map[context.transaction_signature]
-        
+            graph_data["transactions"][context.transaction_signature]["mint_usd_price_ratio"] = GraphService._derive_usd_price_ratio(context, sol_usd_price[context.blocktime*1000])
+     
         return graph_data

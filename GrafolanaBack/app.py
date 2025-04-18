@@ -4,11 +4,14 @@ from flask_cors import CORS
 #from GrafolanaBack.grafolanas_utils import get_orders, getTransaction
 #from GrafolanaBack.utils.transaction_utils.transaction_parser import get_transaction_graph_data
 from GrafolanaBack.domain.metadata import metadata_service
+from GrafolanaBack.domain.prices.sol_price_utils import start_price_updater
 from GrafolanaBack.domain.transaction.services.transaction_parser_service import TransactionParserService
 
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+
+start_price_updater() # Start the price updater in a separate thread
 
 transaction_parser_service = TransactionParserService()
 
