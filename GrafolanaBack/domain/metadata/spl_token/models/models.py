@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 from GrafolanaBack.domain.infrastructure.db.session import Base
-from GrafolanaBack.domain.metadata.spl_token.classes import MintDTO, Creator
+from GrafolanaBack.domain.metadata.spl_token.models.classes import MintDTO, Creator
 
 class MintModel(Base):
     """SQLAlchemy model for storing MintDTO data in the database"""

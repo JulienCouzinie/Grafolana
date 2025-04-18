@@ -13,9 +13,9 @@ from spl.token._layouts import MINT_LAYOUT
 from base64 import b64decode
 
 
-from GrafolanaBack.domain.metadata.spl_token.classes import IPv4Resolver, MetadataData, MetaplexMetadata, MintDTO, MintMapper, OffchainMetadata, Mint, MintInfo
-from GrafolanaBack.domain.metadata.spl_token.metaplex_metadata_parser import MetaplexMetadataParser
-from GrafolanaBack.domain.metadata.spl_token.token_defaults import TOKEN_DEFAULTS
+from GrafolanaBack.domain.metadata.spl_token.models.classes import IPv4Resolver, MetadataData, MetaplexMetadata, MintDTO, MintMapper, OffchainMetadata, Mint, MintInfo
+from GrafolanaBack.domain.metadata.spl_token.parsers.metaplex_metadata_parser import MetaplexMetadataParser
+from GrafolanaBack.domain.metadata.spl_token.config.token_defaults import TOKEN_DEFAULTS
 from GrafolanaBack.domain.logging.logging import mint_logger
 from GrafolanaBack.domain.caching.cache_utils import cache
 from GrafolanaBack.domain.transaction.config.constants import SOL

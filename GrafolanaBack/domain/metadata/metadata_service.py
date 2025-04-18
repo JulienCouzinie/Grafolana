@@ -8,8 +8,8 @@ remain independent from the core transaction analysis logic.
 from typing import List, Dict, Optional, Any
 
 # Import token metadata components
-from GrafolanaBack.domain.metadata.spl_token.mint_metadata_parser import get_mints_info_dto
-from GrafolanaBack.domain.metadata.spl_token.classes import MintDTO
+from GrafolanaBack.domain.metadata.spl_token.parsers.mint_metadata_parser import get_mints_info_dto
+from GrafolanaBack.domain.metadata.spl_token.models.classes import MintDTO
 
 # Import program metadata components
 from GrafolanaBack.domain.metadata.program.programs import get_program_metadatas
