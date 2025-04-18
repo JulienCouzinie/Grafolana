@@ -20,12 +20,15 @@ const SOLANA_COLORS = {
   darkGray: '#2A2A2A',
 };
 
+// View types supported by the graph
+type ViewMode = 'flow' | 'account' | 'wallet' | 'program';
+
 interface TransactionGraphProps {
   graphData: GraphData;
 }
 
 export function TransactionGraph({ graphData }: TransactionGraphProps) {
-  const [viewMode, setViewMode] = useState<'flow' | 'account'>('flow');
+  const [viewMode, setViewMode] = useState<ViewMode>('flow');
   const [processedData, setProcessedData] = useState<GraphData>({ 
     nodes: [], 
     links: [], 
@@ -43,6 +46,8 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
     return viewMode === 'flow' ? flowStrategy : accountStrategy;
+    // Note: In the future, add other strategies here based on viewMode
+    // e.g., viewMode === 'wallet' ? walletStrategy : viewMode === 'program' ? programStrategy : ...
   }, [viewMode]);
 
   // Process data using current strategy
@@ -110,17 +115,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             
             {/* Container for content that gets hidden when collapsed */}
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
-              <div className="view-toggle">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={viewMode === 'account'}
-                    onChange={(e) => setViewMode(e.target.checked ? 'account' : 'flow')}
-                  />
-                  Account-Centric View
-                </label>
-              </div>
-              {/* You could add additional controls or filters here */}
+              {/* Additional controls can be added here */}
             </div>
           </div>
         </Panel>
@@ -141,33 +136,72 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
           order={2}
           defaultSizePercentage={80}
         >
-          <div className="w-full h-full">
-            <NoSSRForceGraph
-              graphData={processedData}
-              width={window ? window.innerWidth * 0.8 : 800} // Responsive width
-              height={window ? window.innerHeight - 120 : 600} // Responsive height, accounting for header/footer
-              backgroundColor="#000000"
-              nodeRelSize={8}
-              // Node rendering
-              nodeCanvasObject={(node, ctx, scale) => strategy.nodeCanvasObject(node, ctx, scale)}
-              nodeLabel={(node) => strategy.nodeTooltip(node)}
-              // Link styling
-              linkWidth={(link) => strategy.getLinkStyle(link).width}
-              linkColor={(link) => strategy.getLinkStyle(link).color}
-              linkCurvature={(link) => strategy.getLinkStyle(link).curvature || 0}
-              linkLineDash={(link) => strategy.getLinkStyle(link).lineDash || []}
-              linkDirectionalArrowLength={(link) => strategy.getLinkStyle(link).arrowLength || 8}
-              linkDirectionalArrowColor={(link) => strategy.getLinkStyle(link).arrowColor || SOLANA_COLORS.purple}
-              linkDirectionalArrowRelPos={1}
-              linkLabel={(link) => strategy.linkTooltip(link)}
-              linkCanvasObject={(link, ctx, scale) => strategy.linkCanvasObject(link, ctx, scale)}
-              linkCanvasObjectMode={() => 'after'}
-              // Interactions
-              enableNodeDrag={true}
-              enableZoomInteraction={true}
-              onNodeHover={(node => strategy.handleNodeHover(node))}
-              onLinkHover={(link => strategy.handleLinkHover(link))}
-            />
+          <div className="w-full h-full flex flex-col">
+            {/* View Selection Control Bar */}
+            <div className="view-control-bar">
+              <div className="view-buttons">
+                <button 
+                  className={`view-button ${viewMode === 'flow' ? 'active' : ''}`} 
+                  onClick={() => setViewMode('flow')}
+                  title="Transfers View - Focus on data flow between accounts"
+                >
+                  Transfers
+                </button>
+                <button 
+                  className={`view-button ${viewMode === 'account' ? 'active' : ''}`} 
+                  onClick={() => setViewMode('account')}
+                  title="Accounts View - Focus on account relationships"
+                >
+                  Accounts
+                </button>
+                <button 
+                  className={`view-button ${viewMode === 'wallet' ? 'active' : ''}`} 
+                  onClick={() => setViewMode('wallet')}
+                  title="Wallets View - Focus on wallet relationships"
+                  disabled={true} // Disabled until implemented
+                >
+                  Wallets
+                </button>
+                <button 
+                  className={`view-button ${viewMode === 'program' ? 'active' : ''}`} 
+                  onClick={() => setViewMode('program')}
+                  title="Programs View - Focus on program interactions"
+                  disabled={true} // Disabled until implemented
+                >
+                  Programs
+                </button>
+              </div>
+            </div>
+
+            {/* Force Graph Visualization */}
+            <div className="graph-container">
+              <NoSSRForceGraph
+                graphData={processedData}
+                width={window ? window.innerWidth * 0.8 : 800} // Responsive width
+                height={window ? window.innerHeight - 150 : 600} // Adjusted height to account for control bar
+                backgroundColor="#000000"
+                nodeRelSize={8}
+                // Node rendering
+                nodeCanvasObject={(node, ctx, scale) => strategy.nodeCanvasObject(node, ctx, scale)}
+                nodeLabel={(node) => strategy.nodeTooltip(node)}
+                // Link styling
+                linkWidth={(link) => strategy.getLinkStyle(link).width}
+                linkColor={(link) => strategy.getLinkStyle(link).color}
+                linkCurvature={(link) => strategy.getLinkStyle(link).curvature || 0}
+                linkLineDash={(link) => strategy.getLinkStyle(link).lineDash || []}
+                linkDirectionalArrowLength={(link) => strategy.getLinkStyle(link).arrowLength || 8}
+                linkDirectionalArrowColor={(link) => strategy.getLinkStyle(link).arrowColor || SOLANA_COLORS.purple}
+                linkDirectionalArrowRelPos={1}
+                linkLabel={(link) => strategy.linkTooltip(link)}
+                linkCanvasObject={(link, ctx, scale) => strategy.linkCanvasObject(link, ctx, scale)}
+                linkCanvasObjectMode={() => 'after'}
+                // Interactions
+                enableNodeDrag={true}
+                enableZoomInteraction={true}
+                onNodeHover={(node => strategy.handleNodeHover(node))}
+                onLinkHover={(link => strategy.handleLinkHover(link))}
+              />
+            </div>
           </div>
         </Panel>
       </PanelGroup>
@@ -217,8 +251,51 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
           display: none;
         }
         
-        .view-toggle {
-          margin-top: 30px;
+        /* View Control Bar Styles */
+        .view-control-bar {
+          padding: 8px;
+          display: flex;
+          justify-content: center;
+          background-color: #1a1a1a;
+          border-bottom: 1px solid #333;
+        }
+        
+        .view-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+        }
+        
+        .view-button {
+          background-color: #2c2c2c;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px 12px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .view-button:hover:not([disabled]) {
+          background-color: #444;
+        }
+        
+        .view-button.active {
+          background-color: ${SOLANA_COLORS.purple};
+          color: white;
+        }
+        
+        .view-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        /* Make the graph container take the remaining space */
+        .graph-container {
+          flex: 1;
+          overflow: hidden;
+          position: relative;
         }
       `}</style>
     </div>
