@@ -35,34 +35,37 @@ class Graphspace:
         
         This method iterates through all transaction contexts and adds their graphs to the main graph.
         """
-        # First, we need to order the transactions contexts chronologically
-        # Some transactions may share the same slot, 
-        # so we order them by fetching their block and looking for the order of the signatures in the block
+        # # First, we need to order the transactions contexts chronologically
+        # # Some transactions may share the same slot, 
+        # # so we order them by fetching their block and looking for the order of the signatures in the block
 
-        # So first let's get all the slots number of the transactions that share the same slot
-        slots: Dict[int, List[str]] = {}
-        for context in self.transaction_contexts.values():
-            slots.setdefault(context.slot, []).append(context.transaction_signature)
+        # # So first let's get all the slots number of the transactions that share the same slot
+        # slots: Dict[int, List[str]] = {}
+        # for context in self.transaction_contexts.values():
+        #     slots.setdefault(context.slot, []).append(context.transaction_signature)
         
-        # Order the transaction signatures by their slot number first and signature order in their block if they are in the block
-        ordered_transaction_contexts: List[TransactionContext] = []
-        # First, sort by slot to create the primary order
-        for slot in sorted(slots.keys()):
-            signatures_in_slot = slots[slot]
-            # If only one signature in this slot, no need to check block order
-            if len(signatures_in_slot) == 1:
-                ordered_transaction_contexts.append(self.transaction_contexts.get(signatures_in_slot[0]))
-            else:
-                # For slots with multiple signatures, order them based on block order
-                block_signatures = self._get_transaction_signatures_from_slot(slot)
-                if block_signatures:
-                    # order signatures_in_slot by their position in block_signatures
-                    signatures_in_slot.sort(key=lambda sig: block_signatures.index(sig) if sig in block_signatures else float('inf'))
+        # # Order the transaction signatures by their slot number first and signature order in their block if they are in the block
+        # ordered_transaction_contexts: List[TransactionContext] = []
+        # # First, sort by slot to create the primary order
+        # for slot in sorted(slots.keys()):
+        #     signatures_in_slot = slots[slot]
+        #     # If only one signature in this slot, no need to check block order
+        #     if len(signatures_in_slot) == 1:
+        #         ordered_transaction_contexts.append(self.transaction_contexts.get(signatures_in_slot[0]))
+        #     else:
+        #         # For slots with multiple signatures, order them based on block order
+        #         block_signatures = self._get_transaction_signatures_from_slot(slot)
+        #         if block_signatures:
+        #             # order signatures_in_slot by their position in block_signatures
+        #             signatures_in_slot.sort(key=lambda sig: block_signatures.index(sig) if sig in block_signatures else float('inf'))
 
-                ordered_transaction_contexts.extend([self.transaction_contexts.get(signature) for signature in signatures_in_slot])
+        #         ordered_transaction_contexts.extend([self.transaction_contexts.get(signature) for signature in signatures_in_slot])
 
-        # Merge all transaction graphs into a single graph
-        for context in ordered_transaction_contexts:
+        # # Merge all transaction graphs into a single graph
+        # for context in ordered_transaction_contexts:
+        #     graph = context.graph
+        #     self.graph.add_graph(graph)
+        for context in self.transaction_contexts.values():
             graph = context.graph
             self.graph.add_graph(graph)
 
