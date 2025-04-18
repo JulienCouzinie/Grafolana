@@ -10,6 +10,7 @@ from typing import List, Dict, Optional, Any
 # Import token metadata components
 from GrafolanaBack.domain.metadata.spl_token.parsers.mint_metadata_parser import get_mints_info_dto
 from GrafolanaBack.domain.metadata.spl_token.models.classes import MintDTO
+from GrafolanaBack.domain.metadata.spl_token.repositories.mint_repository import MintRepository
 
 # Import program metadata components
 from GrafolanaBack.domain.metadata.program.programs import get_program_metadatas
@@ -35,8 +36,36 @@ class MetadataService:
     
     @staticmethod
     def get_token_metadata(mint_addresses: List[str]) -> List[MintDTO]:
-        """Get metadata for a list of token mint addresses."""
-        return get_mints_info_dto(mint_addresses)
+        """
+        Get metadata for a list of token mint addresses.
+        
+        First checks the database, then fetches any missing information from the blockchain.
+        """
+        if not mint_addresses:
+            return []
+            
+        # First check the database
+        db_mints = MintRepository.get_mints_by_addresses(mint_addresses)
+        
+        # Identify any mints not in the database
+        missing_addresses = [addr for addr in mint_addresses if addr not in db_mints]
+        
+        # If we have all the mints, return them
+        if not missing_addresses:
+            return list(db_mints.values())
+        
+        # Fetch missing mints from blockchain
+        fetched_mints = get_mints_info_dto(missing_addresses)
+        
+        # Store the fetched mints in the database
+        if fetched_mints:
+            MintRepository.create_or_update_mints(fetched_mints)
+        
+        # Combine database and fetched results
+        result = list(db_mints.values())
+        result.extend(fetched_mints)
+        
+        return result
     
     @staticmethod
     def get_program_metadata(program_addresses: List[str]) -> List[Dict[str, Any]]:
@@ -59,6 +88,11 @@ class MetadataService:
         return create_or_update_user_label(address, label, user_id, description)
     
     @staticmethod
+    def delete_user_label(label_id: int, user_id: str) -> bool:
+        """Delete a user-defined label."""
+        return delete_user_label(label_id, user_id)
+    
+    @staticmethod
     def create_admin_label(
         address: str, 
         label: str, 
@@ -73,13 +107,9 @@ class MetadataService:
         label: str, 
         description: Optional[str] = None
     ) -> Dict:
-        """Create a default (system-level) label."""
+        """Create a default-level label."""
         return create_default_label(address, label, description)
-    
-    @staticmethod
-    def delete_user_label(address: str, user_id: str) -> bool:
-        """Delete a user-defined label."""
-        return delete_user_label(address, user_id)
+
 
 # Convenience singleton instance
 metadata_service = MetadataService()
