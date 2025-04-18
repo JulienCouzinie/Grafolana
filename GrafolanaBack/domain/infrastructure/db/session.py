@@ -47,6 +47,7 @@ def init_db():
     # Import models to ensure they're registered with Base metadata
     from ...metadata.labeling.models import Label, LabelPriority
     from ...transaction.models.transaction import SolanaTransaction
+    from ...metadata.spl_token.models import MintModel
 
     # Create all tables
     Base.metadata.create_all(engine)
