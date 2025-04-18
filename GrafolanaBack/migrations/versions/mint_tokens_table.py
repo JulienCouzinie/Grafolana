@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('symbol', sa.String(), nullable=False),
         sa.Column('decimals', sa.Integer(), nullable=False, default=0),
-        sa.Column('supply', sa.Integer(), nullable=False, default=0),
+        sa.Column('supply', sa.String(), nullable=False),
         sa.Column('is_initialized', sa.Boolean(), nullable=False, default=False),
         sa.Column('update_authority', sa.String(), nullable=True),
         sa.Column('primary_sale_happened', sa.Boolean(), nullable=False, default=False),

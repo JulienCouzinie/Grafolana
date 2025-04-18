@@ -15,7 +15,8 @@ class MintModel(Base):
     name = Column(String, nullable=False)
     symbol = Column(String, nullable=False)
     decimals = Column(Integer, nullable=False, default=0)
-    supply = Column(Integer, nullable=False, default=0)
+    # Changed from Integer to String to handle arbitrarily large token supplies
+    supply = Column(String, nullable=False, default="0")
     is_initialized = Column(Boolean, nullable=False, default=False)
     update_authority = Column(String, nullable=True)
     primary_sale_happened = Column(Boolean, nullable=False, default=False)
@@ -53,13 +54,16 @@ class MintModel(Base):
                     share=creator_data.get('share', 0)
                 ))
         
+        # Convert supply from string to int for the DTO
+        supply_int = int(self.supply) if self.supply else 0
+        
         return MintDTO(
             mint_address=self.mint_address,
             is_nft=self.is_nft,
             name=self.name,
             symbol=self.symbol,
             decimals=self.decimals,
-            supply=self.supply,
+            supply=supply_int,  # Convert string back to int
             is_initialized=self.is_initialized,
             update_authority=self.update_authority,
             primary_sale_happened=self.primary_sale_happened,
@@ -92,13 +96,16 @@ class MintModel(Base):
                     'share': creator.share
                 })
         
+        # Convert supply from int to string for database storage
+        supply_str = str(dto.supply) if dto.supply is not None else "0"
+        
         return cls(
             mint_address=dto.mint_address,
             is_nft=dto.is_nft,
             name=dto.name,
             symbol=dto.symbol,
             decimals=dto.decimals,
-            supply=dto.supply,
+            supply=supply_str,  # Store as string
             is_initialized=dto.is_initialized,
             update_authority=dto.update_authority,
             primary_sale_happened=dto.primary_sale_happened,
