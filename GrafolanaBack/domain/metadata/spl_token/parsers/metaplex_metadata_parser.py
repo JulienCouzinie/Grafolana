@@ -1,7 +1,7 @@
 import base58
 import struct
 
-from GrafolanaBack.domain.metadata.spl_token.classes import Creator, MetadataData, MetaplexMetadata
+from GrafolanaBack.domain.metadata.spl_token.models.classes import Creator, MetadataData, MetaplexMetadata
 
 
 
