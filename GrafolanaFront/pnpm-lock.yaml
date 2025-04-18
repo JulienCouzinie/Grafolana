@@ -93,6 +93,9 @@ importers:
       react-range-slider-input:
         specifier: ^3.2.1
         version: 3.2.1
+      react-resizable-panels:
+        specifier: 0.0.63
+        version: 0.0.63(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       remotion:
         specifier: 4.0.265
         version: 4.0.265(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -5117,6 +5120,12 @@ packages:
   react-refresh@0.9.0:
     resolution: {integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==}
     engines: {node: '>=0.10.0'}
+
+  react-resizable-panels@0.0.63:
+    resolution: {integrity: sha512-AfA8b6kouhL4rBvgUGs17uzWVlYPaJIwwTCVeWRxNpUHJlCG1h9RIMlzA1849AZGsaNJO3j/SNdI5SS4GZDE3g==}
+    peerDependencies:
+      react: ^16.14.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.14.0 || ^17.0.0 || ^18.0.0
 
   react@19.0.0:
     resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
@@ -12828,6 +12837,11 @@ snapshots:
   react-refresh@0.14.2: {}
 
   react-refresh@0.9.0: {}
+
+  react-resizable-panels@0.0.63(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   react@19.0.0: {}
 

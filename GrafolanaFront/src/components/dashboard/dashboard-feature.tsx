@@ -100,33 +100,36 @@ export default function DashboardFeature() {
 
   if (publicKey) {
     return (
-      <div>
-        <AddressLabel 
-          address="3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu"
-          className="text-white"
-        />
-        <button onClick={() => getTransactionFromWallet('HoUHEVujdFeZbrdz59xMkyWF2k4TS1zTwR5vWYQTJZ1E', 0, Date.now())}>
-          GET ORDERS
-        </button>
-        <br />
-        <input type="text" id="tx_signature" placeholder="Enter Transaction Signature" style={{ width: '1000px', margin: '2px' }} />
-        <button onClick={() => getTransactionFromSignature((document.getElementById('tx_signature') as HTMLInputElement)?.value)}>
-          GET TRANSACTION JSON
-        </button>
-        <span>  </span>
-        <button onClick={() => getTransactionGraphData((document.getElementById('tx_signature') as HTMLInputElement)?.value)}>
-          GET TRANSACTION GRAPH
-        </button><br />
-        <input type="text" id="wallet_signature" placeholder="Enter Wallet Address" defaultValue={"CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX"} style={{ width: '1000px', margin: '2px' }} />
-        <button onClick={() => getWalletGraphData((document.getElementById('wallet_signature') as HTMLInputElement)?.value)}>
-          GET WALLET GRAPH
-        </button>
-        <div id="transaction"></div>
-        <JSONPretty id="json-pretty" data={transactionJSON}></JSONPretty>
-
-        <TransactionGraph graphData={graphData} />
+      <div className="flex flex-col h-full">
+        <div className="p-4">
+          <AddressLabel 
+            address="3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu"
+            className="text-white"
+          />
+          <button onClick={() => getTransactionFromWallet('HoUHEVujdFeZbrdz59xMkyWF2k4TS1zTwR5vWYQTJZ1E', 0, Date.now())}>
+            GET ORDERS
+          </button>
+          <br />
+          <input type="text" id="tx_signature" placeholder="Enter Transaction Signature" style={{ width: '1000px', margin: '2px' }} />
+          <button onClick={() => getTransactionFromSignature((document.getElementById('tx_signature') as HTMLInputElement)?.value)}>
+            GET TRANSACTION JSON
+          </button>
+          <span>  </span>
+          <button onClick={() => getTransactionGraphData((document.getElementById('tx_signature') as HTMLInputElement)?.value)}>
+            GET TRANSACTION GRAPH
+          </button><br />
+          <input type="text" id="wallet_signature" placeholder="Enter Wallet Address" defaultValue={"CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX"} style={{ width: '1000px', margin: '2px' }} />
+          <button onClick={() => getWalletGraphData((document.getElementById('wallet_signature') as HTMLInputElement)?.value)}>
+            GET WALLET GRAPH
+          </button>
+          <div id="transaction"></div>
+          <JSONPretty id="json-pretty" data={transactionJSON}></JSONPretty>
+        </div>
+        
+        <div className="graph-container">
+          <TransactionGraph graphData={graphData} />
+        </div>
       </div>
-      
     );
   }
   return null;

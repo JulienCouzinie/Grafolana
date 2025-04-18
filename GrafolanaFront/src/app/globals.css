@@ -6,6 +6,14 @@ html,
 body {
     background-color: #000;
     color: #00FFA3;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevents scrolling at the document level */
+}
+
+#root {
+    height: 100%;
 }
 
 .navbar{
@@ -23,69 +31,33 @@ body {
     font-family: inherit !important;
 }
 
-.video-preview {
-    
+.controls-panel {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #1a1a1a;
 }
 
-
-#clip {
-    padding: 20px;
-    background-color: #222;
-    border-radius: 10px;
-    border-width: 1px;
-    border-color: rgb(93, 94, 94);
+.resize-handle:hover {
+  background-color: #9945FF !important;
+  transition: background-color 0.2s;
 }
 
-.text-color-buy{
-    color: #00ffa3;
+.full-height-layout {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.text-color-sell{
-    color: #DC1FFF;
+.content-container {
+    flex: 1;
+    overflow: auto; /* Allow scrolling within content if needed */
+    display: flex;
+    flex-direction: column;
 }
 
-
-.buy-order {
-    border-width: 2px;
-    border-color: rgb(183, 249, 225);
-    color: #000 !important;
-    background-color: #00FFA3;
-    padding: 8px;
-  }
-  
-.buy-order:hover {
-    box-shadow: 0px 0px 15px rgba(0, 255, 163, 1);
-}
-
-.sell-order {
-    border-width: 2px;
-    border-color: rgb(243, 181, 255);
-    color: #000 ;
-    background-color: #DC1FFF;
-    padding: 8px;
-}
-
-.sell-order:hover {
-    box-shadow: 0px 0px 15px #DC1FFF;
-}
-
-
-.table-transactions {
-    background-color: #000;
-    color: rgb(93, 94, 94);
-    border-collapse: separate;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: rgb(93, 94, 94);
-}
-
-.table-transactions > thead {
-    background-color: #222;
-}
-
-.transaction-overlay {
-    height: 50px;
-    border-radius:25px;
-    border-width: 5px !important;
-    font-weight: bold;
+.graph-container {
+    flex: 1;
+    display: flex;
+    min-height: 0; /* Important for Firefox */
 }

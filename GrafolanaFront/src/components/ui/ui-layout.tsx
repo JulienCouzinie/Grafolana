@@ -10,7 +10,7 @@ import {WalletButton} from '../solana/solana-provider'
 export function UiLayout({ children }: { children: ReactNode }) {
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="full-height-layout">
       <div className="navbar bg-base-300 dark:text-neutral-content flex-col md:flex-row space-y-2 md:space-y-0">
         <div className="flex-1">
           
@@ -19,7 +19,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           <WalletButton />
         </div>
       </div>
-      <div className="flex-grow w-full">
+      <div className="content-container">
         <Suspense
           fallback={
             <div className="text-center my-32">
