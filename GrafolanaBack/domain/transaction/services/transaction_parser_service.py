@@ -203,7 +203,7 @@ class TransactionParserService:
 
         all_signatures = []
         try:
-            all_signatures = client.get_signatures_for_address(user_wallet_pubkey, limit=200).value
+            all_signatures = client.get_signatures_for_address(user_wallet_pubkey, limit=300).value
         except Exception as e:
             print(f"Error fetching signatures for {user_wallet}: {e}")
             return all_signatures
