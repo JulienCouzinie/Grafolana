@@ -160,11 +160,14 @@ class GraphBuilderService:
             source_account_version: The source account version from which tokens are being burned
             parent_swap_id: An optional ID for tracking the swap operation
         """
+
+
         source_account_version = self.prepare_source_account_version(
             source_address = account_address,
             mint_address = mint_address,
             owner = authority,
-            amount_token = amount_token
+            amount_token = amount_token,
+            account_type = AccountType.TOKEN_ACCOUNT
         )
 
         burn_virtual_account_version = self.prepareBurnVirtualAccountVersion(mint_address = mint_address, amount = amount_token)
@@ -210,7 +213,9 @@ class GraphBuilderService:
             account_version_source = mintto_virtual_account_version, 
             destination_address = account_address,
             mint_address = mint_address,
-            amount_token = amount_token)
+            amount_token = amount_token,
+            account_type = AccountType.TOKEN_ACCOUNT
+        )
         
         self.transactionContext.graph.add_edge(
             source = mintto_virtual_account_version.get_vertex(),

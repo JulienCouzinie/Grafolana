@@ -89,10 +89,20 @@ class TokenTransferParser(InstructionParser):
         authority = str(instruction.parsed["info"]["authority"])
         
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(source_address = source_address, owner = authority, amount_token = amount)
+        account_version_source = graphBuilderService.prepare_source_account_version(
+            source_address = source_address, 
+            owner = authority, 
+            amount_token = amount,
+            account_type = AccountType.TOKEN_ACCOUNT
+        )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(account_version_source, destination_address, amount_token = amount)
+        account_version_destination = graphBuilderService.prepare_destination_account_version(
+            account_version_source, 
+            destination_address, 
+            amount_token = amount,
+            account_type = AccountType.TOKEN_ACCOUNT
+        )
 
         
         # Add edge to graph
@@ -139,14 +149,18 @@ class TokenTransferCheckedParser(InstructionParser):
             source_address = source_address,
             mint_address = mint_address,
             owner = authority,
-            amount_token = amount)
+            amount_token = amount,
+            account_type = AccountType.TOKEN_ACCOUNT
+        )
 
         # Get destination version account
         account_version_destination = graphBuilderService.prepare_destination_account_version(
             account_version_source = account_version_source, 
             destination_address = destination_address,
             mint_address = mint_address,
-            amount_token = amount)
+            amount_token = amount,
+            account_type = AccountType.TOKEN_ACCOUNT
+        )
         
         # Add edge to graph
         context.graph.add_edge(
@@ -234,7 +248,8 @@ class CloseAccountParser(InstructionParser):
             source_address=account_address,
             owner = owner,
             balance_token = 0,
-            balance_lamport = 0
+            balance_lamport = 0,
+            account_type = AccountType.TOKEN_ACCOUNT
         )
 
         amount_lamport = account_version_source.balance_token + 203928
@@ -324,6 +339,7 @@ class SyncNativeParser(InstructionParser):
         mint_address = WRAPPED_SOL_ADDRESS
         account_version = context.account_repository.account_versions.get(account_address)[-1]
         account_version.account.mint_address = mint_address
+        account_version.account.type = AccountType.TOKEN_ACCOUNT
 
         # Convert the lamports balance to WSOL, deducting rent exempt lamports cost
         account_version.balance_token += account_version.balance_lamport - 203928
@@ -381,15 +397,19 @@ class StakeWithdrawParser(InstructionParser):
         withdrawAuthority_address = str(instruction.parsed["info"]["withdrawAuthority"])
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(source_address = stakeAccount_address,
-                                                                                           amount_lamport = lamports,
-                                                                                           owner=withdrawAuthority_address,
-                                                                                           account_type = AccountType.STAKE_ACCOUNT)
+        account_version_source = graphBuilderService.prepare_source_account_version(
+            source_address = stakeAccount_address,
+            amount_lamport = lamports,
+            owner=withdrawAuthority_address,
+            account_type = AccountType.STAKE_ACCOUNT
+        )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(account_version_source = account_version_source, 
-                                                                                                destination_address = destination_address,
-                                                                                                amount_lamport = lamports)
+        account_version_destination = graphBuilderService.prepare_destination_account_version(
+            account_version_source = account_version_source, 
+            destination_address = destination_address,
+            amount_lamport = lamports
+        )
         
         # Add edge to graph
         context.graph.add_edge(
@@ -507,6 +527,7 @@ class AssociatedTokenAccountCreateParser(InstructionParser):
         # update mint if not known yet
         new_account = context.account_repository.accounts.get(new_account_address)
         new_account.mint_address = mint_address
+        new_account.type = AccountType.TOKEN_ACCOUNT
 
         # update owner in all source account's version if it wasn't known yet
         account_version_destination = context.account_repository.account_versions.get(new_account_address)
