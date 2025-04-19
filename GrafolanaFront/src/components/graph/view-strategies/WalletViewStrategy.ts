@@ -118,19 +118,22 @@ class WalletViewStrategy extends BaseViewStrategy {
         };
         
         // If the node is not a SOL account, add it to the composite array
-        if (node.type !== AccountType.SOL_ACCOUNT) {
+        if (node.type !== AccountType.SOL_ACCOUNT && node.type !== AccountType.FEE_ACCOUNT) {
           aggregatedNode.composite = [node];
         }
 
         seen.set(address, aggregatedNode);
       } else {
-        if (node.type !== AccountType.SOL_ACCOUNT) {
-          const existingNode = seen.get(address)!;
-          if (!existingNode.composite) {
-            existingNode.composite = [];
+        if (address!=="FEE") {
+          if (node.type !== AccountType.SOL_ACCOUNT) {
+            const existingNode = seen.get(address)!;
+            if (!existingNode.composite) {
+              existingNode.composite = [];
+            }
+            // Add the node to the composite array of the existing node
+            existingNode.composite.push(node);
           }
-          // Add the node to the composite array of the existing node
-          existingNode.composite.push(node);}
+        }
       }
     });
 
@@ -306,7 +309,7 @@ class WalletViewStrategy extends BaseViewStrategy {
                     compSource.amountString, compSource.imageHTML, compSourceUSD,
                     compDest.amountString, compDest.imageHTML, compDestUSD
                 )
-                : this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
+                : compLink.type + ": " + this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
             }</li>`;
         }).join('')}
         </ul>`
