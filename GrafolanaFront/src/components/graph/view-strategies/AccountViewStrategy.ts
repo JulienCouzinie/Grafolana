@@ -139,7 +139,7 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 
   processData (data: GraphData): GraphData{
-    this.originalData = data;
+    this.originalData.current = data;
     const clonedData = cloneDeep(data);
     let links = clonedData.links;
     links = this.aggregateLinks(links);
@@ -300,6 +300,11 @@ export function useAccountViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
+  const originalDataRef = useRef<GraphData>({
+    nodes: [],
+    links: [],
+    transactions: {},
+  });
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Create and return strategy instance
@@ -307,6 +312,7 @@ export function useAccountViewStrategy(): ViewStrategy {
     metadataServices,
     usdServices,
     processedDataRef,
+    originalDataRef,
     hoveredGroup,
     setHoveredGroup
   );

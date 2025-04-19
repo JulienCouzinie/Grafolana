@@ -17,7 +17,7 @@ export const SOLANA_COLORS = {
 export abstract class BaseViewStrategy implements ViewStrategy {
     // Common data and state references that all strategies need
     protected processedData: React.RefObject <GraphData>;
-    protected originalData: GraphData | null = null;
+    protected originalData: React.RefObject <GraphData>;
     protected hoveredGroup: number | null;
     protected setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>;
     
@@ -32,6 +32,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         metadataServices: Pick<ReturnType<typeof useMetadata>, 'getMintInfo' | 'getMintImage' | 'getProgramInfo' | 'getLabelComputed'>,
         usdServices: Pick<ReturnType<typeof useUSDValue>, 'calculateUSDValue'>,
         processedDataRef: React.RefObject<GraphData>,
+        originalDataRef: React.RefObject<GraphData>,
         hoveredGroup: number | null,
         setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>
     ) {
@@ -41,6 +42,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.getLabelComputed = metadataServices.getLabelComputed;
         this.calculateUSDValue = usdServices.calculateUSDValue;
         this.processedData = processedDataRef;
+        this.originalData = originalDataRef;
         this.hoveredGroup = hoveredGroup;
         this.setHoveredGroup = setHoveredGroup;
     }

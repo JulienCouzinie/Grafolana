@@ -191,7 +191,7 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   processData (data: GraphData): GraphData{
-    this.originalData = data;
+    this.originalData.current = data;
     const clonedData = cloneDeep(data);
     let nodes = this.aggregateAccounts(clonedData.nodes);
 
@@ -274,8 +274,8 @@ class WalletViewStrategy extends BaseViewStrategy {
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
             // Get source and destination nodes for composite link
-            const compLinkSourceNode = this.originalData!.nodes.find(n => n.account_vertex.address === compLink.source_account_vertex.address);
-            const compLinkDestinationNode = this.originalData!.nodes.find(n => n.account_vertex.address === compLink.target_account_vertex.address);
+            const compLinkSourceNode = this.originalData.current.nodes.find(n => n.account_vertex.address === compLink.source_account_vertex.address);
+            const compLinkDestinationNode = this.originalData.current.nodes.find(n => n.account_vertex.address === compLink.target_account_vertex.address);
 
 
             const compSource = this.getAmountDetails(
@@ -316,7 +316,6 @@ class WalletViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>Program:</b> ${this.getLabelComputed(link.program_address, 'program', true).label}<br/>
         <b>From:</b> ${link.source_account_vertex.address}<br/>
         <b>To:</b> ${link.target_account_vertex.address}<br/>
         ${compositesHtml}
@@ -333,6 +332,11 @@ export function useWalletViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
+  const originalDataRef = useRef<GraphData>({
+    nodes: [],
+    links: [],
+    transactions: {},
+  });
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Create and return strategy instance
@@ -340,6 +344,7 @@ export function useWalletViewStrategy(): ViewStrategy {
     metadataServices,
     usdServices,
     processedDataRef,
+    originalDataRef,
     hoveredGroup,
     setHoveredGroup
   );

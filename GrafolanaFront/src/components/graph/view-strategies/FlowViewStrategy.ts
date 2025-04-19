@@ -65,7 +65,7 @@ class FlowViewStrategy extends BaseViewStrategy {
   }
 
   processData(data: GraphData): GraphData {
-    this.originalData = data;
+    this.originalData.current = data;
     const clonedData = cloneDeep(data);
 
     let links = clonedData.links;
@@ -259,6 +259,11 @@ export function useFlowViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
+  const originalDataRef = useRef<GraphData>({
+    nodes: [],
+    links: [],
+    transactions: {},
+  });
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Create and return strategy instance
@@ -266,6 +271,7 @@ export function useFlowViewStrategy(): ViewStrategy {
     metadataServices,
     usdServices,
     processedDataRef,
+    originalDataRef,
     hoveredGroup,
     setHoveredGroup
   );
