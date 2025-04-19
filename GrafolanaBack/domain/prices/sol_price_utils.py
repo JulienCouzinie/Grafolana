@@ -1,5 +1,4 @@
 import time
-import logging
 import atexit
 import requests
 import os
@@ -12,8 +11,7 @@ from typing import Dict, List, Tuple, Optional
 from GrafolanaBack.domain.prices.models import SOLPrice
 from GrafolanaBack.domain.prices.repository import SOLPriceRepository
 from GrafolanaBack.domain.infrastructure.db.session import get_session
-
-logger = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 # Create a persistent session for reuse
 _session = requests.Session()
@@ -97,7 +95,7 @@ def populate_sol_prices() -> None:
         # Start from the minute after the most recent price
         latest_timestamp = latest_price.timestamp
         timestamp_from_rounded = round_timestamp_to_minute(latest_timestamp) + one_minute
-        logger.info(f"Found existing prices. Continuing from timestamp {timestamp_from_rounded} (minute after latest record).")
+        logger.debug(f"Found existing prices. Continuing from timestamp {timestamp_from_rounded} (minute after latest record).")
     
     # Skip if already up to date
     if timestamp_from_rounded >= now_rounded:
@@ -123,7 +121,7 @@ def populate_sol_prices() -> None:
             
             # Bulk save every 10,000 prices to avoid memory issues
             if len(batch_prices) >= 10000:
-                logger.info(f"Saving batch of {len(batch_prices)} SOL prices")
+                logger.debug(f"Saving batch of {len(batch_prices)} SOL prices")
                 sol_price_repo.bulk_set_prices(batch_prices)
                 batch_prices = []
         
@@ -133,7 +131,7 @@ def populate_sol_prices() -> None:
     
     # Save any remaining prices
     if batch_prices:
-        logger.info(f"Saving final batch of {len(batch_prices)} SOL prices")
+        logger.debug(f"Saving final batch of {len(batch_prices)} SOL prices")
         sol_price_repo.bulk_set_prices(batch_prices)
     
     logger.info(f"Completed populating SOL prices. Total fetched: {total_fetched}")
@@ -170,7 +168,7 @@ def start_price_updater() -> None:
         try:
             portalocker.lock(lock_handle, portalocker.LOCK_EX | portalocker.LOCK_NB)
         except portalocker.exceptions.LockException:
-            logger.info("SOL price updater is already running in another process")
+            logger.debug("SOL price updater is already running in another process")
             return
         
         # We got the lock, proceed with starting the scheduler

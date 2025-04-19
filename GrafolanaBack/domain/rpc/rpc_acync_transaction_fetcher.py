@@ -1,7 +1,6 @@
 import asyncio
 import os
 import time
-import logging
 from typing import List, Dict, Callable, Any, Optional, TypedDict, Set
 from threading import Lock, Thread
 
@@ -12,6 +11,7 @@ from solana.exceptions import SolanaRpcException
 from dotenv import load_dotenv
 
 from GrafolanaBack.domain.performance.timing_utils import timing_decorator
+from GrafolanaBack.domain.logging.logging import logger
 
 
 # Define a type for endpoint configuration for better clarity
@@ -49,7 +49,7 @@ class RateLimiter:
         
         # Sleep outside the lock to allow other requests to be processed in parallel
         if wait_time > 0:
-            print("wait_time", wait_time)
+            logger.debug("wait_time", wait_time)
             await asyncio.sleep(wait_time)
 
 class SolanaTransactionFetcher:
@@ -68,7 +68,6 @@ class SolanaTransactionFetcher:
         self.worker_tasks = []
         self.loop = None
         self._lock = Lock()
-        self.logger = logging.getLogger("SolanaTransactionFetcher")
         
         # Dispatcher tracking data - to prevent infinite loops
         self.tx_failed_workers = {}    # Maps signature string to set of worker_ids that failed to fetch it
@@ -94,10 +93,10 @@ class SolanaTransactionFetcher:
             return
             
         if not self.endpoints_config:
-            print("Warning: No RPC endpoints configured. Workers will not start.")
+            logger.warning("No RPC endpoints configured. Workers will not start.")
             return
             
-        print(f"Starting {len(self.endpoints_config)} transaction fetcher workers...")
+        logger.debug(f"Starting {len(self.endpoints_config)} transaction fetcher workers...")
         
         # Create worker queues that will be shared between dispatcher and workers
         self.worker_queues = {i: asyncio.Queue() for i in range(len(self.endpoints_config))}
@@ -123,14 +122,14 @@ class SolanaTransactionFetcher:
         self.worker_tasks.append(dispatcher_task)
         
         self.workers_started = True
-        print(f"Transaction fetcher started with {len(self.worker_tasks)-1} workers and 1 dispatcher")
+        logger.info(f"Transaction fetcher started with {len(self.worker_tasks)-1} workers and 1 dispatcher")
     
     def _load_rpc_endpoints_from_env(self) -> List[EndpointConfig]:
         """Loads and parses RPC endpoints and their RPS limits from .env file."""
         load_dotenv()
         endpoints_str = os.getenv("SOLANA_RPC_ENDPOINTS")
         if not endpoints_str:
-            print("Warning: SOLANA_RPC_ENDPOINTS not found in .env file or environment variables.")
+            logger.error("SOLANA_RPC_ENDPOINTS not found in .env file or environment variables.")
             return []
 
         endpoints_config: List[EndpointConfig] = []
@@ -146,10 +145,10 @@ class SolanaTransactionFetcher:
                     raise ValueError("RPS must be positive")
                 endpoints_config.append({"url": url.strip(), "rps": rps})
             except ValueError:
-                print(f"Warning: Skipping invalid endpoint format: '{part}'. Expected format: URL:RPS")
+                logger.warning(f"Skipping invalid endpoint format: '{part}'. Expected format: URL:RPS")
         
         if not endpoints_config:
-            print("Warning: No valid RPC endpoints were loaded.")
+            logger.error("No valid RPC endpoints were loaded.")
              
         return endpoints_config
     
@@ -158,7 +157,7 @@ class SolanaTransactionFetcher:
         Dispatcher that assigns transactions to workers.
         Ensures that a transaction is not assigned to workers that previously failed to fetch it.
         """
-        print("Transaction dispatcher started")
+        logger.info("Transaction dispatcher started")
         
         # Track last worker assigned to distribute work in a round-robin fashion
         last_worker_id = -1
@@ -199,7 +198,7 @@ class SolanaTransactionFetcher:
                         
                         # If all workers have failed, mark as failed and complete
                         if len(failed_workers) >= total_workers:
-                            print(f"[Dispatcher]: All workers have failed for {sig_str[:10]} - giving up")
+                            logger.warning(f"[Dispatcher]: All workers have failed for {sig_str[:10]} - giving up")
                             
                             with self._lock:
                                 self.results_dict[sig_str] = None  # No data available
@@ -246,12 +245,12 @@ class SolanaTransactionFetcher:
                                 self.request_queue.task_done()
                                 break
 
-                    print(f"[Dispatcher]: Assigned transactions to workers: {dispatch_results}")
+                    logger.debug(f"[Dispatcher]: Assigned transactions to workers: {dispatch_results}")
             except Exception as e:
-                print(f"[Dispatcher]: Error in dispatcher: {e}")
+                logger.error(f"[Dispatcher]: Error in dispatcher: {e}")
                 await asyncio.sleep(0.1)  # Prevent fast spinning on errors
                 
-        print("[Dispatcher]: Exiting task.")
+        logger.info("[Dispatcher]: Exiting task.")
     
     async def _rpc_worker(
         self,
@@ -273,7 +272,7 @@ class SolanaTransactionFetcher:
         # Maximum parallel requests
         max_parallel_requests = requests_per_second * 2
         
-        print(f"[Worker {worker_id} ({url[:40]})]: Starting. Rate limit: {requests_per_second} req/sec, max parallel: {max_parallel_requests}")
+        logger.debug(f"[Worker {worker_id} ({url[:40]})]: Starting. Rate limit: {requests_per_second} req/sec, max parallel: {max_parallel_requests}")
         
         # Use the worker's dedicated queue
         worker_queue = self.worker_queues[worker_id]
@@ -299,7 +298,7 @@ class SolanaTransactionFetcher:
             async def process_request(signature, result_callback, completion_event, retry_count, sig_str, callback_params=None):
                 """Process a single transaction fetch request"""
                 try:
-                    print(f"[Worker {worker_id} ({url[:40]})]: Fetching transaction {sig_str[:10]}... (retry: {retry_count})")
+                    logger.debug(f"[Worker {worker_id} ({url[:40]})]: Fetching transaction {sig_str[:10]}... (retry: {retry_count})")
                     rpc_result = await client.get_transaction(
                         signature,
                         encoding="jsonParsed",
@@ -308,7 +307,7 @@ class SolanaTransactionFetcher:
                     
                     # Check if the RPC returned None for value (transaction not available)
                     if rpc_result.value is None:
-                        print(f"[Worker {worker_id} ({url[:40]})]: RPC returned None value for {sig_str[:10]}")
+                        logger.debug(f"[Worker {worker_id} ({url[:40]})]: RPC returned None value for {sig_str[:10]}")
                         
                         # Mark this worker as having failed for this transaction
                         with self.dispatcher_lock:
@@ -337,10 +336,10 @@ class SolanaTransactionFetcher:
                                     lambda: result_callback(str(signature), rpc_result.value, None)
                                 )
                             if callback_result is not None:
-                                print(f"[Worker {worker_id} ({url[:40]})]: Using callback return value for {sig_str[:10]}.")
+                                logger.debug(f"[Worker {worker_id} ({url[:40]})]: Using callback return value for {sig_str[:10]}.")
                                 final_result = callback_result
                         except Exception as cb_e:
-                            print(f"[Worker {worker_id} ({url[:40]})]: Error in user callback for {sig_str[:10]}: {cb_e}")
+                            logger.error(f"[Worker {worker_id} ({url[:40]})]: Error in user callback for {sig_str[:10]}: {cb_e}")
                     
                     with self.dispatcher_lock:
                         # Clean up tracking since this transaction was successfully processed
@@ -356,14 +355,14 @@ class SolanaTransactionFetcher:
                         completion_event.set()
                             
                 except SolanaRpcException as e:
-                    print(f"[Worker {worker_id} ({url[:40]})]: SolanaRpcException for {sig_str[:10]}: {e}")
+                    logger.error(f"[Worker {worker_id} ({url[:40]})]: SolanaRpcException for {sig_str[:10]}: {e}")
                     await handle_failure(e, signature, sig_str, result_callback, completion_event, retry_count, callback_params)
                 except asyncio.TimeoutError:
-                    print(f"[Worker {worker_id} ({url[:40]})]: Timeout fetching {sig_str[:10]}")
+                    logger.error(f"[Worker {worker_id} ({url[:40]})]: Timeout fetching {sig_str[:10]}")
                     await handle_failure(TimeoutError(f"Request timed out for {signature}"), 
                                          signature, sig_str, result_callback, completion_event, retry_count, callback_params)
                 except Exception as e:
-                    print(f"[Worker {worker_id} ({url[:40]})]: Unexpected error for {sig_str[:10]}: {e}")
+                    logger.error(f"[Worker {worker_id} ({url[:40]})]: Unexpected error for {sig_str[:10]}: {e}")
                     await handle_failure(e, signature, sig_str, result_callback, completion_event, retry_count, callback_params)
 
             # Main worker loop
@@ -432,7 +431,7 @@ class SolanaTransactionFetcher:
                 # Get result to ensure exceptions are raised
                 task.result()
             except Exception as e:
-                print(f"[Worker {worker_id} ({url[:40]})]: Unhandled task exception for {sig_str[:10]}: {e}")
+                logger.error(f"[Worker {worker_id} ({url[:40]})]: Unhandled task exception for {sig_str[:10]}: {e}")
 
     @timing_decorator
     def getMultipleTransactions(

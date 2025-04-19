@@ -1,5 +1,3 @@
-import logging
-import time
 from typing import Dict, List, Optional, Set, Tuple, Any
 import networkx as nx
 
@@ -12,7 +10,7 @@ from GrafolanaBack.domain.transaction.models.graphspace import Graphspace
 from GrafolanaBack.domain.transaction.models.swap import TransferAccountAddresses
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.transaction.utils.utils import get_sol_price, get_token_price
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class GraphService:
     """
@@ -241,7 +239,7 @@ class GraphService:
 
         # Return what we have with a warning if we hit the limit
         if iterations > max_iterations:
-            log.warning(f"Price derivation hit iteration limit for transaction. Partial derivation returned. Transaction signature: {context.transaction_signature}")
+            logger.warning(f"Price derivation hit iteration limit for transaction. Partial derivation returned. Transaction signature: {context.transaction_signature}")
 
         return mint_price_map
     

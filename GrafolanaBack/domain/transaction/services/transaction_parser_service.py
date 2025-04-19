@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Optional, Set, Tuple, Any, cast
 
 from solders.signature import Signature
@@ -19,8 +18,7 @@ from GrafolanaBack.domain.transaction.services.transaction_service import Transa
 from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction, get_instruction_call_stack
 from GrafolanaBack.domain.caching.cache_utils import cache
 from GrafolanaBack.domain.rpc.rpc_connection_utils import client
-
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class TransactionParserService:
     """
@@ -50,7 +48,7 @@ class TransactionParserService:
         """
         
         if encoded_transaction.transaction.meta.err:
-            log.error(f"Transaction {transaction_signature} has an error: {encoded_transaction.transaction.meta.err.to_json()}")
+            logger.info(f"Transaction {transaction_signature} has an error: {encoded_transaction.transaction.meta.err.to_json()}")
             return None
 
         # Create an empty graph and repositories
@@ -131,7 +129,7 @@ class TransactionParserService:
         # Fetch the transaction
         encoded_transaction = self._get_transaction(Signature.from_string(transaction_signature))
         if not encoded_transaction:
-            log.error(f"Transaction {transaction_signature} not found")
+            logger.error(f"Transaction {transaction_signature} not found")
             return None
         
         graph_data = self.parse_and_get_graph_data(transaction_signature, encoded_transaction, {})
@@ -142,7 +140,7 @@ class TransactionParserService:
         # Parse the transaction and get the context
         context = self.parse_transaction(transaction_signature, encoded_transaction)
         if not context:
-            log.error(f"Failed to parse transaction: {transaction_signature}")
+            logger.error(f"Failed to parse transaction: {transaction_signature}")
             return {"nodes": [], "links": [], "swaps": [], "fees": {"fee": 0, "priority_fee": 0}}
         
         # Use GraphService to generate the frontend-friendly format
@@ -234,7 +232,7 @@ class TransactionParserService:
                 return None
             return response.value
         except Exception as error:
-            log.error(f"Error fetching transaction {str(signature)}: {str(error)}", exc_info=True)
+            logger.error(f"Error fetching transaction {str(signature)}: {str(error)}", exc_info=True)
             return None    
 
     def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, graphBuilderService: GraphBuilderService, parent_swap_id: int = None) -> None:

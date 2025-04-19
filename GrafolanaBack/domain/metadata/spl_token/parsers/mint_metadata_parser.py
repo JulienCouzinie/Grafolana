@@ -19,6 +19,7 @@ from GrafolanaBack.domain.metadata.spl_token.config.token_defaults import TOKEN_
 from GrafolanaBack.domain.logging.logging import mint_logger
 from GrafolanaBack.domain.caching.cache_utils import cache
 from GrafolanaBack.domain.transaction.config.constants import SOL
+from GrafolanaBack.domain.logging.logging import logger
 
 # Constants
 METAPLEX_PROGRAM_ID = Pubkey.from_string("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
@@ -155,7 +156,7 @@ class SolanaTokenFetcher:
                 
             async with self.http_session.get(uri, timeout=10) as response:
                 if response.status != 200:
-                    print(f"Failed to fetch metadata from {uri}: {response.status}")
+                    logger.error(f"Failed to fetch metadata from {uri}: {response.status}")
                     return None
                     
                 data = await response.json()
@@ -175,7 +176,7 @@ class SolanaTokenFetcher:
                 )
                 
         except (aiohttp.ClientError, asyncio.TimeoutError, json.JSONDecodeError) as e:
-            print(f"Error fetching off-chain metadata from {uri}: {str(e)}")
+            logger.error(f"Error fetching off-chain metadata from {uri}: {str(e)}")
             return None
 
     async def fetch_multiple_tokens(self, mint_addresses: List[str]) -> List[Mint]:
@@ -229,7 +230,7 @@ class SolanaTokenFetcher:
                     mint_info.address = mint_addr
                     token_data.mint_info = mint_info
                 except Exception as e:
-                    print(f"Error parsing mint data for {mint_addr}: {str(e)}")
+                    logger.error(f"Error parsing mint data for {mint_addr}: {str(e)}")
             
             # Process metadata account if available
             metadata_pda = metadata_pdas[i]
@@ -252,7 +253,7 @@ class SolanaTokenFetcher:
                             token_data.off_chain_metadata = token_defaults.off_chain_metadata
                         
                 except Exception as e:
-                    print(f"Error parsing metadata for mint {mint_addr}: {str(e)}")
+                    logger.error(f"Error parsing metadata for mint {mint_addr}: {str(e)}")
             
             token_data_list.append(token_data)
                 

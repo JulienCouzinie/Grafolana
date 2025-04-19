@@ -1,10 +1,8 @@
 import time
 import functools
-import logging
 from typing import Dict, List, Optional
 from collections import defaultdict
 
-logger = logging.getLogger(__name__)
 
 class TimingStats:
     _instance = None

@@ -1,12 +1,9 @@
-import logging
 from typing import Dict, List, Optional, Set, Any, Tuple
 
 from GrafolanaBack.domain.transaction.models.graph import TransactionGraph
 from GrafolanaBack.domain.transaction.models.swap import Swap, TransferAccountAddresses
 from GrafolanaBack.domain.transaction.repositories.account_repository import AccountRepository
-
-
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class TransactionContext:
     """
@@ -75,7 +72,7 @@ class TransactionContext:
             # (if for some reason the computation produces an unreasonably large number)
             MAX_REASONABLE_PRIORITY_FEE = 1_000_000_000  # 1 SOL in lamports
             if self.priority_fee > MAX_REASONABLE_PRIORITY_FEE:
-                log.warning(f"Computed priority fee exceeds reasonable maximum: {self.priority_fee}. Capping at {MAX_REASONABLE_PRIORITY_FEE}.")
+                logger.warning(f"Computed priority fee exceeds reasonable maximum: {self.priority_fee}. Capping at {MAX_REASONABLE_PRIORITY_FEE}.")
                 self.priority_fee = MAX_REASONABLE_PRIORITY_FEE
             
     def add_swap(self, router:bool,

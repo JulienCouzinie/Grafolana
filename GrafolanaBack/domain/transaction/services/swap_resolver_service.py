@@ -1,4 +1,3 @@
-import logging
 import networkx as nx
 from typing import Dict, List, Optional, Set, Tuple, Any
 
@@ -7,8 +6,7 @@ from GrafolanaBack.domain.transaction.models.graph import TransactionGraph, Tran
 from GrafolanaBack.domain.transaction.models.swap import Swap, TransferAccountAddresses
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.transaction.repositories.account_repository import AccountRepository
-
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class SwapResolverService:
     """
@@ -60,7 +58,7 @@ class SwapResolverService:
         user_source_vertex = min(user_source_vertices, key=lambda v: v.version) if user_source_vertices else None
         user_dest_vertex = max(user_dest_vertices, key=lambda v: v.version) if user_dest_vertices else None
         if (user_source_vertex is None) or (user_dest_vertex is None):
-            log.error(f"user vertices not found for swap {swap}, source: {user_source_vertex}, destination: {user_dest_vertex}, tx: {transaction_context.transaction_signature}")
+            logger.error(f"user vertices not found for swap {swap}, source: {user_source_vertex}, destination: {user_dest_vertex}, tx: {transaction_context.transaction_signature}")
             return
 
         swap_pools : List[AccountVertex]= []
@@ -89,15 +87,15 @@ class SwapResolverService:
         pool_dest_vertex: AccountVertex = max(pool_dest_vertices, key=lambda v: v.version) if pool_dest_vertices else None
         pool_source_vertex: AccountVertex = min(pool_source_vertices, key=lambda v: v.version) if pool_source_vertices else None
         if (pool_dest_vertex is None) or (pool_source_vertex is None):
-            log.error(f"pool vertices not found for swap {swap}, source: {user_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
+            logger.error(f"pool vertices not found for swap {swap}, source: {user_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
             return
 
-        log.debug("finding paths for:  user_source_vertex:", user_source_vertex, "pool_dest_vertex", pool_dest_vertex)
+        logger.debug("finding paths for:  user_source_vertex:", user_source_vertex, "pool_dest_vertex", pool_dest_vertex)
         # Find path from user_source to pool_destination
         try:
             path_a = nx.shortest_path(subgraph, user_source_vertex, pool_dest_vertex)
             if len(path_a) < 2:
-                log.error(f"path user -> pool too short for swap {swap}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
+                logger.error(f"path user -> pool too short for swap {swap}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
                 return
             _ , _ , data = transaction_context.graph.get_last_transfer(path_a, subgraph)
             amount_in = sum(edge_data["amount_destination"] for edge_data in data.values())
@@ -108,15 +106,15 @@ class SwapResolverService:
 
         except nx.NetworkXNoPath:
             # Handle case where path doesn't exist
-            log.error(f"path doesn't exist for swap {swap}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
+            logger.error(f"path doesn't exist for swap {swap}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
             return
 
-        log.debug("finding paths for:  pool_source_vertex:", pool_source_vertex, "user_dest_vertex", user_dest_vertex)
+        logger.debug("finding paths for:  pool_source_vertex:", pool_source_vertex, "user_dest_vertex", user_dest_vertex)
         # Find path from pool_source to user_destination
         try:
             path_b = nx.shortest_path(subgraph, pool_source_vertex, user_dest_vertex)
             if len(path_b) < 2:
-                log.error(f"path pool -> user too short for swap {swap}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
+                logger.error(f"path pool -> user too short for swap {swap}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
                 return
             _ , _ , data = transaction_context.graph.get_first_transfer(path_b, subgraph)
             real_swap_amount_out = sum(edge_data["amount_source"] for edge_data in data.values())
@@ -136,7 +134,7 @@ class SwapResolverService:
 
         except nx.NetworkXNoPath:
             # Handle case where path doesn't exist
-            log.error(f"path doesn't exist for swap {swap}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
+            logger.error(f"path doesn't exist for swap {swap}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
             return
         
         swap.fee = real_swap_amount_out - amount_out
@@ -153,7 +151,7 @@ class SwapResolverService:
                     ),
                     key = swap_transfer_key)
         
-        log.info(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
+        logger.info(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
     
     def _calculate_amount_in_from_balance_changes(self, graph: TransactionGraph, swap: Swap) -> int:
         """

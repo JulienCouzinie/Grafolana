@@ -1,4 +1,3 @@
-import logging
 import json
 import threading
 from typing import Dict, List, Optional, Union, Any, Callable
@@ -12,8 +11,7 @@ from GrafolanaBack.domain.transaction.repositories.transaction_repository import
 from GrafolanaBack.domain.rpc.rpc_connection_utils import client
 from GrafolanaBack.domain.rpc.rpc_acync_transaction_fetcher import fetcher
 from GrafolanaBack.domain.performance.timing_utils import timing_decorator
-
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class TransactionService:
     """
@@ -54,12 +52,12 @@ class TransactionService:
         # First, try to get from database
         db_transaction = self.transaction_repository.get_transaction(signature_str)
         if db_transaction:
-            log.debug(f"Transaction {signature_str[:10]}... found in database")
+            logger.debug(f"Transaction {signature_str[:10]}... found in database")
             # Parse the stored JSON back to EncodedConfirmedTransactionWithStatusMeta
             return EncodedConfirmedTransactionWithStatusMeta.from_json(json.dumps(db_transaction))
             
         # Not in database, fetch from RPC
-        log.debug(f"Transaction {signature_str[:10]}... not found in database, fetching from RPC")
+        logger.debug(f"Transaction {signature_str[:10]}... not found in database, fetching from RPC")
         try:
             # Convert to Signature object if it's a string
             sig_obj = signature if isinstance(signature, Signature) else Signature.from_string(signature_str)
@@ -72,7 +70,7 @@ class TransactionService:
             )
             
             if response.value is None:
-                log.warning(f"Transaction {signature_str[:10]}... not found on RPC")
+                logger.warning(f"Transaction {signature_str} not found on RPC")
                 return None
                 
             # Store the transaction in the database asynchronously
@@ -83,7 +81,7 @@ class TransactionService:
             return response.value
             
         except Exception as e:
-            log.error(f"Error fetching transaction {signature_str[:10]}...: {str(e)}", exc_info=True)
+            logger.error(f"Error fetching transaction {signature_str}: {str(e)}", exc_info=True)
             return None
     
     @timing_decorator
@@ -121,11 +119,11 @@ class TransactionService:
         # Process database results and identify missing transactions
         for sig in signature_strs:
             if sig in db_transactions:
-                log.debug(f"Transaction {sig[:10]}... found in database")
+                logger.debug(f"Transaction {sig[:10]}... found in database")
                 # Parse the stored JSON back to EncodedConfirmedTransactionWithStatusMeta
                 results[sig] = EncodedConfirmedTransactionWithStatusMeta.from_json(json.dumps(db_transactions[sig]))
             else:
-                log.debug(f"Transaction {sig[:10]}... not found in database")
+                logger.debug(f"Transaction {sig[:10]}... not found in database")
                 missing_signatures.append(sig)
         
         # If all transactions were found in the database, return early
@@ -134,7 +132,7 @@ class TransactionService:
             rpc_signatures = [Signature.from_string(sig) for sig in missing_signatures]
             
             # Fetch missing transactions from RPC in batch
-            log.debug(f"Fetching {len(missing_signatures)} transactions from RPC")
+            logger.debug(f"Fetching {len(missing_signatures)} transactions from RPC")
             try:
                 # Use the batch RPC fetcher
                 rpc_results = fetcher.getMultipleTransactions(
@@ -150,7 +148,7 @@ class TransactionService:
                         results[sig_str] = None
                         
             except Exception as e:
-                log.error(f"Error fetching multiple transactions: {str(e)}", exc_info=True)
+                logger.error(f"Error fetching multiple transactions: {str(e)}", exc_info=True)
                 # For any signatures we couldn't fetch, set to None
                 for sig in missing_signatures:
                     if sig not in results:
@@ -213,7 +211,7 @@ class TransactionService:
                 results_dict[signature] = result
                 
         except Exception as e:
-            log.error(f"Error processing callback for transaction {signature}...: {str(e)}", exc_info=True)
+            logger.error(f"Error processing callback for transaction {signature}: {str(e)}", exc_info=True)
             # On error, use the original transaction data
             with threading.Lock():
                 results_dict[signature] = tx_data
@@ -233,11 +231,11 @@ class TransactionService:
             EncodedConfirmedTransactionWithStatusMeta object or None if there was an error
         """
         if error is not None:
-            log.warning(f"Error fetching transaction {signature[:10]}...: {str(error)}")
+            logger.warning(f"Error fetching transaction {signature}: {str(error)}")
             return None
             
         if tx_data is None:
-            log.warning(f"Transaction {signature[:10]}... not found on RPC")
+            logger.warning(f"Transaction {signature} not found on RPC")
             return None
         
         try:
@@ -250,7 +248,7 @@ class TransactionService:
             return tx_data
             
         except Exception as e:
-            log.error(f"Error processing fetched transaction {signature[:10]}...: {str(e)}", exc_info=True)
+            logger.error(f"Error processing fetched transaction {signature}: {str(e)}", exc_info=True)
             return None
             
     def _async_store_transaction(self, signature: str, tx_json: dict):
@@ -273,11 +271,11 @@ class TransactionService:
         """
         try:
             self.transaction_repository.save_transaction(signature, tx_json)
-            log.debug(f"Stored transaction {signature[:10]}... in database")
+            logger.debug(f"Stored transaction {signature[:10]} in database")
         except SQLAlchemyError as e:
-            log.error(f"Database error storing transaction {signature[:10]}...: {str(e)}", exc_info=True)
+            logger.error(f"Database error storing transaction {signature}: {str(e)}", exc_info=True)
         except Exception as e:
-            log.error(f"Error storing transaction {signature[:10]}...: {str(e)}", exc_info=True)
+            logger.error(f"Error storing transaction {signature}: {str(e)}", exc_info=True)
 
     def cleanup(self):
         """

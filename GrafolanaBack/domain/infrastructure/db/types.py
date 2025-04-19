@@ -2,6 +2,7 @@ import json
 import zlib  # Or import gzip, bz2, lzma
 from sqlalchemy.types import TypeDecorator, LargeBinary
 from sqlalchemy.dialects.postgresql import BYTEA # More specific PG type
+from GrafolanaBack.domain.logging.logging import logger
 
 class CompressedJSON(TypeDecorator):
     """
@@ -36,7 +37,7 @@ class CompressedJSON(TypeDecorator):
                 return compressed_data
             except Exception as e:
                 # Handle potential errors during serialization/compression
-                print(f"Error compressing JSON: {e}")
+                logger.error(f"Error compressing JSON: {e}")
                 # Depending on requirements, you might raise the exception,
                 # return None, or store an error marker.
                 # Returning None might cause issues if the column is NOT NULL.
@@ -56,7 +57,7 @@ class CompressedJSON(TypeDecorator):
                 return json.loads(json_string)
             except (zlib.error, json.JSONDecodeError, UnicodeDecodeError) as e:
                  # Handle potential errors during decompression/deserialization
-                print(f"Error decompressing/decoding JSON from DB: {e}")
+                logger.error(f"Error decompressing/decoding JSON from DB: {e}")
                 # Decide how to handle corrupted data. Return None, raise, or return a special marker.
                 return None # Or raise, depending on desired behavior
         return None

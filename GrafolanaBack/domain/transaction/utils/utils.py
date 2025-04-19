@@ -5,8 +5,7 @@ from urllib3.util.retry import Retry
 from GrafolanaBack.domain.transaction.config.constants import REFERENCE_COINS, USD_STABLE
 from GrafolanaBack.domain.performance.timing_utils import timing_decorator
 from GrafolanaBack.domain.caching.cache_utils import cache
-import logging
-logger = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 # Create a persistent session for reuse
 _session = requests.Session()

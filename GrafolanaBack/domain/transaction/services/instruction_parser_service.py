@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Optional, Set, Tuple, Any
 
 from GrafolanaBack.domain.transaction.models.swap import Swap
@@ -13,8 +12,6 @@ from GrafolanaBack.domain.transaction.parsers.instruction_parsers import (
 from GrafolanaBack.domain.transaction.services.graph_builder_service import GraphBuilderService
 from GrafolanaBack.domain.transaction.services.swap_parser_service import SwapParserService
 from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction
-
-log = logging.getLogger(__name__)
 
 class InstructionParserService:
     """

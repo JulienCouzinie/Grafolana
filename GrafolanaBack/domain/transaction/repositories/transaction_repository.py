@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Any
 from ..models.transaction import SolanaTransaction
 from GrafolanaBack.domain.infrastructure.db.session import get_session, close_session
+from GrafolanaBack.domain.logging.logging import logger
 
 class TransactionRepository:
     """
@@ -43,7 +44,7 @@ class TransactionRepository:
             return True
         except Exception as e:
             session.rollback()
-            print(f"Error saving transaction {transaction_signature}: {e}")
+            logger.error(f"Error saving transaction {transaction_signature}: {e}")
             return False
         finally:
             close_session(session)
@@ -66,7 +67,7 @@ class TransactionRepository:
                 return transaction.transaction_json
             return None
         except Exception as e:
-            print(f"Error retrieving transaction {transaction_signature}: {e}")
+            logger.error(f"Error retrieving transaction {transaction_signature}: {e}")
             return None
         finally:
             close_session(session)
@@ -97,7 +98,7 @@ class TransactionRepository:
                 
             return result
         except Exception as e:
-            print(f"Error retrieving transactions: {e}")
+            logger.error(f"Error retrieving transactions: {e}")
             return result
         finally:
             close_session(session)
@@ -123,7 +124,7 @@ class TransactionRepository:
             return False
         except Exception as e:
             session.rollback()
-            print(f"Error deleting transaction {transaction_signature}: {e}")
+            logger.error(f"Error deleting transaction {transaction_signature}: {e}")
             return False
         finally:
             close_session(session)
@@ -140,7 +141,7 @@ class TransactionRepository:
         try:
             return session.query(SolanaTransaction).count()
         except Exception as e:
-            print(f"Error counting transactions: {e}")
+            logger.error(f"Error counting transactions: {e}")
             return 0
         finally:
             close_session(session)

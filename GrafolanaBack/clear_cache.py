@@ -1,6 +1,7 @@
 from GrafolanaBack.domain.caching.cache_utils import clear_cache
+from GrafolanaBack.domain.logging.logging import logger
 
 if __name__ == "__main__":
-    print("Clearing cache...")
+    logger.info("Clearing cache...")
     clear_cache()
-    print("Cache cleared!")
+    logger.info("Cache cleared!")

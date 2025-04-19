@@ -1,5 +1,3 @@
-import logging
-import time
 from typing import Dict, List, Optional, Tuple, Union
 import requests
 from sqlalchemy.orm import Session
@@ -8,8 +6,7 @@ from GrafolanaBack.domain.prices.models import SOLPrice
 from GrafolanaBack.domain.prices.repository import SOLPriceRepository
 from GrafolanaBack.domain.prices.sol_price_utils import round_timestamp_to_minute
 from GrafolanaBack.domain.infrastructure.db.session import get_session
-
-logger = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 # Create a persistent session for reuse to avoid connection overhead
 _session = requests.Session()
@@ -61,7 +58,7 @@ class SOLPriceService:
             return price_record.price
             
         # If not in database, fetch from API
-        logger.info(f"SOL price not found in database for timestamp {rounded_timestamp}, fetching from API")
+        logger.debug(f"SOL price not found in database for timestamp {rounded_timestamp}, fetching from API")
         price: Optional[float] = self._fetch_price_from_api(rounded_timestamp)
         
         # If we got a price from the API, save it to the database for future use
@@ -116,7 +113,7 @@ class SOLPriceService:
         
         # Fetch remaining prices from API if needed
         if missing_timestamps:
-            logger.info(f"Fetching {len(missing_timestamps)} missing SOL prices from API")
+            logger.debug(f"Fetching {len(missing_timestamps)} missing SOL prices from API")
             api_prices: Dict[int, Optional[float]] = self._fetch_prices_from_api_batch(missing_timestamps)
             
             # Add API results to our result set

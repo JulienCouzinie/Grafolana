@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
 from typing import Dict, List, Optional, Set, Tuple, Any, Generic, TypeVar
 import networkx as nx
 from networkx import MultiDiGraph
@@ -9,7 +8,7 @@ from networkx import Graph
 
 from GrafolanaBack.domain.transaction.models.account import AccountVertex
 from GrafolanaBack.domain.transaction.models.swap import Swap
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 T = TypeVar('T')
 
@@ -319,7 +318,7 @@ class TransactionGraph:
                     if data.get('swap_parent_id') == swap.id]
         
         if not swap_edges:
-            log.warning(f"No edges found for swap {swap.id}")
+            logger.warning(f"No edges found for swap {swap.id}")
             return
         
         # Create a new subgraph with just these edges
