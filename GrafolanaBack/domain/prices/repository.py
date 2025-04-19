@@ -10,12 +10,14 @@ class SOLPriceRepository:
 
     def bulk_set_prices(self, prices: List[Tuple[int, float]]) -> None:
         """
-        Inserts multiple SOL price records into the database.
+        Inserts multiple SOL price records into the database using modern SQLAlchemy patterns.
         
         :param prices: List of tuples containing (timestamp, price)
         """
+        # Create SOLPrice objects
         price_objects = [SOLPrice(timestamp=timestamp, price=price) for timestamp, price in prices]
-        self.session.bulk_save_objects(price_objects)
+        
+        self.session.add_all(price_objects)
         self.session.commit()
 
     def bulk_get_prices(self, start_time: int, end_time: int) -> List[SOLPrice]:
