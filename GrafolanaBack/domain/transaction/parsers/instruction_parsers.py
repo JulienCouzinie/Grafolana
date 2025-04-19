@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Set, Tuple, Any
-import logging
 
 from GrafolanaBack.domain.transaction.models.account import AccountType
 from GrafolanaBack.domain.transaction.models.graph import TransferProperties, TransferType
@@ -9,8 +8,7 @@ from GrafolanaBack.domain.transaction.config.constants import COMPUTE_BUDGET_PRO
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.transaction.services.graph_builder_service import GraphBuilderService
 from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction, decode_discriminator, decode_instruction_data
-
-log = logging.getLogger(__name__)
+from GrafolanaBack.domain.logging.logging import logger
 
 class InstructionParser(ABC):
     """Base class for instruction parsers using the Strategy pattern."""
