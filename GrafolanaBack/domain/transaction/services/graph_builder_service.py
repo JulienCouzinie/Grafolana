@@ -264,8 +264,18 @@ class GraphBuilderService:
         Add fee transfers to the graph.
         """
         # Add fee transfer from fee payer to fee account
-        fee_payer_account_version = self.prepare_source_account_version(transactionContext.fee_payer,amount_lamport=transactionContext.fee)
-        fee_account = self.prepare_destination_account_version(fee_payer_account_version, FEE, amount_lamport=transactionContext.fee)
+        fee_payer_account_version = self.prepare_source_account_version(
+            source_address = transactionContext.fee_payer,
+            amount_lamport = transactionContext.fee
+        )
+
+        fee_account = self.prepare_destination_account_version(
+            account_version_source = fee_payer_account_version, 
+            destination_address = FEE,
+            amount_lamport = transactionContext.fee,
+            account_type = AccountType.FEE_ACCOUNT)
+        
+        # Add fee transfer from fee payer to fee account
         self.transactionContext.graph.add_edge(
             source = fee_payer_account_version.get_vertex(),
             target = fee_account.get_vertex(),
@@ -280,8 +290,17 @@ class GraphBuilderService:
         # Add priority fee transfer from fee payer to fee account
         # Only if priority fee is > 0
         if transactionContext.priority_fee > 0:
-            fee_payer_account_version = self.prepare_source_account_version(transactionContext.fee_payer,amount_lamport=transactionContext.priority_fee)
-            fee_account = self.prepare_destination_account_version(fee_payer_account_version, FEE, amount_lamport=transactionContext.priority_fee)
+            fee_payer_account_version = self.prepare_source_account_version(
+                source_address = transactionContext.fee_payer,
+                amount_lamport = transactionContext.priority_fee)
+            
+            fee_account = self.prepare_destination_account_version(
+                account_version_source = fee_payer_account_version, 
+                destination_address = FEE, 
+                amount_lamport=transactionContext.priority_fee,
+                account_type = AccountType.FEE_ACCOUNT
+            )
+            
             self.transactionContext.graph.add_edge(
                 source = fee_payer_account_version.get_vertex(),
                 target = fee_account.get_vertex(),
