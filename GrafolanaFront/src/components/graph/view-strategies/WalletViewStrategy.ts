@@ -1,4 +1,4 @@
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType } from '@/types/graph';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, AccountVertex, GraphNode, TransferType} from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -7,7 +7,8 @@ import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 
-class AccountViewStrategy extends BaseViewStrategy {
+
+class WalletViewStrategy extends BaseViewStrategy {
   
   // Assign curvature to links based on their duplication
   // and directionality (source to target or target to source)
@@ -77,63 +78,114 @@ class AccountViewStrategy extends BaseViewStrategy {
     return links;
   }
 
-  // Aggregate accounts by address and version
-  // Set the id of the node to the address of the account
-  private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
-    const seen = new Set<string>();
-    const deduplicatedNodes: ForceGraphNode[] = [];
+  private getWalletAddress(node: ForceGraphNode): string {
+    let address;
+    
+    if (node.type==AccountType.SOL_ACCOUNT) {
+      address = node.account_vertex.address;
+    } else {
+      address = node.owner || node.account_vertex.address;
+    }
+    return address;
+  }
 
+  // Aggregate accounts by wallet 
+  // SOL accounts are aggregated by their address
+  // Token accounts are aggregated by their wallet owner
+  // if the owner is not present, the address is used
+  private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
+    const seen = new Map<string, ForceGraphNode>();
+    
     nodes.forEach((node) => {
-      if (!seen.has(node.account_vertex.address)) {
-        seen.add(node.account_vertex.address);
-        node.id = node.account_vertex.address;
-        deduplicatedNodes.push(node);
+      let address = this.getWalletAddress(node);
+      if (!seen.has(address)) {
+        // Create new node of type WALLET_ACCOUNT
+        let aggregatedNode: ForceGraphNode = {
+          id: address,
+          type: AccountType.WALLET_ACCOUNT,
+          account_vertex: new AccountVertex(
+            address, 
+            0, 
+            ''
+          ),
+          mint_address: "SOL",
+          is_pool: false,
+          owner: null,
+          authorities: [],
+          balance_token: 0, 
+          balance_lamport:0, 
+          composite: null
+        };
+        
+        // If the node is not a SOL account, add it to the composite array
+        if (node.type !== AccountType.SOL_ACCOUNT) {
+          aggregatedNode.composite = [node];
+        }
+
+        seen.set(address, aggregatedNode);
+      } else {
+        if (node.type !== AccountType.SOL_ACCOUNT) {
+          const existingNode = seen.get(address)!;
+          if (!existingNode.composite) {
+            existingNode.composite = [];
+          }
+          // Add the node to the composite array of the existing node
+          existingNode.composite.push(node);}
       }
     });
 
-    return deduplicatedNodes;
+    // Convert map values to array
+    const deduplicatedNodes = Array.from(seen.values());
 
+    return deduplicatedNodes;
   }
+
 
   // Aggregate links that have same target and source accounts
   // Aggregate the amounts of the links
   // Keep original links in composite array
-  private aggregateLinks (links: GraphLink[]): GraphLink[]  {
-    const seen = new Set<string>();
-    const deduplicatedLinks: GraphLink[] = [];
+  private aggregateLinks (clonedData: GraphData): GraphLink[]  {
+    const links = clonedData.links;
+    const nodes = clonedData.nodes;
+    const seen = new Map<string,GraphLink>();
+
 
     links.forEach((link) => {
-      const key = `${link.source_account_vertex.address}-${link.target_account_vertex.address}`;
+      let source_node = this.getForceGraphNodebyAccountVertex(nodes, link.source_account_vertex);
+      let target_node = this.getForceGraphNodebyAccountVertex(nodes, link.target_account_vertex);
+      
+      let source_address = this.getWalletAddress(source_node!);
+      let target_address = this.getWalletAddress(target_node!);
+      const key = `${source_address}-${target_address}`;
       // Check if the link has already been seen
       if (!seen.has(key)) {
-        // If not, add it to the deduplicated list
-        // and mark it as seen
-        seen.add(key);
-        link.source = link.source_account_vertex.address;
-        link.target = link.target_account_vertex.address; 
-        deduplicatedLinks.push(link);
+
+        // Create new WALLET_TO_WALLET link
+        let aggregatedlink: ForceGraphLink = {
+          key: 0,
+          transaction_signature: '',
+          program_address: '',
+          source: source_address,
+          target: target_address,
+          source_account_vertex: link.source_account_vertex,
+          target_account_vertex: link.target_account_vertex,
+          amount_source: 0,
+          amount_destination: 0,
+          type: TransferType.WALLET_TO_WALLET,
+          composite: [],
+        };
+
+        aggregatedlink.composite = [link];
+
+        seen.set(key, aggregatedlink);
       } else {
-        // If already seen, find the existing link
-        // and aggregate the amounts
-        const existingLink = deduplicatedLinks.find(
-          (l) => l.source_account_vertex.address === link.source_account_vertex.address && l.target_account_vertex.address === link.target_account_vertex.address
-        );
-        // If found, aggregate the amounts
-        if (existingLink) {
-          // Clone the existing link to keep the original
-          // in the composite array
-          if (!existingLink.composite) {
-            existingLink.composite = [];
-            existingLink.composite.push(cloneDeep(existingLink));
-          }
-          // Add the new link to the composite array
-          // and aggregate the amounts
-          existingLink.composite.push(link);
-          existingLink.amount_source += link.amount_source;
-          existingLink.amount_destination += link.amount_destination;
-        }
+        
+        seen.get(key)!.composite!.push(link);
       }
     });
+
+    // Convert map values to array
+    const deduplicatedLinks = Array.from(seen.values());
 
     return deduplicatedLinks;
   }
@@ -141,12 +193,13 @@ class AccountViewStrategy extends BaseViewStrategy {
   processData (data: GraphData): GraphData{
     this.originalData = data;
     const clonedData = cloneDeep(data);
-    let links = clonedData.links;
-    links = this.aggregateLinks(links);
+    let nodes = this.aggregateAccounts(clonedData.nodes);
+
+    let links = this.aggregateLinks(clonedData);
     links = this.assignLinkCurvature(links);
 
     const processed = {
-      nodes: this.aggregateAccounts(clonedData.nodes),
+      nodes: nodes,
       links: links,
       transactions: clonedData.transactions,
     };
@@ -169,6 +222,27 @@ class AccountViewStrategy extends BaseViewStrategy {
       `
       : '';
 
+    // Create composite list HTML if composite exists
+    const compositeHtml = node.composite && node.composite.length > 0
+      ? `
+        <b>Composite:</b><br/>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${node.composite.map(comp => {
+            // Get mint info and image for composite account
+            const compMintAddress = comp.mint_address;
+            const compMintInfo = compMintAddress ? this.getMintInfo(compMintAddress) : null;
+            const compMintImage = compMintInfo?.image ? this.getMintImage(compMintInfo.image) : null;
+            
+            return `<li>
+              ${compMintImage ? `<img src="${compMintImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; display: inline-block;">` : ''}
+              ${compMintInfo?.symbol ? `${compMintInfo.symbol}: ` : ''}
+              ${comp.account_vertex.address}
+            </li>`;
+          }).join('')}
+        </ul>
+      `
+      : '';
+
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Account:</b> ${node.account_vertex.address}<br/>
@@ -179,10 +253,8 @@ class AccountViewStrategy extends BaseViewStrategy {
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
           ${mintImage ? `<img src="${mintImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
         ` : '<b>Token:</b> SOL<br/>'}
-        <b>Owner:</b> ${node.owner || 'Unknown'}<br/>
-        ${authoritiesHtml}
-        <b>Token Balance:</b> ${node.balance_token}<br/>
-        <b>Lamport Balance:</b> ${node.balance_lamport}
+        ${compositeHtml}
+
       </div>
     `;
   }
@@ -193,79 +265,41 @@ class AccountViewStrategy extends BaseViewStrategy {
   linkTooltip(link: ForceGraphLink): string {
     const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
     const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
-    const imageUrl = this.getProgramInfo(link.program_address)?.icon;
+    const imageUrl = '/logo/wallettowallet.png';
 
-    // Calculate USD values and get mint info
-    const sourceUSD = sourceNode ? this.calculateUSDValue(
-        link.amount_source, 
-        sourceNode.mint_address, 
-        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-    ) : 'N/A';
-    const destinationUSD = destinationNode ? this.calculateUSDValue(
-        link.amount_destination, 
-        destinationNode.mint_address, 
-        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-    ) : 'N/A';
-
-    const mintSource = this.getMintInfo(sourceNode?.mint_address!);
-    const mintDestination = this.getMintInfo(destinationNode?.mint_address!);
-
-    // Get formatted amounts for source and destination
-    const source = this.getAmountDetails(link, mintSource);
-    const destination = this.getAmountDetails(link, mintDestination, true);
-
-    // Format the amount line based on link type
-    const amountLine = link.type === 'SWAP' 
-    ? (() => {
-        // Find the swap details
-        const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
-        let feeAmount = null;
-        let feeUSD = 'N/A';
-        
-        if (swapDetails?.fee) {
-            // Format fee using destination mint decimals
-            const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
-            feeAmount = formattedFee + " " + mintDestination?.symbol;
-            feeUSD = destinationNode ? this.calculateUSDValue(
-                swapDetails.fee,
-                destinationNode.mint_address,
-                this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-        }
-
-        return this.formatSwapAmount(
-            source.amountString, source.imageHTML, sourceUSD,
-            destination.amountString, destination.imageHTML, destinationUSD,
-            feeAmount, feeUSD
-        );
-    })()
-    : this.formatNormalAmount(source.amountString, source.imageHTML, sourceUSD);
+    
 
     // Format composite links if they exist
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
+            // Get source and destination nodes for composite link
+            const compLinkSourceNode = this.originalData!.nodes.find(n => n.account_vertex.address === compLink.source_account_vertex.address);
+            const compLinkDestinationNode = this.originalData!.nodes.find(n => n.account_vertex.address === compLink.target_account_vertex.address);
+
+
             const compSource = this.getAmountDetails(
             compLink, 
-            this.getMintInfo(sourceNode?.mint_address!));
+            this.getMintInfo(compLinkSourceNode!.mint_address!));
             const compDest = this.getAmountDetails(
             compLink,
-            this.getMintInfo(destinationNode?.mint_address!),
+            this.getMintInfo(compLinkDestinationNode!.mint_address!),
             true
             );
 
             // Calculate USD values for the composite link specifically
-            const compSourceUSD = sourceNode ? this.calculateUSDValue(
+            const compSourceUSD = compLinkSourceNode ? this.calculateUSDValue(
                 compLink.amount_source, 
-                sourceNode.mint_address, 
+                compLinkSourceNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
             ) : 'N/A';
-            const compDestUSD = destinationNode ? this.calculateUSDValue(
+            const compDestUSD = compLinkDestinationNode ? this.calculateUSDValue(
                 compLink.amount_destination, 
-                destinationNode.mint_address, 
+                compLinkDestinationNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
             ) : 'N/A';
 
+            console.log("compLink.type", compLink.type);
             return `<li>${
             compLink.type === 'SWAP'
                 ? this.formatSwapAmount(
@@ -285,14 +319,13 @@ class AccountViewStrategy extends BaseViewStrategy {
         <b>Program:</b> ${this.getLabelComputed(link.program_address, 'program', true).label}<br/>
         <b>From:</b> ${link.source_account_vertex.address}<br/>
         <b>To:</b> ${link.target_account_vertex.address}<br/>
-        ${amountLine}
         ${compositesHtml}
     </div>
     `;
   }
 }
 
-export function useAccountViewStrategy(): ViewStrategy {
+export function useWalletViewStrategy(): ViewStrategy {
   const metadataServices = useMetadata();
   const usdServices = useUSDValue();
   const processedDataRef = useRef<GraphData>({
@@ -303,7 +336,7 @@ export function useAccountViewStrategy(): ViewStrategy {
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Create and return strategy instance
-  return new AccountViewStrategy(
+  return new WalletViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,

@@ -1,4 +1,4 @@
-import { GraphData, GraphNode, GraphLink, ProcessedGraphData, ForceGraphLink, ForceGraphNode } from '@/types/graph';
+import { GraphData, GraphNode, GraphLink, ProcessedGraphData, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
@@ -17,6 +17,7 @@ export const SOLANA_COLORS = {
 export abstract class BaseViewStrategy implements ViewStrategy {
     // Common data and state references that all strategies need
     protected processedData: React.RefObject <GraphData>;
+    protected originalData: GraphData | null = null;
     protected hoveredGroup: number | null;
     protected setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>;
     
@@ -42,6 +43,10 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.processedData = processedDataRef;
         this.hoveredGroup = hoveredGroup;
         this.setHoveredGroup = setHoveredGroup;
+    }
+
+    protected getForceGraphNodebyAccountVertex (nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
+     return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
     }
 
     // Shared helper functions
@@ -103,25 +108,31 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         ctx.fill();
 
         if (mintInfo) {
-        // Draw mint logo
-        const imageUrl = mintInfo?.image;
-        const img = this.getMintImage(imageUrl);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(node.x!, node.y!, nodeSize - 1, 0, 2 * Math.PI, false);
-        ctx.clip();
-        
-        const imgSize = (nodeSize) * 2;
-        if (img){
-            ctx.drawImage(
-                img, 
-                node.x! - nodeSize + 1, 
-                node.y! - nodeSize + 1, 
-                imgSize - 2, 
-                imgSize - 2
-            );
-        }
-        ctx.restore();
+            let img;
+            if (node.type == AccountType.WALLET_ACCOUNT){
+                img = new Image();
+                img.src = '/logo/walletblack.png';
+            } else {
+                // Draw mint logo
+                const imageUrl = mintInfo?.image;
+                img = this.getMintImage(imageUrl);
+            }
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(node.x!, node.y!, nodeSize - 1, 0, 2 * Math.PI, false);
+            ctx.clip();
+            
+            const imgSize = (nodeSize) * 2;
+            if (img){
+                ctx.drawImage(
+                    img, 
+                    node.x! - nodeSize + 1, 
+                    node.y! - nodeSize + 1, 
+                    imgSize - 2, 
+                    imgSize - 2
+                );
+            }
+            ctx.restore();
         }
 
         // Draw special icons based on node type
@@ -166,7 +177,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         );
     }
 
-    private formatSwapAmount = (
+    protected formatSwapAmount = (
         sourceAmount: string,
         sourceImage: string,
         sourceUSD: string,
@@ -181,7 +192,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return baseLine + feeLine + '<br/>';
     };
     
-    private formatNormalAmount = (
+    protected formatNormalAmount = (
         amount: string,
         image: string,
         usd: string
@@ -189,12 +200,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return `Amount: ${amount}${image} (${usd})<br/>`;
     };
 
-    private calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
+    protected calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
         return amount / Math.pow(10, mintInfo?.decimals || 0);
     }
     
     
-    private getAmountDetails = (
+    protected getAmountDetails = (
         link: ForceGraphLink,
         mintInfo: MintDTO | null,
         isDestination: boolean = false // Add proper parameter for amount selection
@@ -210,109 +221,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return { amountString, imageHTML };
     };
     
-    linkTooltip(link: ForceGraphLink): string {
-        const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
-        const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
-        const imageUrl = this.getProgramInfo(link.program_address)?.icon;
-
-        // Calculate USD values and get mint info
-        const sourceUSD = sourceNode ? this.calculateUSDValue(
-            link.amount_source, 
-            sourceNode.mint_address, 
-            this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-        ) : 'N/A';
-        const destinationUSD = destinationNode ? this.calculateUSDValue(
-            link.amount_destination, 
-            destinationNode.mint_address, 
-            this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-        ) : 'N/A';
-
-        const mintSource = this.getMintInfo(sourceNode?.mint_address!);
-        const mintDestination = this.getMintInfo(destinationNode?.mint_address!);
-
-        // Get formatted amounts for source and destination
-        const source = this.getAmountDetails(link, mintSource);
-        const destination = this.getAmountDetails(link, mintDestination, true);
-
-        // Format the amount line based on link type
-        const amountLine = link.type === 'SWAP' 
-        ? (() => {
-            // Find the swap details
-            const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
-            let feeAmount = null;
-            let feeUSD = 'N/A';
-            
-            if (swapDetails?.fee) {
-                // Format fee using destination mint decimals
-                const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
-                feeAmount = formattedFee + " " + mintDestination?.symbol;
-                feeUSD = destinationNode ? this.calculateUSDValue(
-                    swapDetails.fee,
-                    destinationNode.mint_address,
-                    this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-                ) : 'N/A';
-            }
-    
-            return this.formatSwapAmount(
-                source.amountString, source.imageHTML, sourceUSD,
-                destination.amountString, destination.imageHTML, destinationUSD,
-                feeAmount, feeUSD
-            );
-        })()
-        : this.formatNormalAmount(source.amountString, source.imageHTML, sourceUSD);
-
-        // Format composite links if they exist
-        const compositesHtml = link.composite 
-        ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
-            ${link.composite.map(compLink => {
-                const compSource = this.getAmountDetails(
-                compLink, 
-                this.getMintInfo(sourceNode?.mint_address!));
-                const compDest = this.getAmountDetails(
-                compLink,
-                this.getMintInfo(destinationNode?.mint_address!),
-                true
-                );
-
-                // Calculate USD values for the composite link specifically
-                const compSourceUSD = sourceNode ? this.calculateUSDValue(
-                    compLink.amount_source, 
-                    sourceNode.mint_address, 
-                    this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-                ) : 'N/A';
-                const compDestUSD = destinationNode ? this.calculateUSDValue(
-                    compLink.amount_destination, 
-                    destinationNode.mint_address, 
-                    this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-                ) : 'N/A';
-
-                return `<li>${
-                compLink.type === 'SWAP'
-                    ? this.formatSwapAmount(
-                        compSource.amountString, compSource.imageHTML, compSourceUSD,
-                        compDest.amountString, compDest.imageHTML, compDestUSD
-                    )
-                    : this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
-                }</li>`;
-            }).join('')}
-            </ul>`
-        : '';
-
-        return `
-        <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
-            <b>Type:</b> ${link.type}<br/>
-            ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-            <b>Program:</b> ${this.getLabelComputed(link.program_address, 'program', true).label}<br/>
-            <b>From:</b> ${link.source_account_vertex.address}<br/>
-            <b>To:</b> ${link.target_account_vertex.address}<br/>
-            ${amountLine}
-            ${compositesHtml}
-        </div>
-        `;
-    }
-
     // Abstract methods that must be implemented by derived classes
     abstract processData(data: GraphData): GraphData;
     abstract nodeTooltip(node: GraphNode): string;
     abstract linkCanvasObject(link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number): void;
+    abstract linkTooltip(link: GraphLink): string;
 }

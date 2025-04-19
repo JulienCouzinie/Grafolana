@@ -11,9 +11,43 @@ export class AccountVertex {
         this.version = version;
     }
     get id(): string {
-        //console.log("AccountVertex id called");
         return this.address + "_v" + this.version + "_t" + this.transaction_signature;
     }
+}
+
+/**
+ * Enum representing all possible account types in the system
+ */
+export enum AccountType {
+    WALLET_ACCOUNT = "WALLET_ACCOUNT", // Type added for the wallet view
+    BURN_ACCOUNT = "BURN_ACCOUNT",
+    MINTTO_ACCOUNT = "MINTTO_ACCOUNT",
+    STAKE_ACCOUNT = "STAKE_ACCOUNT", 
+    TOKEN_ACCOUNT = "TOKEN_ACCOUNT",
+    SOL_ACCOUNT = "SOL_ACCOUNT",
+    FEE_ACCOUNT = "FEE_ACCOUNT",
+    UNKNOWN = "UNKNOWN"
+}
+
+/**
+ * Enum representing all possible edges types in the system
+ */
+export enum TransferType {
+    WALLET_TO_WALLET = "WALLET_TO_WALLET", // Type added for the wallet view
+    TRANSFER = "TRANSFER",
+    CREATE_ACCOUNT = "CREATEACCOUNT",
+    CLOSE_ACCOUNT = "CLOSEACCOUNT",
+    BURN = "BURN",
+    MINTTO= "MINTTO",
+    NATIVE_SOL = "NATIVE_SOL",
+    SWAP = "SWAP",
+    FEE = "FEE",
+    AUTHORIZE = "AUTHORIZE",
+    PRIORITY_FEE = "PRIORITYFEE",
+    SPLIT = "SPLIT",
+    TRANSFERCHECKED = "TRANSFERCHECKED",
+    WITHDRAW = "WITHDRAW",
+    NEW_TRANSACTION = "NEW_TRANSACTION"
 }
 
 // Base interface for graph node data
@@ -24,8 +58,9 @@ export interface GraphNode {
     authorities: string[]
     balance_token: number;
     balance_lamport: number;
-    type: string;
+    type: AccountType;
     is_pool: boolean;
+    composite: GraphNode[] | null; // Composite nodes (when multiple nodes are aggregated into one)
 }
 
 // Interface for a graph link
@@ -39,11 +74,11 @@ export interface GraphLink {
     target_account_vertex: AccountVertex; // Target account vertex
     amount_source: number;      // Amount transferred from source
     amount_destination: number; // Amount received at destination
-    type: string;               // Transfer type (e.g., "BURN", "MINTTO", "SWAP")
+    type: TransferType;               // Transfer type (e.g., "BURN", "MINTTO", "SWAP")
     group?: number;             // Group ID for swaps (optional)
     curvature?: number;         // Curvature for multilinks
     swap_id?: number;           // Swap id if transfer is of type == "SWAP"
-    composite: GraphLink[];     // Composite links (when multiple links are aggregated into one)
+    composite: GraphLink[] | null;     // Composite links (when multiple links are aggregated into one)
 }
 
 export interface PriceReference{

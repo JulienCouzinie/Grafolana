@@ -7,6 +7,7 @@ import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
+import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 
 const NoSSRForceGraph = dynamic(() => import('./NoSSRForceGraph'), {
   ssr: false,
@@ -42,12 +43,12 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Use flow view strategy hook
   const flowStrategy = useFlowViewStrategy();
   const accountStrategy = useAccountViewStrategy();
+  const walletStrategy = useWalletViewStrategy();
   
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
-    return viewMode === 'flow' ? flowStrategy : accountStrategy;
-    // Note: In the future, add other strategies here based on viewMode
-    // e.g., viewMode === 'wallet' ? walletStrategy : viewMode === 'program' ? programStrategy : ...
+    return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
+
   }, [viewMode]);
 
   // Process data using current strategy
@@ -158,7 +159,6 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                   className={`view-button ${viewMode === 'wallet' ? 'active' : ''}`} 
                   onClick={() => setViewMode('wallet')}
                   title="Wallets View - Focus on wallet relationships"
-                  disabled={true} // Disabled until implemented
                 >
                   Wallets
                 </button>

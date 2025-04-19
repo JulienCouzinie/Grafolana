@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
-import { LinkObject } from 'react-force-graph-2d';
+
 
 class FlowViewStrategy extends BaseViewStrategy {
 
@@ -65,6 +65,7 @@ class FlowViewStrategy extends BaseViewStrategy {
   }
 
   processData(data: GraphData): GraphData {
+    this.originalData = data;
     const clonedData = cloneDeep(data);
 
     let links = clonedData.links;
@@ -146,6 +147,107 @@ class FlowViewStrategy extends BaseViewStrategy {
         ctx.fillText(label, labelX, labelY);
     }
   }
+
+  linkTooltip(link: ForceGraphLink): string {
+    const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
+    const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+    const imageUrl = this.getProgramInfo(link.program_address)?.icon;
+
+    // Calculate USD values and get mint info
+    const sourceUSD = sourceNode ? this.calculateUSDValue(
+        link.amount_source, 
+        sourceNode.mint_address, 
+        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+    ) : 'N/A';
+    const destinationUSD = destinationNode ? this.calculateUSDValue(
+        link.amount_destination, 
+        destinationNode.mint_address, 
+        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+    ) : 'N/A';
+
+    const mintSource = this.getMintInfo(sourceNode?.mint_address!);
+    const mintDestination = this.getMintInfo(destinationNode?.mint_address!);
+
+    // Get formatted amounts for source and destination
+    const source = this.getAmountDetails(link, mintSource);
+    const destination = this.getAmountDetails(link, mintDestination, true);
+
+    // Format the amount line based on link type
+    const amountLine = link.type === 'SWAP' 
+    ? (() => {
+        // Find the swap details
+        const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
+        let feeAmount = null;
+        let feeUSD = 'N/A';
+        
+        if (swapDetails?.fee) {
+            // Format fee using destination mint decimals
+            const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
+            feeAmount = formattedFee + " " + mintDestination?.symbol;
+            feeUSD = destinationNode ? this.calculateUSDValue(
+                swapDetails.fee,
+                destinationNode.mint_address,
+                this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+            ) : 'N/A';
+        }
+
+        return this.formatSwapAmount(
+            source.amountString, source.imageHTML, sourceUSD,
+            destination.amountString, destination.imageHTML, destinationUSD,
+            feeAmount, feeUSD
+        );
+    })()
+    : this.formatNormalAmount(source.amountString, source.imageHTML, sourceUSD);
+
+    // Format composite links if they exist
+    const compositesHtml = link.composite 
+    ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
+        ${link.composite.map(compLink => {
+            const compSource = this.getAmountDetails(
+            compLink, 
+            this.getMintInfo(sourceNode?.mint_address!));
+            const compDest = this.getAmountDetails(
+            compLink,
+            this.getMintInfo(destinationNode?.mint_address!),
+            true
+            );
+
+            // Calculate USD values for the composite link specifically
+            const compSourceUSD = sourceNode ? this.calculateUSDValue(
+                compLink.amount_source, 
+                sourceNode.mint_address, 
+                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
+            ) : 'N/A';
+            const compDestUSD = destinationNode ? this.calculateUSDValue(
+                compLink.amount_destination, 
+                destinationNode.mint_address, 
+                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
+            ) : 'N/A';
+
+            return `<li>${
+            compLink.type === 'SWAP'
+                ? this.formatSwapAmount(
+                    compSource.amountString, compSource.imageHTML, compSourceUSD,
+                    compDest.amountString, compDest.imageHTML, compDestUSD
+                )
+                : this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
+            }</li>`;
+        }).join('')}
+        </ul>`
+    : '';
+
+    return `
+    <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
+        <b>Type:</b> ${link.type}<br/>
+        ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
+        <b>Program:</b> ${this.getLabelComputed(link.program_address, 'program', true).label}<br/>
+        <b>From:</b> ${link.source_account_vertex.address}<br/>
+        <b>To:</b> ${link.target_account_vertex.address}<br/>
+        ${amountLine}
+        ${compositesHtml}
+    </div>
+    `;
+}
 
 }
 
