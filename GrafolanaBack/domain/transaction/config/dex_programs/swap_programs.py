@@ -1360,17 +1360,6 @@ swap_programs_data = {
             {
                 DISCRIMINATOR: "2b04ed0b1ac91e62", #swapV2 inner
                 LABEL: "swapV2 inner",
-                ACCOUNTS_LENGTH: 15,
-                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
-                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 4,
-                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
-                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX:5
-            },
-            # Transaction : QU7nHgvi6KGitnyUoWyBsn5Y1h2EjKQr93xV7CWTPt8ifCSKYwndxxcTBDcM5fWcJk5uc833xbskEMtC8cdpDxf
-            {
-                DISCRIMINATOR: "2b04ed0b1ac91e62", #swapV2 outer
-                LABEL: "swapV2 outer",
-                ACCOUNTS_LENGTH: 17,
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 4,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
