@@ -1,6 +1,11 @@
 import {  ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode, ProcessedGraphData } from '@/types/graph';
 import { LinkObject } from 'react-force-graph-2d';
 
+export interface ContextMenuItem {
+  label: string;
+  action: string;
+}
+
 export interface ViewStrategy {
   /**
    * Transform input data into the view-specific format
@@ -22,10 +27,30 @@ export interface ViewStrategy {
    */
   linkTooltip: (link: ForceGraphLink) => string;
 
+  /**
+   * Custom rendering for links
+   */
   linkCanvasObject: (link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number) => void;
 
+  /**
+   * Handle node hover events
+   */
   handleNodeHover: (node: ForceGraphNode | null) => void;
+  
+  /**
+   * Handle link hover events
+   */
   handleLinkHover: (link: GraphLink | null) => void;
+
+  /**
+   * Get context menu items for a node
+   */
+  getNodeContextMenuItems: (node: ForceGraphNode) => ContextMenuItem[];
+  
+  /**
+   * Handle context menu actions
+   */
+  handleNodeContextMenu: (node: ForceGraphNode, action: string) => void;
 
   /**
    * Style-related props for links
@@ -37,7 +62,7 @@ export interface ViewStrategy {
     lineDash?: number[];
     arrowLength?: number;
     arrowColor?: string;
-    onNodeHover?:GraphNode;
-    onLinkHover?:GraphNode;
+    onNodeHover?: GraphNode;
+    onLinkHover?: GraphNode;
   };
 }

@@ -1,5 +1,5 @@
 import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType } from '@/types/graph';
-import { ViewStrategy } from './ViewStrategy';
+import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
 import { useRef, useState } from 'react';
@@ -288,6 +288,41 @@ class AccountViewStrategy extends BaseViewStrategy {
         ${compositesHtml}
     </div>
     `;
+  }
+
+  // Override to provide account-specific context menu items
+  getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
+    const baseItems = super.getNodeContextMenuItems(node);
+    
+    // Add account-specific items
+    return [
+        ...baseItems,
+        {
+            label: "View Transactions",
+            action: "view_transactions"
+        },
+        {
+            label: "Explore Related Accounts",
+            action: "explore_related"
+        }
+    ];
+  }
+  
+  // Override to handle account-specific context menu actions
+  handleNodeContextMenu(node: ForceGraphNode, action: string): void {
+    switch(action) {
+        case "view_transactions":
+            // Handle viewing transactions for this account
+            console.log("View transactions for account:", node.account_vertex.address);
+            break;
+        case "explore_related":
+            // Handle exploring related accounts
+            console.log("Explore related accounts for:", node.account_vertex.address);
+            break;
+        default:
+            // Fall back to base implementation for common actions
+            super.handleNodeContextMenu(node, action);
+    }
   }
 }
 

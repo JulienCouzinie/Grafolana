@@ -17,6 +17,7 @@ type TypedForceGraphProps = Omit<
   | 'linkDirectionalArrowLength'
   | 'linkDirectionalArrowColor'
   | 'linkCanvasObject'
+  | 'onNodeRightClick'
 > & {
   nodeCanvasObject: (node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => void;
   nodeLabel: (node: ForceGraphNode) => string;
@@ -30,6 +31,7 @@ type TypedForceGraphProps = Omit<
   linkCanvasObject: (node: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number) => void;
   onNodeHover?: (node: ForceGraphNode | null, previousNode: ForceGraphNode | null) => void;
   onLinkHover?: (link: ForceGraphLink | null, previousLink: ForceGraphLink | null) => void;
+  onNodeRightClick?: (node: ForceGraphNode, event: MouseEvent) => void;
 };
 
 export default function NoSSRForceGraph(props: TypedForceGraphProps) {

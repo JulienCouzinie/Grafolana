@@ -1,5 +1,5 @@
 import { GraphData, GraphNode, GraphLink, ProcessedGraphData, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
-import { ViewStrategy } from './ViewStrategy';
+import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -213,6 +213,37 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         
         return { amountString, imageHTML };
     };
+    
+    // Default implementation for context menu items
+    getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
+        // Default context menu items available for all strategies
+        return [
+            {
+                label: "Copy Address",
+                action: "copy_address"
+            },
+            {
+                label: "Show Details",
+                action: "show_details"
+            }
+        ];
+    }
+    
+    // Default implementation for context menu handler
+    handleNodeContextMenu(node: ForceGraphNode, action: string): void {
+        switch(action) {
+            case "copy_address":
+                // Copy the account address to clipboard
+                navigator.clipboard.writeText(node.account_vertex.address);
+                break;
+            case "show_details":
+                // Show detailed view can be implemented by specific strategies
+                console.log("Show details for:", node);
+                break;
+            default:
+                console.log(`Unhandled action: ${action} for node:`, node);
+        }
+    }
     
     // Abstract methods that must be implemented by derived classes
     abstract processData(data: GraphData): GraphData;

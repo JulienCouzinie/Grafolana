@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { GraphData, } from '../../types/graph';
+import { ForceGraphNode, GraphData, } from '../../types/graph';
 import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
@@ -37,6 +37,19 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   });
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
   
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    node: ForceGraphNode | null;
+    isOpen: boolean;
+  }>({
+    x: 0,
+    y: 0,
+    node: null,
+    isOpen: false,
+  });
+  
   // Create a ref for the panel to access its imperative handle
   const panelRef = useRef<ImperativePanelHandle>(null);
 
@@ -48,8 +61,50 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
     return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
-
   }, [viewMode]);
+
+  // Handle right-click on node
+  const handleNodeRightClick = (node: ForceGraphNode | null, event: MouseEvent) => {
+    // Prevent the default context menu
+    event.preventDefault();
+    
+    if (node) {
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        node,
+        isOpen: true,
+      });
+    } else {
+      // Close the context menu when clicking elsewhere
+      setContextMenu(prev => ({ ...prev, isOpen: false }));
+    }
+  };
+  
+  // Handle context menu item click
+  const handleContextMenuAction = (action: string) => {
+    if (strategy && contextMenu.node) {
+      strategy.handleNodeContextMenu(contextMenu.node, action);
+    }
+    
+    // Close the context menu after action
+    setContextMenu(prev => ({ ...prev, isOpen: false }));
+  };
+  
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setContextMenu(prev => ({ ...prev, isOpen: false }));
+    };
+    
+    if (contextMenu.isOpen) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, [contextMenu.isOpen]);
 
   // Process data using current strategy
   useEffect(() => {
@@ -89,6 +144,28 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   return (
     <div className="w-full h-full">
       <MetadataPreloader graphData={graphData} />
+      {/* Context Menu */}
+      {contextMenu.isOpen && contextMenu.node && (
+        <div 
+          className="context-menu"
+          style={{
+            position: 'fixed',
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+            zIndex: 1000,
+          }}
+        >
+          {strategy.getNodeContextMenuItems(contextMenu.node).map((item) => (
+            <button 
+              key={item.action}
+              className="context-menu-item"
+              onClick={() => handleContextMenuAction(item.action)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
       <PanelGroup direction="horizontal" className="h-full">
         {/* Controls Panel */}
         <Panel 
@@ -200,6 +277,8 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 enableZoomInteraction={true}
                 onNodeHover={(node => strategy.handleNodeHover(node))}
                 onLinkHover={(link => strategy.handleLinkHover(link))}
+                // Right-click handling
+                onNodeRightClick={handleNodeRightClick}
               />
             </div>
           </div>
@@ -296,6 +375,36 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
           flex: 1;
           overflow: hidden;
           position: relative;
+        }
+
+        /* Context Menu Styles */
+        .context-menu {
+          background-color: #1a1a1a;
+          border: 1px solid #333;
+          border-radius: 4px;
+          padding: 4px 0;
+          min-width: 150px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .context-menu-item {
+          display: block;
+          width: 100%;
+          padding: 8px 16px;
+          text-align: left;
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .context-menu-item:hover {
+          background-color: ${SOLANA_COLORS.darkGray};
+        }
+        
+        .context-menu-item:active {
+          background-color: ${SOLANA_COLORS.purple};
         }
       `}</style>
     </div>
