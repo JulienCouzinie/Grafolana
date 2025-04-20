@@ -11,13 +11,15 @@ interface AddressLabelProps {
   type?: AddressType;
   className?: string;
   shortened?: boolean; // Add new prop
+  show_controls?: boolean; // Add control visibility prop
 }
 
 export function AddressLabel({ 
   address, 
   type = 'unknown', 
   className,
-  shortened = false // Default to false
+  shortened = false, // Default to false
+  show_controls = true // Default to showing controls
 }: AddressLabelProps) {
   const { getLabelComputed, updateLabel} = useMetadata();
   const { publicKey } = useWallet();
@@ -121,45 +123,49 @@ export function AddressLabel({
         )}
       </span>
 
-      {/* Copy button */}
-      <button
-        onClick={handleCopy}
-        className="p-1 hover:text-blue-500 relative"
-        title="Copy address"
-      >
-        {/* Copy icon */}
-        <svg 
-          className={`w-3.5 h-3.5 transition-opacity duration-200 ${showCheckmark ? 'opacity-0' : 'opacity-100'}`} 
-          aria-hidden="true" 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="currentColor" 
-          viewBox="0 0 20 20"
+      {/* Copy button - only show if show_controls is true */}
+      {show_controls && (
+        <button
+          onClick={handleCopy}
+          className="p-1 hover:text-blue-500 relative"
+          title="Copy address"
         >
-          <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z"/>
-        </svg>
-        {/* Checkmark icon */}
-        <svg 
-          className={`w-3.5 h-3.5 absolute inset-1 transition-opacity duration-200 ${showCheckmark ? 'opacity-100' : 'opacity-0'}`} 
-          viewBox="0 0 20 20" 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="currentColor" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        > 
-          <path id="Shape" d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)"/>
-        </svg>
-      </button>
+          {/* Copy icon */}
+          <svg 
+            className={`w-3.5 h-3.5 transition-opacity duration-200 ${showCheckmark ? 'opacity-0' : 'opacity-100'}`} 
+            aria-hidden="true" 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z"/>
+          </svg>
+          {/* Checkmark icon */}
+          <svg 
+            className={`w-3.5 h-3.5 absolute inset-1 transition-opacity duration-200 ${showCheckmark ? 'opacity-100' : 'opacity-0'}`} 
+            viewBox="0 0 20 20" 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="currentColor" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          > 
+            <path id="Shape" d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)"/>
+          </svg>
+        </button>
+      )}
 
-      {/* Modify button */}
-      <button
-        onClick={() => setIsDialogOpen(true)}
-        className="p-1 hover:text-blue-500"
-        title="Edit label"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
-        </svg>
-      </button>
+      {/* Modify button - only show if show_controls is true */}
+      {show_controls && (
+        <button
+          onClick={() => setIsDialogOpen(true)}
+          className="p-1 hover:text-blue-500"
+          title="Edit label"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
+          </svg>
+        </button>
+      )}
 
       {/* Label edit dialog */}
       {isDialogOpen && (
