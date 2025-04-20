@@ -9,6 +9,7 @@ import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
+import { Accordion, AccordionItem } from '../ui/accordion';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -284,7 +285,18 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             
             {/* Container for content that gets hidden when collapsed */}
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
-              {/* Additional controls can be added here */}
+              <h2 className="panel-title">Graph Controls</h2>
+              <Accordion className="custom-accordion">
+                <AccordionItem title="Filters" defaultOpen={true}>
+                  <p>Content for section 1</p>
+                </AccordionItem>
+                <AccordionItem title="Grouping" defaultOpen={true}>
+                  <p>Content for section 2</p>
+                </AccordionItem>
+                <AccordionItem title="Contextual Info" defaultOpen={true}>
+                  <p>Content for section 3</p>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         </Panel>
@@ -498,6 +510,35 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
         
         .context-menu-item:active {
           background-color: ${SOLANA_COLORS.purple};
+        }
+
+        /* Panel title styles */
+        .panel-title {
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          color: white;
+        }
+        
+        /* Custom accordion styles */
+        :global(.custom-accordion) {
+          border: none;
+          background-color: transparent;
+        }
+        
+        :global(.custom-accordion > div) {
+          border-top: 1px solid #333; /* Dark gray line only at top */
+          margin: 0 -12px; /* Extend to full width of panel */
+          padding: 0 12px; /* Add padding back inside */
+        }
+        
+        :global(.custom-accordion button) {
+          padding-left: 0; /* Remove left padding from buttons */
+          padding-right: 0; /* Remove right padding from buttons */
+        }
+        
+        :global(.custom-accordion .p-6) {
+          padding: 12px 0; /* Custom padding for content area */
         }
       `}</style>
     </div>
