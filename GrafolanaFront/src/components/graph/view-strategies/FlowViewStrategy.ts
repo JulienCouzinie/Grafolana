@@ -84,8 +84,8 @@ class FlowViewStrategy extends BaseViewStrategy {
 
   nodeTooltip(node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
-    const mintInfo = mintAddress ? this.getMintInfo(mintAddress) : null;
-    const mintImage = mintInfo?.image ? this.getMintImage(mintInfo.image) : null;
+    const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+    const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -151,22 +151,22 @@ class FlowViewStrategy extends BaseViewStrategy {
   linkTooltip(link: ForceGraphLink): string {
     const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
     const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
-    const imageUrl = this.getProgramInfo(link.program_address)?.icon;
+    const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon;
 
     // Calculate USD values and get mint info
-    const sourceUSD = sourceNode ? this.calculateUSDValue(
+    const sourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
         link.amount_source, 
         sourceNode.mint_address, 
         this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
     ) : 'N/A';
-    const destinationUSD = destinationNode ? this.calculateUSDValue(
+    const destinationUSD = destinationNode ? this.usdServices.calculateUSDValue(
         link.amount_destination, 
         destinationNode.mint_address, 
         this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
     ) : 'N/A';
 
-    const mintSource = this.getMintInfo(sourceNode?.mint_address!);
-    const mintDestination = this.getMintInfo(destinationNode?.mint_address!);
+    const mintSource = this.metadataServices.getMintInfo(sourceNode?.mint_address!);
+    const mintDestination = this.metadataServices.getMintInfo(destinationNode?.mint_address!);
 
     // Get formatted amounts for source and destination
     const source = this.getAmountDetails(link, mintSource);
@@ -184,7 +184,7 @@ class FlowViewStrategy extends BaseViewStrategy {
             // Format fee using destination mint decimals
             const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
             feeAmount = formattedFee + " " + mintDestination?.symbol;
-            feeUSD = destinationNode ? this.calculateUSDValue(
+            feeUSD = destinationNode ? this.usdServices.calculateUSDValue(
                 swapDetails.fee,
                 destinationNode.mint_address,
                 this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
@@ -205,20 +205,20 @@ class FlowViewStrategy extends BaseViewStrategy {
         ${link.composite.map(compLink => {
             const compSource = this.getAmountDetails(
             compLink, 
-            this.getMintInfo(sourceNode?.mint_address!));
+            this.metadataServices.getMintInfo(sourceNode?.mint_address!));
             const compDest = this.getAmountDetails(
             compLink,
-            this.getMintInfo(destinationNode?.mint_address!),
+            this.metadataServices.getMintInfo(destinationNode?.mint_address!),
             true
             );
 
             // Calculate USD values for the composite link specifically
-            const compSourceUSD = sourceNode ? this.calculateUSDValue(
+            const compSourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
                 compLink.amount_source, 
                 sourceNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
             ) : 'N/A';
-            const compDestUSD = destinationNode ? this.calculateUSDValue(
+            const compDestUSD = destinationNode ? this.usdServices.calculateUSDValue(
                 compLink.amount_destination, 
                 destinationNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
@@ -240,7 +240,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>Program:</b> ${this.getLabelComputed(link.program_address, 'program', true).label}<br/>
+        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, 'program', true).label}<br/>
         <b>From:</b> ${link.source_account_vertex.address}<br/>
         <b>To:</b> ${link.target_account_vertex.address}<br/>
         ${amountLine}

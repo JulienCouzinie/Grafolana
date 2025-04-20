@@ -221,8 +221,8 @@ class WalletViewStrategy extends BaseViewStrategy {
 
   nodeTooltip (node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
-    const mintInfo = mintAddress ? this.getMintInfo(mintAddress) : null;
-    const mintImage = mintInfo?.image ? this.getMintImage(mintInfo.image) : null;
+    const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+    const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -242,8 +242,8 @@ class WalletViewStrategy extends BaseViewStrategy {
           ${node.composite.map(comp => {
             // Get mint info and image for composite account
             const compMintAddress = comp.mint_address;
-            const compMintInfo = compMintAddress ? this.getMintInfo(compMintAddress) : null;
-            const compMintImage = compMintInfo?.image ? this.getMintImage(compMintInfo.image) : null;
+            const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
+            const compMintImage = compMintInfo?.image ? this.metadataServices.getMintImage(compMintInfo.image) : null;
             
             return `<li>
               ${compMintImage ? `<img src="${compMintImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; display: inline-block;">` : ''}
@@ -292,20 +292,20 @@ class WalletViewStrategy extends BaseViewStrategy {
 
             const compSource = this.getAmountDetails(
             compLink, 
-            this.getMintInfo(compLinkSourceNode!.mint_address!));
+            this.metadataServices.getMintInfo(compLinkSourceNode!.mint_address!));
             const compDest = this.getAmountDetails(
             compLink,
-            this.getMintInfo(compLinkDestinationNode!.mint_address!),
+            this.metadataServices.getMintInfo(compLinkDestinationNode!.mint_address!),
             true
             );
 
             // Calculate USD values for the composite link specifically
-            const compSourceUSD = compLinkSourceNode ? this.calculateUSDValue(
+            const compSourceUSD = compLinkSourceNode ? this.usdServices.calculateUSDValue(
                 compLink.amount_source, 
                 compLinkSourceNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
             ) : 'N/A';
-            const compDestUSD = compLinkDestinationNode ? this.calculateUSDValue(
+            const compDestUSD = compLinkDestinationNode ? this.usdServices.calculateUSDValue(
                 compLink.amount_destination, 
                 compLinkDestinationNode.mint_address, 
                 this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio

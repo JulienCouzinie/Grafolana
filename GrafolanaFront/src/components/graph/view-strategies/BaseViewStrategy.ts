@@ -16,39 +16,33 @@ export const SOLANA_COLORS = {
 
 export abstract class BaseViewStrategy implements ViewStrategy {
     // Common data and state references that all strategies need
-    protected processedData: React.RefObject <GraphData>;
-    protected originalData: React.RefObject <GraphData>;
+    protected processedData: React.RefObject<GraphData>;
+    protected originalData: React.RefObject<GraphData>;
     protected hoveredGroup: number | null;
     protected setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>;
     
-    // Services
-    protected getMintInfo: ReturnType<typeof useMetadata>['getMintInfo'];
-    protected getMintImage: ReturnType<typeof useMetadata>['getMintImage'];
-    protected getProgramInfo: ReturnType<typeof useMetadata>['getProgramInfo'];
-    protected getLabelComputed: ReturnType<typeof useMetadata>['getLabelComputed'];
-    protected calculateUSDValue: ReturnType<typeof useUSDValue>['calculateUSDValue'];
+    // Services - provide direct access to the service objects
+    protected metadataServices: ReturnType<typeof useMetadata>;
+    protected usdServices: ReturnType<typeof useUSDValue>;
 
     constructor(
-        metadataServices: Pick<ReturnType<typeof useMetadata>, 'getMintInfo' | 'getMintImage' | 'getProgramInfo' | 'getLabelComputed'>,
-        usdServices: Pick<ReturnType<typeof useUSDValue>, 'calculateUSDValue'>,
+        metadataServices: ReturnType<typeof useMetadata>,
+        usdServices: ReturnType<typeof useUSDValue>,
         processedDataRef: React.RefObject<GraphData>,
         originalDataRef: React.RefObject<GraphData>,
         hoveredGroup: number | null,
         setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>
     ) {
-        this.getMintInfo = metadataServices.getMintInfo;
-        this.getMintImage = metadataServices.getMintImage;
-        this.getProgramInfo = metadataServices.getProgramInfo;
-        this.getLabelComputed = metadataServices.getLabelComputed;
-        this.calculateUSDValue = usdServices.calculateUSDValue;
+        this.metadataServices = metadataServices;
+        this.usdServices = usdServices;
         this.processedData = processedDataRef;
         this.originalData = originalDataRef;
         this.hoveredGroup = hoveredGroup;
         this.setHoveredGroup = setHoveredGroup;
     }
 
-    protected getForceGraphNodebyAccountVertex (nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
-     return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
+    protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
+        return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
     }
 
     // Shared helper functions
@@ -60,12 +54,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Common hover handlers that both strategies need
     handleNodeHover(node: ForceGraphNode | null): void {
         if (node) {
-        const linkedGroup = this.processedData.current.links.find(
-            (link) => (
-                (typeof link.source === 'string' ? link.source : (link.source as ForceGraphNode).id) === node.id ||
-                (typeof link.target === 'string' ? link.target : (link.target as ForceGraphNode).id) === node.id
-            )
-        )?.group;
+            const linkedGroup = this.processedData.current.links.find(
+                (link) => (
+                    (typeof link.source === 'string' ? link.source : (link.source as ForceGraphNode).id) === node.id ||
+                    (typeof link.target === 'string' ? link.target : (link.target as ForceGraphNode).id) === node.id
+                )
+            )?.group;
             this.setHoveredGroup(linkedGroup ?? null);
         } else {
             this.setHoveredGroup(null);
@@ -75,8 +69,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     handleLinkHover(link: GraphLink | null): void {
         this.setHoveredGroup(link ? link.group ?? null : null);
     }
-
-  
 
     // Common link style implementation
     getLinkStyle(link: ForceGraphLink) {
@@ -91,7 +83,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     nodeCanvasObject(node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number): void {
-        const mintInfo = this.getMintInfo(node?.mint_address);
+        const mintInfo = this.metadataServices.getMintInfo(node?.mint_address);
         const fontSize = 12 / globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;
 
@@ -117,7 +109,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             } else {
                 // Draw mint logo
                 const imageUrl = mintInfo?.image;
-                img = this.getMintImage(imageUrl);
+                img = this.metadataServices.getMintImage(imageUrl);
             }
             ctx.save();
             ctx.beginPath();
@@ -206,18 +198,17 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return amount / Math.pow(10, mintInfo?.decimals || 0);
     }
     
-    
     protected getAmountDetails = (
         link: ForceGraphLink,
         mintInfo: MintDTO | null,
-        isDestination: boolean = false // Add proper parameter for amount selection
+        isDestination: boolean = false
     ): { amountString: string, imageHTML: string } => {
         const amount = this.calculateTokenAmount(
             isDestination ? link.amount_destination : link.amount_source,
             mintInfo
         );
         const amountString = amount + " " + mintInfo?.symbol;
-        const image = mintInfo?.image ? this.getMintImage(mintInfo?.image) : null;
+        const image = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo?.image) : null;
         const imageHTML = image ? `<img src="${image.src}" crossorigin="anonymous" style="width: 16px; height: 16px; display: inline-block;">` : '';
         
         return { amountString, imageHTML };
