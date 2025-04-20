@@ -13,13 +13,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@remotion/bundler": "4.0.265",
-    "@remotion/cli": "4.0.265",
-    "@remotion/google-fonts": "4.0.265",
-    "@remotion/lambda": "4.0.265",
-    "@remotion/paths": "4.0.265",
-    "@remotion/player": "4.0.265",
-    "@remotion/shapes": "4.0.265",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.23",
     "@solana/wallet-adapter-react": "0.15.35",
@@ -41,14 +34,11 @@
     "react-json-pretty": "^2.2.0",
     "react-range-slider-input": "^3.2.1",
     "react-resizable-panels": "0.0.63",
-    "remotion": "4.0.265",
     "zod": "3.22.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.1.0",
     "@next/eslint-plugin-next": "15.1.6",
-    "@remotion/eslint-config-flat": "4.0.265",
-    "@remotion/eslint-plugin": "^4.0.277",
     "@types/bn.js": "^5.1.0",
     "@types/jest": "^29.0.3",
     "@types/lodash": "^4.17.16",
@@ -68,8 +58,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@typescript-eslint/parser": "^8.0.0",
-      "@remotion/eslint-plugin": "^4.0.277"
+      "@typescript-eslint/parser": "^8.0.0"
     }
   }
 }
