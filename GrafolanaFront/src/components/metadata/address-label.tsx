@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useTooltipPosition } from '@/hooks/useTooltipPosition';
 import { Label } from '@/types/metadata';
+import { createPortal } from 'react-dom';
 
 export type AddressType = 'program' | 'token' | 'unknown';
 
@@ -10,8 +11,8 @@ interface AddressLabelProps {
   address: string;
   type?: AddressType;
   className?: string;
-  shortened?: boolean; // Add new prop
-  show_controls?: boolean; // Add control visibility prop
+  shortened?: boolean;
+  show_controls?: boolean;
 }
 
 export function AddressLabel({ 
@@ -30,6 +31,8 @@ export function AddressLabel({
   const [displayDescription, setDisplayDescription] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     function fetchLabel() {
@@ -41,7 +44,7 @@ export function AddressLabel({
     }
 
     fetchLabel();
-  }, [address, getLabelComputed]);
+  }, [address, getLabelComputed, type, shortened]);
 
   useEffect(() => {
     const userId = publicKey?.toBase58();
@@ -53,9 +56,18 @@ export function AddressLabel({
       setDescriptionInput(label.description || '');
       setDisplayDescription(label.description || '');
     };
-
-
   }, [address, publicKey]);
+
+  // Update tooltip position when it's shown
+  useEffect(() => {
+    if (showTooltip && labelRef.current) {
+      const rect = labelRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top - 10, // Position above the element with a small gap
+        left: rect.left + (rect.width / 2)
+      });
+    }
+  }, [showTooltip]);
 
   const handleCopy = async () => {
     try {
@@ -92,36 +104,49 @@ export function AddressLabel({
   return (
     <div className="relative inline-flex items-center gap-2">
       <span 
+        ref={labelRef}
         className={className}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
         {displayLabel}
-        
-        {showTooltip && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2">
-            <div className="bg-gray-800 text-white text-sm rounded-lg shadow-lg p-3 border border-gray-700">
-              {/* Container div that sets the width based on the address */}
-              <div className="inline-block">
-                {/* Address determines the container width */}
-                <div className="font-mono text-xs text-gray-300 whitespace-nowrap">
-                  {address}
-                </div>
-                
-                {/* Description wraps within the address width */}
-                {displayDescription && (
-                  <div className="text-gray-300 text-xs border-t border-gray-700 pt-1 mt-1 break-words">
-                    {displayDescription}
-                  </div>
-                )}
+      </span>
+      
+      {/* Use createPortal to render the tooltip at the document root level */}
+      {showTooltip && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="address-tooltip-portal"
+          style={{
+            position: 'fixed',
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 99999, // Higher than anything else
+            pointerEvents: 'none', // Let mouse events pass through
+          }}
+        >
+          <div className="bg-gray-800 text-white text-sm rounded-lg shadow-lg p-3 border border-gray-700">
+            {/* Container div that sets the width based on the address */}
+            <div className="inline-block">
+              {/* Address determines the container width */}
+              <div className="font-mono text-xs text-gray-300 whitespace-nowrap">
+                {address}
               </div>
               
-              {/* Arrow */}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-3 h-3 bg-gray-800 rotate-45 border-r border-b border-gray-700" />
+              {/* Description wraps within the address width */}
+              {displayDescription && (
+                <div className="text-gray-300 text-xs border-t border-gray-700 pt-1 mt-1 break-words">
+                  {displayDescription}
+                </div>
+              )}
             </div>
+            
+            {/* Arrow */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-3 h-3 bg-gray-800 rotate-45 border-r border-b border-gray-700" />
           </div>
-        )}
-      </span>
+        </div>,
+        document.body
+      )}
 
       {/* Copy button - only show if show_controls is true */}
       {show_controls && (
@@ -169,7 +194,7 @@ export function AddressLabel({
 
       {/* Label edit dialog */}
       {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999]">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4 text-white">Edit Label</h3>
             
