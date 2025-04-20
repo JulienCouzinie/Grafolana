@@ -10,6 +10,7 @@ import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '../ui/accordion';
+import { useGraphInteractions } from './hooks/useGraphInteractions';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -67,14 +68,6 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Add a reference to the graph component at the beginning of your component
   const fgRef = useRef<any>(null);
 
-  // Add this function to your TransactionGraph component
-  // This tracks if the ALT key is currently pressed
-  const [isAltKeyPressed, setIsAltKeyPressed] = useState<boolean>(false);
-
-  // Add state to track selected nodes and CTRL key state
-  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
-  const [isCtrlKeyPressed, setIsCtrlKeyPressed] = useState<boolean>(false);
-
   // Create a ref for the panel to access its imperative handle
   const panelRef = useRef<ImperativePanelHandle>(null);
 
@@ -88,227 +81,37 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
   }, [viewMode]);
 
-  // Add an effect to track ALT and CTRL key state
+  // Use consolidated graph interactions hook
+  const {
+    // Node selection
+    clearSelection,
+    handleNodeClick,
+    
+    // Node position fixing
+    handleNodeDragEnd,
+    
+    // Context menu
+    contextMenu,
+    handleNodeRightClick,
+    handleContextMenuAction,
+  } = useGraphInteractions(strategy, fgRef);
+
+  // Clear selection when view mode changes
+  // FIX: Remove clearSelection from dependencies to prevent infinite render loop
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Alt') {
-        setIsAltKeyPressed(true);
-      }
-      // Track ctrl key (use ctrlKey or metaKey for Mac compatibility)
-      if (event.ctrlKey || event.metaKey) {
-        setIsCtrlKeyPressed(true);
-      }
-    };
-    
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Alt') {
-        setIsAltKeyPressed(false);
-      }
-      // Check if ctrl key is released
-      if (!event.ctrlKey && !event.metaKey) {
-        setIsCtrlKeyPressed(false);
-      }
-    };
-    
-    // Add event listeners for key tracking
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', () => {
-      // Reset key states when window loses focus
-      setIsAltKeyPressed(false);
-      setIsCtrlKeyPressed(false);
-    });
-    
-    // Cleanup event listeners when component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', () => {
-        setIsAltKeyPressed(false);
-        setIsCtrlKeyPressed(false);
-      });
-    };
-  }, []);
-
-  // Add handler for node drag end
-  const handleNodeDragEnd = (node: ForceGraphNode) => {
-    if (isAltKeyPressed && node) {
-      // Fix node position by setting fx and fy to the current position
-      node.fx = node.x;
-      node.fy = node.y;
-      
-      // Provide user feedback (optional)
-      console.log(`Node ${node.id} position fixed at x:${node.x}, y:${node.y}`);
-      
-      // Force a refresh of the graph to reflect changes
-      if (fgRef.current) {
-        fgRef.current.d3ReheatSimulation();
-      }
-    }
-  };
-
-  // Add handler for node click to manage selection
-  const handleNodeClick = (node: ForceGraphNode | null) => {
-    if (!node) return;
-    
-    // Get node ID for tracking in the selection set
-    const nodeId = node.id!.toString();
-    
-    // If CTRL is pressed, toggle the clicked node in the selection
-    if (isCtrlKeyPressed) {
-      setSelectedNodes(currentSelected => {
-        // Create a new Set to avoid mutation
-        const updatedSelection = new Set(currentSelected);
-        
-        // Toggle the node: remove if already selected, add if not
-        if (updatedSelection.has(nodeId)) {
-          updatedSelection.delete(nodeId);
-        } else {
-          updatedSelection.add(nodeId);
-        }
-        
-        return updatedSelection;
-      });
-    } else {
-      // No CTRL pressed: replace selection with just this node
-      // If the node is already the only selected one, deselect it
-      if (selectedNodes.size === 1 && selectedNodes.has(nodeId)) {
-        setSelectedNodes(new Set());
-      } else {
-        setSelectedNodes(new Set([nodeId]));
-      }
-    }
-  };
-
-  // Add an effect to clear selection when view mode changes
-  useEffect(() => {
-    setSelectedNodes(new Set());
-  }, [viewMode]);
-
-  // Pass the selected nodes to the strategy
-  useEffect(() => {
-    if (strategy) {
-      strategy.selectedNodes = selectedNodes;
-    }
-  }, [strategy, selectedNodes]);
+    clearSelection();
+  }, [viewMode]); // Only depend on viewMode changes
 
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
     if (!fgRef.current) return;
 
     // Configure collision force - properly access the d3Force API
-  fgRef.current.d3Force('collide', d3.forceCollide()
-    //.radius(8) // Fixed radius of 16px (slightly larger than your hovered node size)
-    //.strength(1) // Strong enough to prevent overlaps but not cause chaotic movement
-    //.iterations(5) // Increase iterations for more accurate collision detection
-  );
-    
-    // Configure collision force with node-type awareness
-//   fgRef.current.d3Force('collide', d3.forceCollide()
-//   .radius((node: any) => {
-//     // Cast to our domain type for access to properties
-//     const graphNode = node as ForceGraphNode;
-    
-//     // Central nodes should have larger collision radius
-//     // Check node properties to determine if it's a central node
-//     // For example, checking degree (number of connections)
-//     const isHighConnectivityNode = graphNode.links && graphNode.links.length > 5;
-    
-//     // Give central/important nodes more space
-//     return isHighConnectivityNode ? 30 : 10;
-//   })
-//   .strength(0.7) // Balance between maintaining structure and preventing overlap
-//   .iterations(2) // More iterations for better accuracy
-// );
-
-// // Enable charge force for general repulsion
-// fgRef.current.d3Force('charge', d3.forceManyBody()
-//   .strength(-80) // Moderate repulsion to maintain structure
-//   .distanceMax(200) // Limit the maximum range of effect
-// );
-
-// // Configure link force for better cluster formation
-// fgRef.current.d3Force('link', d3.forceLink()
-//   .id((d: any) => d.id)
-//   .distance((link: any) => {
-//     // Can be extended to vary distance based on link type
-//     return 100; // Base distance between nodes
-//   })
-//   .strength((link: any) => {
-//     // Stronger links for important connections
-//     return 0.7; // Balance between cohesion and separation
-//   })
-// );
-    
-    // // After configuring forces, reheat the simulation
-    // // Access the internal simulation instance correctly
-    // const simulation = fgRef.current.d3Force('simulation');
-    // if (simulation) {
-    //   simulation.alpha(1).restart();
-    // } else {
-    //   // If direct access to simulation isn't available, use the public API
-    //   fgRef.current.d3ReheatSimulation();
-    // }
+    fgRef.current.d3Force('collide', d3.forceCollide());
     
   }, [processedData]); // Re-run when data changes
 
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
-  
-  // Context menu state
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    node: ForceGraphNode | null;
-    isOpen: boolean;
-  }>({
-    x: 0,
-    y: 0,
-    node: null,
-    isOpen: false,
-  });
-  
-  // Handle right-click on node
-  const handleNodeRightClick = (node: ForceGraphNode | null, event: MouseEvent) => {
-    // Prevent the default context menu
-    event.preventDefault();
-    
-    if (node) {
-      setContextMenu({
-        x: event.clientX,
-        y: event.clientY,
-        node,
-        isOpen: true,
-      });
-    } else {
-      // Close the context menu when clicking elsewhere
-      setContextMenu(prev => ({ ...prev, isOpen: false }));
-    }
-  };
-  
-  // Handle context menu item click
-  const handleContextMenuAction = (action: string) => {
-    if (strategy && contextMenu.node) {
-      strategy.handleNodeContextMenu(contextMenu.node, action);
-    }
-    
-    // Close the context menu after action
-    setContextMenu(prev => ({ ...prev, isOpen: false }));
-  };
-  
-  // Close context menu when clicking outside
-  useEffect(() => {
-    const handleOutsideClick = () => {
-      setContextMenu(prev => ({ ...prev, isOpen: false }));
-    };
-    
-    if (contextMenu.isOpen) {
-      document.addEventListener('click', handleOutsideClick);
-    };
-    
-    return () => {
-      document.removeEventListener('click', handleOutsideClick);
-    };
-  }, [contextMenu.isOpen]);
 
   // Process data using current strategy
   useEffect(() => {
