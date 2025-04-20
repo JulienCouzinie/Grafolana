@@ -264,15 +264,12 @@ export function useFlowViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
-  const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Create and return strategy instance
   return new FlowViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,
-    originalDataRef,
-    hoveredGroup,
-    setHoveredGroup
+    originalDataRef
   );
 }

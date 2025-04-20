@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import * as d3 from 'd3-force';
 import { ForceGraphNode, GraphData, } from '../../types/graph';
 import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
@@ -9,6 +10,32 @@ import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 
+/**
+ * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
+ * 
+ * When adding new props to this component, follow these steps:
+ * 
+ * 1. Add the prop to TypedForceGraphProps in NoSSRForceGraph.tsx:
+ *    - First add the prop name to the Omit<> list if it exists in ForceGraphProps 
+ *    - Then add it back with our domain-specific types (ForceGraphNode, ForceGraphLink)
+ * 
+ * 2. Props currently being typed and properly passed:
+ *    - nodeCanvasObject: For custom rendering of nodes
+ *    - nodeLabel: For tooltips when hovering over nodes
+ *    - linkWidth, linkColor, linkCurvature: For link styling
+ *    - onNodeHover, onLinkHover: For hover event handling
+ *    - onNodeRightClick: For context menu
+ *    - All other standard ForceGraph props are passed through automatically
+ * 
+ * 3. When using refs:
+ *    - Remember that ref is handled specially through forwardRef
+ *    - The ref gives access to methods like d3Force(), d3ReheatSimulation()
+ *    - Example: fgRef.current.d3Force('collide', d3.forceCollide()...)
+ * 
+ * 4. When adding event handlers:
+ *    - Make sure to update both the Omit<> list and the added types
+ *    - Use consistent nullability patterns (e.g., node: ForceGraphNode | null)
+ */
 const NoSSRForceGraph = dynamic(() => import('./NoSSRForceGraph'), {
   ssr: false,
 });
@@ -35,6 +62,70 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     links: [], 
     transactions: {},
   });
+
+  // Add a reference to the graph component at the beginning of your component
+  const fgRef = useRef<any>(null);
+
+  // Add an effect to properly initialize and configure the force simulation
+  useEffect(() => {
+    if (!fgRef.current) return;
+
+    // Configure collision force - properly access the d3Force API
+  fgRef.current.d3Force('collide', d3.forceCollide()
+    //.radius(8) // Fixed radius of 16px (slightly larger than your hovered node size)
+    //.strength(1) // Strong enough to prevent overlaps but not cause chaotic movement
+    //.iterations(5) // Increase iterations for more accurate collision detection
+  );
+    
+    // Configure collision force with node-type awareness
+//   fgRef.current.d3Force('collide', d3.forceCollide()
+//   .radius((node: any) => {
+//     // Cast to our domain type for access to properties
+//     const graphNode = node as ForceGraphNode;
+    
+//     // Central nodes should have larger collision radius
+//     // Check node properties to determine if it's a central node
+//     // For example, checking degree (number of connections)
+//     const isHighConnectivityNode = graphNode.links && graphNode.links.length > 5;
+    
+//     // Give central/important nodes more space
+//     return isHighConnectivityNode ? 30 : 10;
+//   })
+//   .strength(0.7) // Balance between maintaining structure and preventing overlap
+//   .iterations(2) // More iterations for better accuracy
+// );
+
+// // Enable charge force for general repulsion
+// fgRef.current.d3Force('charge', d3.forceManyBody()
+//   .strength(-80) // Moderate repulsion to maintain structure
+//   .distanceMax(200) // Limit the maximum range of effect
+// );
+
+// // Configure link force for better cluster formation
+// fgRef.current.d3Force('link', d3.forceLink()
+//   .id((d: any) => d.id)
+//   .distance((link: any) => {
+//     // Can be extended to vary distance based on link type
+//     return 100; // Base distance between nodes
+//   })
+//   .strength((link: any) => {
+//     // Stronger links for important connections
+//     return 0.7; // Balance between cohesion and separation
+//   })
+// );
+    
+    // // After configuring forces, reheat the simulation
+    // // Access the internal simulation instance correctly
+    // const simulation = fgRef.current.d3Force('simulation');
+    // if (simulation) {
+    //   simulation.alpha(1).restart();
+    // } else {
+    //   // If direct access to simulation isn't available, use the public API
+    //   fgRef.current.d3ReheatSimulation();
+    // }
+    
+  }, [processedData]); // Re-run when data changes
+
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
   
   // Context menu state
@@ -253,6 +344,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             {/* Force Graph Visualization */}
             <div className="graph-container">
               <NoSSRForceGraph
+                ref={fgRef}
                 graphData={processedData}
                 width={window ? window.innerWidth * 0.8 : 800} // Responsive width
                 height={window ? window.innerHeight - 150 : 600} // Adjusted height to account for control bar
@@ -274,11 +366,12 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 linkCanvasObjectMode={() => 'after'}
                 // Interactions
                 enableNodeDrag={true}
+                autoPauseRedraw={false}
                 enableZoomInteraction={true}
                 onNodeHover={(node => strategy.handleNodeHover(node))}
                 onLinkHover={(link => strategy.handleLinkHover(link))}
                 // Right-click handling
-                onNodeRightClick={handleNodeRightClick}
+                onNodeRightClick={handleNodeRightClick}                
               />
             </div>
           </div>

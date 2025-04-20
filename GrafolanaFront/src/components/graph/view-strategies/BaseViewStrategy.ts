@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
 import { MintDTO } from '@/types/metadata';
-import { LinkObject } from 'react-force-graph-2d';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -18,9 +17,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Common data and state references that all strategies need
     protected processedData: React.RefObject<GraphData>;
     protected originalData: React.RefObject<GraphData>;
-    protected hoveredGroup: number | null;
-    protected setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>;
-    
+        
     // Services - provide direct access to the service objects
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
@@ -29,52 +26,42 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         metadataServices: ReturnType<typeof useMetadata>,
         usdServices: ReturnType<typeof useUSDValue>,
         processedDataRef: React.RefObject<GraphData>,
-        originalDataRef: React.RefObject<GraphData>,
-        hoveredGroup: number | null,
-        setHoveredGroup: React.Dispatch<React.SetStateAction<number | null>>
+        originalDataRef: React.RefObject<GraphData>
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
         this.processedData = processedDataRef;
         this.originalData = originalDataRef;
-        this.hoveredGroup = hoveredGroup;
-        this.setHoveredGroup = setHoveredGroup;
+        
+        // Initialize hover states
+        this.hoveredNode = null;
+        this.hoveredLink = null;
     }
+    hoveredNode: ForceGraphNode | null;
+    hoveredLink: ForceGraphLink | null;
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
         return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
     }
 
-    // Shared helper functions
-    protected getGroupColor(group: number | undefined): string {
-        const colors = [SOLANA_COLORS.purple, SOLANA_COLORS.green, SOLANA_COLORS.blue];
-        return group !== undefined ? colors[group % colors.length] : SOLANA_COLORS.darkGray;
-    }
-
-    // Common hover handlers that both strategies need
+    // Track the hovered node directly
     handleNodeHover(node: ForceGraphNode | null): void {
-        if (node) {
-            const linkedGroup = this.processedData.current.links.find(
-                (link) => (
-                    (typeof link.source === 'string' ? link.source : (link.source as ForceGraphNode).id) === node.id ||
-                    (typeof link.target === 'string' ? link.target : (link.target as ForceGraphNode).id) === node.id
-                )
-            )?.group;
-            this.setHoveredGroup(linkedGroup ?? null);
-        } else {
-            this.setHoveredGroup(null);
-        }
+        this.hoveredNode = node;
     }
 
-    handleLinkHover(link: GraphLink | null): void {
-        this.setHoveredGroup(link ? link.group ?? null : null);
+    // Update link hover tracking to track the link directly
+    handleLinkHover(link: ForceGraphLink | null): void {
+        this.hoveredLink = link;
+        // We keep this for backward compatibility, but it's not used for hover styling
+        // this.setHoveredGroup(link ? link.group ?? null : null);
     }
 
-    // Common link style implementation
+    // Common link style implementation - updated to use direct hoveredLink
     getLinkStyle(link: ForceGraphLink) {
+        const isHovered = this.hoveredLink && this.hoveredLink === link;
         return {
-            width: link.group === this.hoveredGroup ? 4 : 2,
-            color: this.getGroupColor(link.group),
+            width: isHovered ? 4 : 2, // Make link wider when hovered
+            color: isHovered ? SOLANA_COLORS.blue : SOLANA_COLORS.darkGray,
             curvature: link.curvature || 0,
             lineDash: link.type === 'SWAP' ? [1, 1] : [],
             arrowLength: 8,
@@ -82,18 +69,17 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         };
     }
 
+    // Node rendering with hover effect - already implemented correctly
     nodeCanvasObject(node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number): void {
         const mintInfo = this.metadataServices.getMintInfo(node?.mint_address);
         const fontSize = 12 / globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;
 
-        const isInHoveredGroup = this.hoveredGroup !== null && this.processedData.current.links.some(
-            (link) => link.group === this.hoveredGroup && (
-                (typeof link.source === 'string' ? link.source : (link.source as ForceGraphNode).id) === node.id ||
-                (typeof link.target === 'string' ? link.target : (link.target as ForceGraphNode).id) === node.id
-            )
-        );
-        const nodeSize = isInHoveredGroup ? 12 : 8;
+        // Determine if this is the hovered node
+        const isHovered = this.hoveredNode && this.hoveredNode.id === node.id;
+        
+        // Set nodeSize based on hover state (larger when hovered)
+        const nodeSize = isHovered ? 14 : 8;
 
         // Draw circle background
         ctx.beginPath();

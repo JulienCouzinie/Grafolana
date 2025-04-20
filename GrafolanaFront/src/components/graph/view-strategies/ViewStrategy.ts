@@ -65,4 +65,8 @@ export interface ViewStrategy {
     onNodeHover?: GraphNode;
     onLinkHover?: GraphNode;
   };
+
+  // Add the hoveredNode property to the interface
+  hoveredNode: ForceGraphNode | null;
+  hoveredLink: ForceGraphLink | null;
 }
