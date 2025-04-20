@@ -69,4 +69,7 @@ export interface ViewStrategy {
   // Add the hoveredNode property to the interface
   hoveredNode: ForceGraphNode | null;
   hoveredLink: ForceGraphLink | null;
+
+  // Add the selectedNodes property to the interface
+  selectedNodes: Set<string>;
 }

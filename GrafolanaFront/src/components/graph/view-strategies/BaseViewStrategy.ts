@@ -22,11 +22,17 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
 
+    // Add a property to store selected nodes
+    selectedNodes: Set<string> = new Set();
+    hoveredNode: ForceGraphNode | null;
+    hoveredLink: ForceGraphLink | null;
+
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
         usdServices: ReturnType<typeof useUSDValue>,
         processedDataRef: React.RefObject<GraphData>,
-        originalDataRef: React.RefObject<GraphData>
+        originalDataRef: React.RefObject<GraphData>,
+        selectedNodes: Set<string> = new Set()
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
@@ -36,9 +42,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Initialize hover states
         this.hoveredNode = null;
         this.hoveredLink = null;
+        this.selectedNodes = selectedNodes;
     }
-    hoveredNode: ForceGraphNode | null;
-    hoveredLink: ForceGraphLink | null;
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
         return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
@@ -69,7 +74,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         };
     }
 
-    // Node rendering with hover effect - already implemented correctly
+    // Update nodeCanvasObject to consider the selected state
     nodeCanvasObject(node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number): void {
         const mintInfo = this.metadataServices.getMintInfo(node?.mint_address);
         const fontSize = 12 / globalScale;
@@ -78,13 +83,18 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Determine if this is the hovered node
         const isHovered = this.hoveredNode && this.hoveredNode.id === node.id;
         
+        // Determine if this node is selected
+        const isSelected = this.selectedNodes.has(node.id!.toString());
+        
         // Set nodeSize based on hover state (larger when hovered)
         const nodeSize = isHovered ? 14 : 8;
 
         // Draw circle background
         ctx.beginPath();
         ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
-        ctx.fillStyle = SOLANA_COLORS.green;
+        
+        // Use Solana blue for selected nodes, green for normal nodes
+        ctx.fillStyle = isSelected ? SOLANA_COLORS.blue : SOLANA_COLORS.green;
         ctx.fill();
 
         if (mintInfo) {
@@ -202,6 +212,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     
     // Default implementation for context menu items
     getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
+        // Check if the node is currently fixed (has fx and fy properties)
+        const isFixed = node.fx !== undefined && node.fy !== undefined;
+
         // Default context menu items available for all strategies
         return [
             {
@@ -211,6 +224,10 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             {
                 label: "Show Details",
                 action: "show_details"
+            },
+            {
+                label: isFixed ? "Unfix Position" : "Fix Position",
+                action: "toggle_fix_position"
             }
         ];
     }
@@ -225,6 +242,24 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             case "show_details":
                 // Show detailed view can be implemented by specific strategies
                 console.log("Show details for:", node);
+                break;
+            case "toggle_fix_position":
+                // Toggle fixing the node position
+                if (node.fx !== undefined && node.fy !== undefined) {
+                    // Node is currently fixed, so unfix it
+                    node.fx = undefined;
+                    node.fy = undefined;
+                } else {
+                    // Node is not fixed, so fix it at its current position
+                    node.fx = node.x;
+                    node.fy = node.y;
+                }
+                // Ensure the graph updates to reflect the change
+                if (this.processedData.current) {
+                    // Create a new reference to trigger React state updates
+                    const updatedNodes = [...this.processedData.current.nodes];
+                    this.processedData.current.nodes = updatedNodes;
+                }
                 break;
             default:
                 console.log(`Unhandled action: ${action} for node:`, node);

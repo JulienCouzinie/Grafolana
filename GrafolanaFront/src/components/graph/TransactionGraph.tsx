@@ -67,6 +67,131 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Add a reference to the graph component at the beginning of your component
   const fgRef = useRef<any>(null);
 
+  // Add this function to your TransactionGraph component
+  // This tracks if the ALT key is currently pressed
+  const [isAltKeyPressed, setIsAltKeyPressed] = useState<boolean>(false);
+
+  // Add state to track selected nodes and CTRL key state
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [isCtrlKeyPressed, setIsCtrlKeyPressed] = useState<boolean>(false);
+
+  // Create a ref for the panel to access its imperative handle
+  const panelRef = useRef<ImperativePanelHandle>(null);
+
+  // Use flow view strategy hook
+  const flowStrategy = useFlowViewStrategy();
+  const accountStrategy = useAccountViewStrategy();
+  const walletStrategy = useWalletViewStrategy();
+  
+  // Select current strategy based on view mode
+  const strategy = useMemo(() => {
+    return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
+  }, [viewMode]);
+
+  // Add an effect to track ALT and CTRL key state
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') {
+        setIsAltKeyPressed(true);
+      }
+      // Track ctrl key (use ctrlKey or metaKey for Mac compatibility)
+      if (event.ctrlKey || event.metaKey) {
+        setIsCtrlKeyPressed(true);
+      }
+    };
+    
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') {
+        setIsAltKeyPressed(false);
+      }
+      // Check if ctrl key is released
+      if (!event.ctrlKey && !event.metaKey) {
+        setIsCtrlKeyPressed(false);
+      }
+    };
+    
+    // Add event listeners for key tracking
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', () => {
+      // Reset key states when window loses focus
+      setIsAltKeyPressed(false);
+      setIsCtrlKeyPressed(false);
+    });
+    
+    // Cleanup event listeners when component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', () => {
+        setIsAltKeyPressed(false);
+        setIsCtrlKeyPressed(false);
+      });
+    };
+  }, []);
+
+  // Add handler for node drag end
+  const handleNodeDragEnd = (node: ForceGraphNode) => {
+    if (isAltKeyPressed && node) {
+      // Fix node position by setting fx and fy to the current position
+      node.fx = node.x;
+      node.fy = node.y;
+      
+      // Provide user feedback (optional)
+      console.log(`Node ${node.id} position fixed at x:${node.x}, y:${node.y}`);
+      
+      // Force a refresh of the graph to reflect changes
+      if (fgRef.current) {
+        fgRef.current.d3ReheatSimulation();
+      }
+    }
+  };
+
+  // Add handler for node click to manage selection
+  const handleNodeClick = (node: ForceGraphNode | null) => {
+    if (!node) return;
+    
+    // Get node ID for tracking in the selection set
+    const nodeId = node.id!.toString();
+    
+    // If CTRL is pressed, toggle the clicked node in the selection
+    if (isCtrlKeyPressed) {
+      setSelectedNodes(currentSelected => {
+        // Create a new Set to avoid mutation
+        const updatedSelection = new Set(currentSelected);
+        
+        // Toggle the node: remove if already selected, add if not
+        if (updatedSelection.has(nodeId)) {
+          updatedSelection.delete(nodeId);
+        } else {
+          updatedSelection.add(nodeId);
+        }
+        
+        return updatedSelection;
+      });
+    } else {
+      // No CTRL pressed: replace selection with just this node
+      // If the node is already the only selected one, deselect it
+      if (selectedNodes.size === 1 && selectedNodes.has(nodeId)) {
+        setSelectedNodes(new Set());
+      } else {
+        setSelectedNodes(new Set([nodeId]));
+      }
+    }
+  };
+
+  // Add an effect to clear selection when view mode changes
+  useEffect(() => {
+    setSelectedNodes(new Set());
+  }, [viewMode]);
+
+  // Pass the selected nodes to the strategy
+  useEffect(() => {
+    if (strategy) {
+      strategy.selectedNodes = selectedNodes;
+    }
+  }, [strategy, selectedNodes]);
+
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
     if (!fgRef.current) return;
@@ -142,19 +267,6 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     isOpen: false,
   });
   
-  // Create a ref for the panel to access its imperative handle
-  const panelRef = useRef<ImperativePanelHandle>(null);
-
-  // Use flow view strategy hook
-  const flowStrategy = useFlowViewStrategy();
-  const accountStrategy = useAccountViewStrategy();
-  const walletStrategy = useWalletViewStrategy();
-  
-  // Select current strategy based on view mode
-  const strategy = useMemo(() => {
-    return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
-  }, [viewMode]);
-
   // Handle right-click on node
   const handleNodeRightClick = (node: ForceGraphNode | null, event: MouseEvent) => {
     // Prevent the default context menu
@@ -191,7 +303,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     
     if (contextMenu.isOpen) {
       document.addEventListener('click', handleOutsideClick);
-    }
+    };
     
     return () => {
       document.removeEventListener('click', handleOutsideClick);
@@ -365,6 +477,8 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 // Node rendering
                 nodeCanvasObject={(node, ctx, scale) => strategy.nodeCanvasObject(node, ctx, scale)}
                 nodeLabel={(node) => strategy.nodeTooltip(node)}
+                // Add click handler for node selection
+                onNodeClick={handleNodeClick}
                 // Link styling
                 linkWidth={(link) => strategy.getLinkStyle(link).width}
                 linkColor={(link) => strategy.getLinkStyle(link).color}
@@ -383,7 +497,9 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 onNodeHover={(node => strategy.handleNodeHover(node))}
                 onLinkHover={(link => strategy.handleLinkHover(link))}
                 // Right-click handling
-                onNodeRightClick={handleNodeRightClick}                
+                onNodeRightClick={handleNodeRightClick}
+                // Add drag end handler
+                onNodeDragEnd={handleNodeDragEnd}                
               />
             </div>
           </div>
