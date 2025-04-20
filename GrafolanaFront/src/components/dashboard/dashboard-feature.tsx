@@ -7,14 +7,14 @@ import 'react-json-pretty/themes/monikai.css';
 import { TransactionGraph } from '../graph/TransactionGraph';
 import { AccountVertex, GraphData, GraphLink } from '../../types/graph';
 import { AddressLabel } from '../metadata/address-label';
-import { useMetadata } from '../metadata/metadata-provider';
+
 
 export default function DashboardFeature() {
-  const { connected, publicKey } = useWallet();
-  const [isRecordingFinished, setIsRecordingFinished] = useState(false);
+  const { publicKey } = useWallet();
+
   const [transactionJSON, setTransactionJSON] = useState<Record<string, unknown>>({});
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [], transactions: {}, });
-  const { getLabelComputed: getLabelByAddress, updateLabel} = useMetadata();
+
 
   const getTransactionFromWallet = async (walletkey: string, startTime: number, endTime: number) => {
     try {

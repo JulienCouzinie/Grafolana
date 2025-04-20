@@ -22,7 +22,7 @@ interface MetadataContextType {
   getProgramImage: (imageUrl: string) => HTMLImageElement;
   
   updateLabel: (address: string, label: string, description?: string, userId?: string) => Promise<Label>;
-  getLabelComputed: (address: string, type: AddressType, shortened_address: boolean) => SimpleLabel;
+  getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
@@ -210,7 +210,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   const FetchLabelsInfosAndCache = useCallback(async (
     addresses: AddressWithType[], 
     userId?: string,
-    shortenAddresses: boolean = true
+    shortenAddresses: boolean = false
   ): Promise<void> => {
     const uniqueAddresses = [...new Set(addresses.map(a => a.address))];
     const addressTypeMap = new Map(addresses.map(a => [a.address, a.type]));
@@ -380,7 +380,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getLabelComputed = useCallback(
-    (address: string, type: AddressType, shortenedAddress: boolean = false): SimpleLabel => {
+    (address: string, type: AddressType = "unknown", shortenedAddress: boolean = false): SimpleLabel => {
       const userId = publicKey?.toBase58();
 
       // Check if label is already in state

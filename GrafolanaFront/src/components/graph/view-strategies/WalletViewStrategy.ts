@@ -229,7 +229,7 @@ class WalletViewStrategy extends BaseViewStrategy {
       ? `
         <b>Authorities:</b><br/>
         <ul style="margin: 0; padding-left: 20px;">
-          ${node.authorities.map(auth => `<li>${auth}</li>`).join('')}
+          ${node.authorities.map(auth => `<li>${this.metadataServices.getLabelComputed(auth).label}"</li>`).join('')}
         </ul>
       `
       : '';
@@ -257,8 +257,7 @@ class WalletViewStrategy extends BaseViewStrategy {
 
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
-        <b>Account:</b> ${node.account_vertex.address}<br/>
-        <b>Version:</b> ${node.account_vertex.version}<br/>
+        <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
         ${mintAddress ? `
           <b>Mint:</b> ${mintAddress}<br/>
           ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
@@ -328,8 +327,8 @@ class WalletViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>From:</b> ${link.source_account_vertex.address}<br/>
-        <b>To:</b> ${link.target_account_vertex.address}<br/>
+        <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
+        <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
         ${compositesHtml}
     </div>
     `;
