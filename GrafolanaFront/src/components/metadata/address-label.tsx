@@ -15,6 +15,14 @@ interface AddressLabelProps {
   show_controls?: boolean;
 }
 
+interface TooltipPosition {
+  top: number;
+  left: number;
+  transformOrigin?: string;
+  transformOffset?: { x: number; y: number };
+  arrowLeftOffset?: number; // Add property to track arrow offset
+}
+
 export function AddressLabel({ 
   address, 
   type = 'unknown', 
@@ -32,7 +40,8 @@ export function AddressLabel({
   const [showTooltip, setShowTooltip] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
   const labelRef = useRef<HTMLSpanElement>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
 
   useEffect(() => {
     function fetchLabel() {
@@ -58,18 +67,70 @@ export function AddressLabel({
     };
   }, [address, publicKey]);
 
-  // Update tooltip position when it's shown
+  // Calculate tooltip position with boundary detection
   useEffect(() => {
     if (showTooltip && labelRef.current) {
       const rect = labelRef.current.getBoundingClientRect();
-      setTooltipPosition({
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Default position (centered above the label)
+      let position: TooltipPosition = {
         top: rect.top - 10, // Position above the element with a small gap
-        left: rect.left + (rect.width / 2)
-      });
+        left: rect.left + (rect.width / 2),
+      };
+
+      // Need to wait for tooltip to be rendered to get its dimensions
+      setTimeout(() => {
+        if (tooltipRef.current) {
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          
+          // Check if tooltip would go off-screen and adjust position accordingly
+          
+          // Handle horizontal overflow
+          if (position.left - (tooltipRect.width / 2) < 10) {
+            // Too close to left edge
+            const originalLeft = position.left;
+            position.left = tooltipRect.width / 2 + 10; // Keep tooltip within viewport with padding
+            
+            // Calculate how much we shifted the tooltip right
+            const shift = position.left - originalLeft;
+            // The arrow should be offset to the left by the same amount
+            position.arrowLeftOffset = -shift;
+            
+          } else if (position.left + (tooltipRect.width / 2) > viewportWidth - 10) {
+            // Too close to right edge
+            const originalLeft = position.left;
+            position.left = viewportWidth - (tooltipRect.width / 2) - 10;
+            
+            // Calculate how much we shifted the tooltip left
+            const shift = originalLeft - position.left;
+            // The arrow should be offset to the right by the same amount
+            position.arrowLeftOffset = shift;
+          }
+          
+          // Handle vertical overflow (if tooltip would go above the viewport)
+          if (position.top - tooltipRect.height < 10) {
+            // Position below the element instead of above
+            position = {
+              top: rect.bottom + 10,
+              left: position.left,
+              transformOrigin: "top center",
+              transformOffset: { x: -50, y: 0 }, // Adjust transform to position the arrow correctly
+              arrowLeftOffset: position.arrowLeftOffset // Preserve the horizontal arrow offset
+            };
+          }
+          
+          setTooltipPosition(position);
+        }
+      }, 0);
+      
+      // Initial position estimate
+      setTooltipPosition(position);
     }
   }, [showTooltip]);
 
-  const handleCopy = async () => {
+  const handleCopy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(address);
       setShowCheckmark(true);
@@ -79,7 +140,7 @@ export function AddressLabel({
     }
   };
 
-  const handleSaveLabel = async () => {
+  const handleSaveLabel = async (): Promise<void> => {
     if (!publicKey) {
       alert('Please connect your wallet to create labels');
       return;
@@ -101,6 +162,40 @@ export function AddressLabel({
     }
   };
 
+  // Determine transform style based on tooltip position
+  const getTooltipTransform = (): string => {
+    if (tooltipPosition.transformOffset) {
+      return `translate(${tooltipPosition.transformOffset.x}%, ${tooltipPosition.transformOffset.y}%)`;
+    }
+    return 'translate(-50%, -100%)'; // Default transform
+  };
+
+  // Determine arrow position and style
+  const getArrowPosition = (): React.CSSProperties => {
+    const baseStyles: React.CSSProperties = {
+      left: tooltipPosition.arrowLeftOffset ? `calc(50% + ${tooltipPosition.arrowLeftOffset}px)` : '50%',
+      transform: 'translateX(-50%)',
+    };
+    
+    if (tooltipPosition.transformOrigin === "top center") {
+      // When tooltip is below the element
+      return {
+        ...baseStyles,
+        top: '-6px',
+        bottom: 'auto',
+        transform: `translateX(-50%) rotate(-135deg)`, // Flip the arrow to point up
+      };
+    }
+    
+    // Default - tooltip above element
+    return {
+      ...baseStyles,
+      bottom: '-6px',
+      top: 'auto',
+      transform: `translateX(-50%) rotate(45deg)`, // Arrow points down
+    };
+  };
+
   return (
     <div className="relative inline-flex items-center gap-2">
       <span 
@@ -115,12 +210,14 @@ export function AddressLabel({
       {/* Use createPortal to render the tooltip at the document root level */}
       {showTooltip && typeof document !== 'undefined' && createPortal(
         <div 
+          ref={tooltipRef}
           className="address-tooltip-portal"
           style={{
             position: 'fixed',
             top: `${tooltipPosition.top}px`,
             left: `${tooltipPosition.left}px`,
-            transform: 'translate(-50%, -100%)',
+            transform: getTooltipTransform(),
+            transformOrigin: tooltipPosition.transformOrigin || 'bottom center',
             zIndex: 99999, // Higher than anything else
             pointerEvents: 'none', // Let mouse events pass through
           }}
@@ -141,8 +238,11 @@ export function AddressLabel({
               )}
             </div>
             
-            {/* Arrow */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-3 h-3 bg-gray-800 rotate-45 border-r border-b border-gray-700" />
+            {/* Arrow - position dynamically based on tooltip placement */}
+            <div 
+              className="absolute w-3 h-3 bg-gray-800 border border-gray-700" 
+              style={getArrowPosition()}
+            />
           </div>
         </div>,
         document.body
