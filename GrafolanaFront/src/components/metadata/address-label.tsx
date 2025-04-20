@@ -1,7 +1,6 @@
 import { useMetadata } from './metadata-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useTooltipPosition } from '@/hooks/useTooltipPosition';
 import { Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
 
@@ -175,24 +174,30 @@ export function AddressLabel({
     const baseStyles: React.CSSProperties = {
       left: tooltipPosition.arrowLeftOffset ? `calc(50% + ${tooltipPosition.arrowLeftOffset}px)` : '50%',
       transform: 'translateX(-50%)',
+      width: '10px', // Width of arrow
+      height: '10px', // Height of arrow
+      backgroundColor: '#1F2937', // Same background color as tooltip (bg-gray-800)
+      borderStyle: 'solid',
+      borderWidth: '0 1px 1px 0', // Only show right and bottom borders for a clean arrow
+      borderColor: '#374151', // Same as tooltip border (border-gray-700)
     };
     
     if (tooltipPosition.transformOrigin === "top center") {
-      // When tooltip is below the element
+      // When tooltip is below the element - arrow points up
       return {
         ...baseStyles,
-        top: '-6px',
+        top: '-5px', // Position above the tooltip
         bottom: 'auto',
-        transform: `translateX(-50%) rotate(-135deg)`, // Flip the arrow to point up
+        transform: 'translateX(-50%) rotate(-135deg)', // Rotate to point upward
       };
     }
     
-    // Default - tooltip above element
+    // Default - tooltip above element - arrow points down
     return {
       ...baseStyles,
-      bottom: '-6px',
+      bottom: '-5px', // Position below the tooltip
       top: 'auto',
-      transform: `translateX(-50%) rotate(45deg)`, // Arrow points down
+      transform: 'translateX(-50%) rotate(45deg)', // Rotate to point downward
     };
   };
 
@@ -238,9 +243,9 @@ export function AddressLabel({
               )}
             </div>
             
-            {/* Arrow - position dynamically based on tooltip placement */}
+            {/* Arrow - using CSS triangles instead of a rotated box */}
             <div 
-              className="absolute w-3 h-3 bg-gray-800 border border-gray-700" 
+              className="absolute"
               style={getArrowPosition()}
             />
           </div>
