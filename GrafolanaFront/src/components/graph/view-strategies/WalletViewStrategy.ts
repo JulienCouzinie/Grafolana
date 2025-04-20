@@ -94,7 +94,8 @@ class WalletViewStrategy extends BaseViewStrategy {
   // Token accounts are aggregated by their wallet owner
   // if the owner is not present, the address is used
   private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
-    const seen = new Map<string, ForceGraphNode>();
+    let seen = new Map<string, ForceGraphNode>();
+    let composite_seen_per_address = new Map<string, string[]>();
     
     nodes.forEach((node) => {
       let address = this.getWalletAddress(node);
@@ -116,22 +117,30 @@ class WalletViewStrategy extends BaseViewStrategy {
           balance_lamport:0, 
           composite: null
         };
+        composite_seen_per_address.set(address, []);
         
         // If the node is not a SOL account, add it to the composite array
         if (node.type !== AccountType.SOL_ACCOUNT && node.type !== AccountType.FEE_ACCOUNT) {
           aggregatedNode.composite = [node];
+          composite_seen_per_address.get(address)!.push(node.account_vertex.address);
         }
 
         seen.set(address, aggregatedNode);
       } else {
         if (address!=="FEE") {
           if (node.type !== AccountType.SOL_ACCOUNT) {
-            const existingNode = seen.get(address)!;
-            if (!existingNode.composite) {
-              existingNode.composite = [];
+            // Check if the node is already in the composite array
+            // If not, add it to the composite array of the existing node
+            if (!composite_seen_per_address.get(address)!.includes(node.account_vertex.address)) {
+              composite_seen_per_address.get(address)!.push(node.account_vertex.address);
+            
+              const existingNode = seen.get(address)!;
+              if (!existingNode.composite) {
+                existingNode.composite = [];
+              }
+              // Add the node to the composite array of the existing node
+              existingNode.composite.push(node);
             }
-            // Add the node to the composite array of the existing node
-            existingNode.composite.push(node);
           }
         }
       }
