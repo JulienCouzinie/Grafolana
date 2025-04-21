@@ -248,7 +248,7 @@ class WalletViewStrategy extends BaseViewStrategy {
             return `<li>
               ${compMintImage ? `<img src="${compMintImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; display: inline-block;">` : ''}
               ${compMintInfo?.symbol ? `${compMintInfo.symbol}: ` : ''}
-              ${comp.account_vertex.address}
+              ${this.metadataServices.getLabelComputed(comp.account_vertex.address).label}
             </li>`;
           }).join('')}
         </ul>
