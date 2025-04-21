@@ -348,7 +348,8 @@ export function useWalletViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
-  const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
+
+  const selectedNodes = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
   return new WalletViewStrategy(
@@ -356,7 +357,6 @@ export function useWalletViewStrategy(): ViewStrategy {
     usdServices,
     processedDataRef,
     originalDataRef,
-    hoveredGroup,
-    setHoveredGroup
+    selectedNodes
   );
 }

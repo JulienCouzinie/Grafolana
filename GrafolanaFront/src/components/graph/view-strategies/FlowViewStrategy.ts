@@ -264,12 +264,15 @@ export function useFlowViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
+  
+  const selectedNodes = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
   return new FlowViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,
-    originalDataRef
+    originalDataRef,
+    selectedNodes
   );
 }

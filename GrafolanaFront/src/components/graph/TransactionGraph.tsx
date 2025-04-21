@@ -76,15 +76,20 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   const accountStrategy = useAccountViewStrategy();
   const walletStrategy = useWalletViewStrategy();
   
+  // Add state to store accordion content
+  const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
+  const [groupingContent, setGroupingContent] = useState<React.ReactNode | null>(null);
+  const [contextualContent, setContextualContent] = useState<React.ReactNode | null>(null);
+
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
     return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
-  }, [viewMode]);
+  }, [viewMode, flowStrategy, walletStrategy, accountStrategy]);
 
   // Use consolidated graph interactions hook
   const {
     // Node selection
-    clearSelection,
+    nodeSelectionUpdate,
     handleNodeClick,
     
     // Node position fixing
@@ -94,13 +99,9 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     contextMenu,
     handleNodeRightClick,
     handleContextMenuAction,
+    handleBackGroundClick,
   } = useGraphInteractions(strategy, fgRef);
 
-  // Clear selection when view mode changes
-  // FIX: Remove clearSelection from dependencies to prevent infinite render loop
-  useEffect(() => {
-    clearSelection();
-  }, [viewMode]); // Only depend on viewMode changes
 
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
@@ -120,6 +121,25 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
       setProcessedData(processed);
     }
   }, [graphData, viewMode]);
+
+  // Use an effect to update accordion content whenever strategy changes or selectedNodes changes
+  useEffect(() => {
+    if (strategy) {
+      // Update all accordion content from strategy
+      setFiltersContent(strategy.getFiltersContent());
+      setGroupingContent(strategy.getGroupingContent());
+      setContextualContent(strategy.getContextualInfoContent());
+    }
+  }, [viewMode]);
+
+  // Add effect to update contextual info when selection changes
+  useEffect(() => {
+    if (strategy) {
+      // Only update contextual content since it's the one showing selection info
+      setContextualContent(strategy.getContextualInfoContent());
+    }
+  }, [nodeSelectionUpdate]);
+
 
   // Render nothing if no strategy is selected
   if (!strategy) return null;
@@ -203,13 +223,19 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
                 <AccordionItem title="Filters" defaultOpen={true}>
-                  <p>Content for section 1</p>
+                  <div className="accordion-content">
+                    {filtersContent || <p>No filters available for this view</p>}
+                  </div>
                 </AccordionItem>
                 <AccordionItem title="Grouping" defaultOpen={true}>
-                  <p>Content for section 2</p>
+                  <div className="accordion-content">
+                    {groupingContent || <p>No grouping options available for this view</p>}
+                  </div>
                 </AccordionItem>
                 <AccordionItem title="Contextual Info" defaultOpen={true}>
-                  <p>Content for section 3</p>
+                  <div className="accordion-content">
+                    {contextualContent || <p>No contextual information available for this view</p>}
+                  </div>
                 </AccordionItem>
               </Accordion>
             </div>
@@ -302,7 +328,8 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 // Right-click handling
                 onNodeRightClick={handleNodeRightClick}
                 // Add drag end handler
-                onNodeDragEnd={handleNodeDragEnd}                
+                onNodeDragEnd={handleNodeDragEnd}     
+                onBackgroundClick={handleBackGroundClick}           
               />
             </div>
           </div>

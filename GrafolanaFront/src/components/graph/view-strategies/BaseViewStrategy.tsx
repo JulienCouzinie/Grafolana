@@ -1,3 +1,4 @@
+import React, { Ref } from 'react';
 import { GraphData, GraphNode, GraphLink, ProcessedGraphData, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
@@ -22,8 +23,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
 
-    // Add a property to store selected nodes
-    selectedNodes: Set<string> = new Set();
+    // Change selectedNodes to be a Ref instead of a direct Set
+    selectedNodes: React.RefObject<Set<string>>;
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
 
@@ -32,7 +33,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         usdServices: ReturnType<typeof useUSDValue>,
         processedDataRef: React.RefObject<GraphData>,
         originalDataRef: React.RefObject<GraphData>,
-        selectedNodes: Set<string> = new Set()
+        selectedNodesRef: React.RefObject<Set<string>>
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
@@ -42,7 +43,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Initialize hover states
         this.hoveredNode = null;
         this.hoveredLink = null;
-        this.selectedNodes = selectedNodes;
+        this.selectedNodes = selectedNodesRef;
     }
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
@@ -74,7 +75,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         };
     }
 
-    // Update nodeCanvasObject to consider the selected state
+    // Update nodeCanvasObject to use the ref for selectedNodes
     nodeCanvasObject(node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number): void {
         const mintInfo = this.metadataServices.getMintInfo(node?.mint_address);
         const fontSize = 12 / globalScale;
@@ -83,8 +84,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Determine if this is the hovered node
         const isHovered = this.hoveredNode && this.hoveredNode.id === node.id;
         
-        // Determine if this node is selected
-        const isSelected = this.selectedNodes.has(node.id!.toString());
+        // Determine if this node is selected - use the ref
+        const isSelected = this.selectedNodes.current?.has(node.id!.toString()) || false;
         
         // Set nodeSize based on hover state (larger when hovered)
         const nodeSize = isHovered ? 14 : 8;
@@ -264,6 +265,50 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             default:
                 console.log(`Unhandled action: ${action} for node:`, node);
         }
+    }
+
+    /**
+     * Returns content for the Filters accordion section
+     * Override in concrete strategies for strategy-specific filtering options
+     */
+    getFiltersContent(): React.ReactNode {
+        return (
+            <div className="strategy-panel-content">
+                <p>Base filtering options</p>
+                
+            </div>
+        );
+    }
+
+    /**
+     * Returns content for the Grouping accordion section
+     * Override in concrete strategies for strategy-specific grouping options
+     */
+    getGroupingContent(): React.ReactNode {
+        return (
+            <div className="strategy-panel-content">
+                <p>Base grouping options</p>
+                {/* No common grouping controls in base strategy */}
+                <p>Select a specific view for more grouping options</p>
+            </div>
+        );
+    }
+
+    /**
+     * Returns content for the Contextual Info accordion section
+     * Override in concrete strategies for strategy-specific contextual information
+     */
+    getContextualInfoContent(): React.ReactNode {
+        return (
+            <div className="strategy-panel-content">
+                <p>Base contextual information</p>
+                {/* Add common contextual information */}
+                <div className="info-section">
+                    <h3>Selection</h3>
+                    <p>Selected nodes: {this.selectedNodes.current?.size || 0}</p>
+                </div>
+            </div>
+        );
     }
     
     // Abstract methods that must be implemented by derived classes

@@ -340,11 +340,14 @@ export function useAccountViewStrategy(): ViewStrategy {
     transactions: {},
   });
 
+  const selectedNodes = useRef<Set<string>>(new Set<string>());
+
   // Create and return strategy instance
   return new AccountViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,
-    originalDataRef
+    originalDataRef,
+    selectedNodes
   );
 }

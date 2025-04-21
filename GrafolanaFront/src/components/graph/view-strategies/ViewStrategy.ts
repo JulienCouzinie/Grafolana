@@ -1,5 +1,6 @@
-import {  ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode, ProcessedGraphData } from '@/types/graph';
+import { ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode, ProcessedGraphData } from '@/types/graph';
 import { LinkObject } from 'react-force-graph-2d';
+import { Ref, RefObject } from 'react';
 
 export interface ContextMenuItem {
   label: string;
@@ -35,18 +36,18 @@ export interface ViewStrategy {
   /**
    * Handle node hover events
    */
-  handleNodeHover: (node: ForceGraphNode | null) => void;
-  
+  handleNodeHover(node: ForceGraphNode | null): void;
+
   /**
    * Handle link hover events
    */
-  handleLinkHover: (link: GraphLink | null) => void;
+  handleLinkHover(link: ForceGraphLink | null): void;
 
   /**
    * Get context menu items for a node
    */
   getNodeContextMenuItems: (node: ForceGraphNode) => ContextMenuItem[];
-  
+
   /**
    * Handle context menu actions
    */
@@ -66,10 +67,30 @@ export interface ViewStrategy {
     onLinkHover?: GraphNode;
   };
 
-  // Add the hoveredNode property to the interface
   hoveredNode: ForceGraphNode | null;
   hoveredLink: ForceGraphLink | null;
 
-  // Add the selectedNodes property to the interface
-  selectedNodes: Set<string>;
+  /**
+   * Reference to the currently selected nodes set
+   * Uses React.Ref to allow mutations to the current value
+   */
+  selectedNodes: RefObject<Set<string>>;
+
+  /**
+   * Returns the content to be displayed in the Filters accordion section
+   * @returns React node with filter controls specific to this strategy
+   */
+  getFiltersContent(): React.ReactNode;
+
+  /**
+   * Returns the content to be displayed in the Grouping accordion section
+   * @returns React node with grouping controls specific to this strategy
+   */
+  getGroupingContent(): React.ReactNode;
+
+  /**
+   * Returns the content to be displayed in the Contextual Info accordion section
+   * @returns React node with contextual information specific to this strategy
+   */
+  getContextualInfoContent(): React.ReactNode;
 }

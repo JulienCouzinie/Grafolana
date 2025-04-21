@@ -14,19 +14,16 @@ type ContextMenuState = {
 // Type for the return value of the hook
 type UseGraphInteractionsReturn = {
   // Node selection
-  selectedNodes: Set<string>;
-  isCtrlKeyPressed: boolean;
+  nodeSelectionUpdate: number;
   handleNodeClick: (node: ForceGraphNode | null) => void;
-  clearSelection: () => void;
-  
-  // Node position fixing
-  isAltKeyPressed: boolean;
+
   handleNodeDragEnd: (node: ForceGraphNode) => void;
   
   // Context menu
   contextMenu: ContextMenuState;
   handleNodeRightClick: (node: ForceGraphNode | null, event: MouseEvent) => void;
   handleContextMenuAction: (action: string) => void;
+  handleBackGroundClick: (event: MouseEvent) => void;
 };
 
 /**
@@ -44,7 +41,7 @@ export function useGraphInteractions(
   fgRef: RefObject<ForceGraphMethods>
 ): UseGraphInteractionsReturn {
   // ---------- NODE SELECTION ----------
-  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [nodeSelectionUpdate, setNodeSelectionUpdate] = useState<number>(0);
   const [isCtrlKeyPressed, setIsCtrlKeyPressed] = useState<boolean>(false);
 
   // ---------- NODE POSITION FIXING ----------
@@ -104,41 +101,40 @@ export function useGraphInteractions(
   
   // Handler for node click to manage selection
   const handleNodeClick = (node: ForceGraphNode | null) => {
-    if (!node) return;
-    
     // Get node ID for tracking in the selection set
-    const nodeId = node.id!.toString();
+    const nodeId = node!.id!.toString();
     
     // If CTRL is pressed, toggle the clicked node in the selection
     if (isCtrlKeyPressed) {
-      setSelectedNodes(currentSelected => {
-        // Create a new Set to avoid mutation
-        const updatedSelection = new Set(currentSelected);
-        
         // Toggle the node: remove if already selected, add if not
-        if (updatedSelection.has(nodeId)) {
-          updatedSelection.delete(nodeId);
+        if (strategy?.selectedNodes.current.has(nodeId)) {
+          strategy?.selectedNodes.current.delete(nodeId);
         } else {
-          updatedSelection.add(nodeId);
+          strategy?.selectedNodes.current.add(nodeId);
         }
         
-        return updatedSelection;
-      });
     } else {
       // No CTRL pressed: replace selection with just this node
       // If the node is already the only selected one, deselect it
-      if (selectedNodes.size === 1 && selectedNodes.has(nodeId)) {
-        setSelectedNodes(new Set());
+      if (strategy?.selectedNodes.current.size === 1 && strategy?.selectedNodes.current.has(nodeId)) {
+        strategy!.selectedNodes.current = new Set();
       } else {
-        setSelectedNodes(new Set([nodeId]));
+        strategy!.selectedNodes.current = new Set([nodeId]);
       }
     }
+
+    setNodeSelectionUpdate(prev => prev + 1); // Trigger re-render
   };
+
+  // Handler for background click to clear selection
+  const handleBackGroundClick = (event: MouseEvent) => {
+    if (strategy!.selectedNodes.current.size > 0) {
+      strategy!.selectedNodes.current = new Set(); // Clear selection
+      setNodeSelectionUpdate(prev => prev + 1); // Trigger re-render
+    }
+  }
   
-  // Method to clear node selection
-  const clearSelection = () => {
-    setSelectedNodes(new Set());
-  };
+
 
   // ---------- NODE POSITION FIXING HANDLERS ----------
   
@@ -204,27 +200,19 @@ export function useGraphInteractions(
     };
   }, [contextMenu.isOpen]);
 
-  // Effect to update strategy with selected nodes
-  useEffect(() => {
-    if (strategy) {
-      strategy.selectedNodes = selectedNodes;
-    }
-  }, [strategy, selectedNodes]);
 
   return {
     // Node selection
-    selectedNodes,
-    isCtrlKeyPressed,
+    nodeSelectionUpdate,
     handleNodeClick,
-    clearSelection,
     
     // Node position fixing
-    isAltKeyPressed,
     handleNodeDragEnd,
     
     // Context menu
     contextMenu,
     handleNodeRightClick,
     handleContextMenuAction,
+    handleBackGroundClick,
   };
 }
