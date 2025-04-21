@@ -48,7 +48,8 @@ export function LabelEditDialog({
         address,
         labelInput,
         descriptionInput,
-        publicKey.toBase58()
+        publicKey.toBase58(),
+        type
       );
       // Call onSaveSuccess with updated values
       onSaveSuccess(labelInput, descriptionInput);
