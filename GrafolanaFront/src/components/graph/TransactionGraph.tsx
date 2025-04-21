@@ -57,12 +57,25 @@ interface TransactionGraphProps {
   graphData: GraphData;
 }
 
+// Create an interface to store processed data by view mode
+interface ProcessedDataCache {
+  [key: string]: GraphData | null;
+}
+
 export function TransactionGraph({ graphData }: TransactionGraphProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('flow');
   const [processedData, setProcessedData] = useState<GraphData>({ 
     nodes: [], 
     links: [], 
     transactions: {},
+  });
+
+  // Cache for storing processed data by view mode
+  const processedDataCache = useRef<ProcessedDataCache>({
+    flow: null,
+    account: null,
+    wallet: null,
+    program: null,
   });
 
   // Add a reference to the graph component at the beginning of your component
@@ -84,7 +97,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
     return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
-  }, [viewMode, flowStrategy, walletStrategy, accountStrategy]);
+  }, [viewMode]);
 
   // Use consolidated graph interactions hook
   const {
@@ -117,10 +130,35 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Process data using current strategy
   useEffect(() => {
     if (strategy) {
+
+
+      // Check if we have cached data for the current view mode
+      if (processedDataCache.current[viewMode]) {
+        // Use cached data
+        setProcessedData(processedDataCache.current[viewMode]!);
+      } else {
+        // Process and cache the data
+        const processed = strategy.processData(graphData);
+        processedDataCache.current[viewMode] = processed;
+        setProcessedData(processed);
+      }
+    }
+  }, [viewMode]);
+
+  // Process data using current strategy
+  useEffect(() => {
+    if (strategy) {
       const processed = strategy.processData(graphData);
       setProcessedData(processed);
+      // Invalidate cache for all view modes
+      processedDataCache.current['flow'] = null;
+      processedDataCache.current['account'] = null;
+      processedDataCache.current['wallet'] = null;
+      processedDataCache.current['program'] = null;
+      // Cache the processed data for the current view mode
+      processedDataCache.current[viewMode] = processed;
     }
-  }, [graphData, viewMode]);
+  }, [graphData]);
 
   // Use an effect to update accordion content whenever strategy changes or selectedNodes changes
   useEffect(() => {
@@ -359,7 +397,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
           position: ${isPanelCollapsed ? 'relative' : 'absolute'};
           top: ${isPanelCollapsed ? '0' : '10px'};
           right: ${isPanelCollapsed ? 'auto' : '10px'};
-          background-color: ${SOLANA_COLORS.purple};
+          background-color: ${SOLANA_COLORS.darkGray};
           color: white;
           border: none;
           border-radius: 4px;
@@ -374,7 +412,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
         }
         
         .panel-toggle-button:hover {
-          background-color: ${SOLANA_COLORS.blue};
+          background-color: ${SOLANA_COLORS.purple};
         }
         
         .panel-content.hidden {
