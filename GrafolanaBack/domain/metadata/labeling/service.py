@@ -19,29 +19,6 @@ def get_labels_for_addresses(addresses: List[str], user_id: Optional[str] = None
     if not addresses:
         return {}
     
-    # Convert list of addresses to tuple for caching
-    addresses_tuple = tuple(sorted(addresses))
-    
-    # Call the internal function with the tuple
-    return _get_labels_for_addresses(addresses_tuple, user_id)
-
-@cache.memoize(name="LabelService.get_labels_for_addresses")
-def _get_labels_for_addresses(addresses_tuple: tuple, user_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
-    """
-    Retrieve labels for a list of addresses.
-    
-    Args:
-        addresses: List of addresses to fetch labels for
-        user_id: Optional user ID to include user-specific labels
-        
-    Returns:
-        Dictionary mapping addresses to their highest priority label
-    """
-    addresses = list(addresses_tuple)
-
-    if not addresses:
-        return {}
-    
     session = get_session()
     try:
         # Construct query conditions
