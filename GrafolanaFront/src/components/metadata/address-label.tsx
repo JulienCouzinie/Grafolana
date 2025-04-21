@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
-import { LabelEditDialog } from './label-edit-dialog';
+import { useLabelEditDialog } from './label-edit-dialog-provider';
 
 interface AddressLabelProps {
   address: string;
@@ -28,10 +28,9 @@ export function AddressLabel({
   shortened = false, // Default to false
   show_controls = true // Default to showing controls
 }: AddressLabelProps) {
-  const { getLabelComputed, updateLabel } = useMetadata();
+  const { getLabelComputed } = useMetadata();
   const { publicKey } = useWallet();
   const [displayLabel, setDisplayLabel] = useState(shortened ? shortenAddress(address) : address);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [descriptionInput, setDescriptionInput] = useState('');
   const [displayDescription, setDisplayDescription] = useState('');
@@ -40,6 +39,9 @@ export function AddressLabel({
   const labelRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
+  
+  // Use our new label edit dialog context
+  const { openLabelEditor } = useLabelEditDialog();
 
   useEffect(() => {
     function fetchLabel() {
@@ -273,7 +275,13 @@ export function AddressLabel({
       {/* Modify button - only show if show_controls is true */}
       {show_controls && (
         <button
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => openLabelEditor({
+            address,
+            initialLabel: labelInput,
+            initialDescription: descriptionInput,
+            type,
+            onSaveSuccess: handleSaveSuccess
+          })}
           className="p-1 hover:text-blue-500"
           title="Edit label"
         >
@@ -282,17 +290,6 @@ export function AddressLabel({
           </svg>
         </button>
       )}
-
-      {/* Use the LabelEditDialog component */}
-      <LabelEditDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        address={address}
-        initialLabel={labelInput}
-        initialDescription={descriptionInput}
-        type={type}
-        onSaveSuccess={handleSaveSuccess}
-      />
     </div>
   );
 }
