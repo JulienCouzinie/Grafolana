@@ -1,7 +1,10 @@
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, RefObject, useCallback } from 'react';
 import { ForceGraphNode } from '../../../types/graph';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 import { ViewStrategy } from '../view-strategies/ViewStrategy';
+import { useLabelEditDialog } from '@/components/metadata/label-edit-dialog-provider';
+import { AddressType } from '@/types/metadata';
+import { useMetadata } from '@/components/metadata/metadata-provider';
 
 // Type for the context menu state
 type ContextMenuState = {
@@ -54,6 +57,9 @@ export function useGraphInteractions(
     node: null,
     isOpen: false,
   });
+
+  const { openLabelEditor } = useLabelEditDialog();
+  const { getLabelComputed } = useMetadata();
 
   // Shared effect to track keyboard state (ALT and CTRL keys)
   useEffect(() => {
@@ -176,14 +182,34 @@ export function useGraphInteractions(
   };
   
   // Handler for context menu item click
-  const handleContextMenuAction = (action: string) => {
-    if (strategy && contextMenu.node) {
-      strategy.handleNodeContextMenu(contextMenu.node, action);
+  const handleContextMenuAction = useCallback((action: string) => {
+    if (contextMenu.node) {
+      if (action === "rename_account") {
+        // Determine address type based on node type
+        let addressType = AddressType.UNKNOWN;
+        
+        // Get current label and description from metadata service
+        const currentLabel = getLabelComputed(contextMenu.node.account_vertex.address, addressType);
+        
+        // Open the label editor dialog
+        openLabelEditor({
+          address: contextMenu.node.account_vertex.address,
+          initialLabel: currentLabel.label || "",
+          initialDescription: currentLabel.description || "",
+          type: addressType,
+          onSaveSuccess: (label: string, description: string) => {
+            // The metadata provider will automatically update all components 
+            // that use this address's label information
+          }
+        });
+      } else {
+        // For all other actions, use the strategy's handler
+        strategy!.handleNodeContextMenu(contextMenu.node, action);
+      }
+      // Clear context menu after action
+      setContextMenu({ isOpen: false, x: 0, y: 0, node: null });
     }
-    
-    // Close the context menu after action
-    setContextMenu(prev => ({ ...prev, isOpen: false }));
-  };
+  }, [contextMenu, strategy, openLabelEditor, getLabelComputed]);
   
   // Effect to close context menu when clicking outside
   useEffect(() => {

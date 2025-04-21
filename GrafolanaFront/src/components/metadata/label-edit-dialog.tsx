@@ -29,7 +29,11 @@ export function LabelEditDialog({
 
   // Update state when props change
   useEffect(() => {
-    setLabelInput(initialLabel);
+    if (initialLabel == address) {
+      setLabelInput("");
+    } else {
+      setLabelInput(initialLabel);
+    }
     setDescriptionInput(initialDescription);
   }, [initialLabel, initialDescription]);
 

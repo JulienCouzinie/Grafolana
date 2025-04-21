@@ -228,6 +228,10 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 action: "copy_address"
             },
             {
+                label: "Rename Account", 
+                action: "rename_account"
+            },
+            {
                 label: "Show Details",
                 action: "show_details"
             },
@@ -244,6 +248,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             case "copy_address":
                 // Copy the account address to clipboard
                 navigator.clipboard.writeText(node.account_vertex.address);
+                break;
+            case "rename_account":
+                // The strategy class itself doesn't have access to hooks directly
+                // We'll need to implement this in a component that uses the strategy
+                // See the implementation in useGraphInteractions below
                 break;
             case "show_details":
                 // Show detailed view can be implemented by specific strategies

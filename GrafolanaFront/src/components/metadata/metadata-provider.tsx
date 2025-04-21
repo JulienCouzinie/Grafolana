@@ -21,7 +21,7 @@ interface MetadataContextType {
   getMintImage: (imageUrl: string | undefined) => HTMLImageElement | null;
   getProgramImage: (imageUrl: string) => HTMLImageElement;
   
-  updateLabel: (address: string, label: string, description?: string, userId?: string) => Promise<Label>;
+  updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
 }
 
@@ -209,8 +209,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
   const FetchLabelsInfosAndCache = useCallback(async (
     addresses: AddressWithType[], 
-    userId?: string,
-    shortenAddresses: boolean = false
+    userId?: string
   ): Promise<void> => {
     const uniqueAddresses = [...new Set(addresses.map(a => a.address))];
     const addressTypeMap = new Map(addresses.map(a => [a.address, a.type]));
@@ -245,12 +244,12 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     uniqueAddresses.forEach(address => {
-        computeLabel(address,addressTypeMap.get(address)!,shortenAddresses, userId);
+        computeLabel(address,addressTypeMap.get(address)!, userId);
     });
 
   }, []);
 
-  const computeLabel = useCallback((address: string, type: AddressType, isshortenAddress: boolean, userId?: string) => {
+  const computeLabel = useCallback((address: string, type: AddressType, userId?: string) => {
     // Now compute labels for all addresses, regardless of whether they were just fetched
 
       const cacheKey = getCacheKey(address, userId);
@@ -276,7 +275,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       } else {
         computedLabel = {
           address,
-          label: isshortenAddress ? shortenAddress(address) : address
+          label: address
         };
       }
   
@@ -350,7 +349,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     address: string,
     label: string,
     description?: string,
-    userId?: string
+    userId?: string,
+    type: AddressType = AddressType.UNKNOWN
   ): Promise<Label> => {
     if (!userId) {
       throw new Error("User ID is required to create or update labels");
@@ -371,6 +371,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       setLabel(cacheKey, updatedLabel);
       // Invalidate the computed label cache for this address
       deleteFromComputedLabels(address);
+      computeLabel(address, type, userId);
     
       return updatedLabel;
     } catch (error) {
@@ -386,12 +387,15 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       // Check if label is already in state
       const cachedLabel = ComputedLabelsRef.current.get(address);
       if (cachedLabel) {
+        if (cachedLabel.label === address) {
+          return { address: address, label: shortenedAddress ? shortenAddress(address) : address };
+        }
         return cachedLabel;
       }
 
       const addressesWithTypes: AddressWithType[] = [{address,type}];
       // Trigger asynchronous fetching
-      FetchLabelsInfosAndCache(addressesWithTypes,userId, shortenedAddress );
+      FetchLabelsInfosAndCache(addressesWithTypes,userId);
 
       // Return fallback while fetching
       return { address: address, label: shortenedAddress ? shortenAddress(address) : address };
