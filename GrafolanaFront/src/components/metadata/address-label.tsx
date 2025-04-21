@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
+import { LabelEditDialog } from './label-edit-dialog';
 
 export type AddressType = 'program' | 'token' | 'unknown';
 
@@ -29,7 +30,7 @@ export function AddressLabel({
   shortened = false, // Default to false
   show_controls = true // Default to showing controls
 }: AddressLabelProps) {
-  const { getLabelComputed, updateLabel} = useMetadata();
+  const { getLabelComputed, updateLabel } = useMetadata();
   const { publicKey } = useWallet();
   const [displayLabel, setDisplayLabel] = useState(shortened ? shortenAddress(address) : address);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -139,26 +140,13 @@ export function AddressLabel({
     }
   };
 
-  const handleSaveLabel = async (): Promise<void> => {
-    if (!publicKey) {
-      alert('Please connect your wallet to create labels');
-      return;
-    }
-
-    try {
-      await updateLabel(
-        address,
-        labelInput,
-        descriptionInput,
-        publicKey.toBase58()
-      );
-      setDisplayLabel(labelInput);
-      setDisplayDescription(descriptionInput);
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error('Error saving label:', error);
-      alert('Failed to save label');
-    }
+  // Handle successful save from the dialog
+  const handleSaveSuccess = (label: string, description: string): void => {
+    setDisplayLabel(label);
+    setDisplayDescription(description);
+    // Update the inputs for consistency with the original implementation
+    setLabelInput(label);
+    setDescriptionInput(description);
   };
 
   // Determine transform style based on tooltip position
@@ -297,53 +285,16 @@ export function AddressLabel({
         </button>
       )}
 
-      {/* Label edit dialog */}
-      {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999]">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4 text-white">Edit Label</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300">Label</label>
-                <input
-                  type="text"
-                  value={labelInput}
-                  onChange={(e) => setLabelInput(e.target.value)}
-                  className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
-                  placeholder="Enter label"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300">Description</label>
-                <textarea
-                  value={descriptionInput}
-                  onChange={(e) => setDescriptionInput(e.target.value)}
-                  className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
-                  rows={3}
-                  placeholder="Enter description"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setIsDialogOpen(false)}
-                  className="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveLabel}
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-500"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Use the LabelEditDialog component */}
+      <LabelEditDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        address={address}
+        initialLabel={labelInput}
+        initialDescription={descriptionInput}
+        type={type}
+        onSaveSuccess={handleSaveSuccess}
+      />
     </div>
   );
 }
