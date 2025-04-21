@@ -1,11 +1,9 @@
 import { useMetadata } from './metadata-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Label } from '@/types/metadata';
+import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
 import { LabelEditDialog } from './label-edit-dialog';
-
-export type AddressType = 'program' | 'token' | 'unknown';
 
 interface AddressLabelProps {
   address: string;
@@ -25,7 +23,7 @@ interface TooltipPosition {
 
 export function AddressLabel({ 
   address, 
-  type = 'unknown', 
+  type = AddressType.UNKNOWN, 
   className,
   shortened = false, // Default to false
   show_controls = true // Default to showing controls

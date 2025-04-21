@@ -259,14 +259,14 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       let computedLabel: SimpleLabel;
       if (label) {
         computedLabel = label;
-      } else if (type === "program" && programsRef.current.get(address)) {
+      } else if (type === AddressType.PROGRAM && programsRef.current.get(address)) {
         const program = programsRef.current.get(address)!;
         computedLabel = { 
           address, 
           label: program.label, 
           description: program.description 
         };
-      } else if (type === "token" && mintsRef.current.get(address)) {
+      } else if (type === AddressType.TOKEN && mintsRef.current.get(address)) {
         const mint = mintsRef.current.get(address)!;
         computedLabel = { 
           address, 
@@ -289,7 +289,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     if (labelsRef.current.has(cacheKey)) {
       return labelsRef.current.get(cacheKey)!;
     }
-    FetchLabelsInfosAndCache([{address, type: 'unknown'}], userId);
+    FetchLabelsInfosAndCache([{address, type: AddressType.UNKNOWN}], userId);
     return null;
   }
   , [labelsState]);
@@ -380,7 +380,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getLabelComputed = useCallback(
-    (address: string, type: AddressType = "unknown", shortenedAddress: boolean = false): SimpleLabel => {
+    (address: string, type: AddressType = AddressType.UNKNOWN, shortenedAddress: boolean = false): SimpleLabel => {
       const userId = publicKey?.toBase58();
 
       // Check if label is already in state

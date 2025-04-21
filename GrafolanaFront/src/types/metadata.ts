@@ -58,10 +58,12 @@ export interface Program {
   description?: string,
 }
 
+export enum AddressType {
+  PROGRAM = "program",
+  TOKEN = "token",
+  UNKNOWN = "unknown",
+}
 
-export type AddressType = "unknown" | "token" | "program";
-
-// Add this type at the top
 export interface AddressWithType {
   address: string;
   type: AddressType;

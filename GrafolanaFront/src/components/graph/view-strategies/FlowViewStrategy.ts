@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
+import { AddressType } from '@/types/metadata';
 
 
 class FlowViewStrategy extends BaseViewStrategy {
@@ -240,7 +241,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, 'program', true).label}<br/>
+        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM, true).label}<br/>
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
         ${amountLine}
