@@ -90,13 +90,18 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Set nodeSize based on hover state (larger when hovered)
         const nodeSize = isHovered ? 14 : 8;
 
-        // Draw circle background
+        // Draw circle background with dark gray fill
         ctx.beginPath();
         ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
-        
-        // Use Solana blue for selected nodes, green for normal nodes
-        ctx.fillStyle = isSelected ? SOLANA_COLORS.blue : SOLANA_COLORS.green;
+        ctx.fillStyle = SOLANA_COLORS.darkGray;
         ctx.fill();
+
+        // Draw colored rim
+        ctx.beginPath();
+        ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = isSelected ? SOLANA_COLORS.purple : SOLANA_COLORS.green;
+        ctx.stroke();
 
         if (mintInfo) {
             let img;
