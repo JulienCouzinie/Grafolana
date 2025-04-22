@@ -11,6 +11,7 @@ import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'rea
 import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '../ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
+import { ForceGraphMethods } from 'react-force-graph-2d';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -81,7 +82,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   const [redraw, setRedraw] = useState<number>(0);
 
   // Add a reference to the graph component at the beginning of your component
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<ForceGraphMethods<{}, {}>>(null);
 
   // Create a ref for the panel to access its imperative handle
   const panelRef = useRef<ImperativePanelHandle>(null);
@@ -138,6 +139,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
       if (processedDataCache.current[viewMode]) {
         // Use cached data
         setProcessedData(processedDataCache.current[viewMode]!);
+        // Don't reheat simulation if data is cached
       } else {
         // Process and cache the data
         const processed = strategy.processData(graphData);

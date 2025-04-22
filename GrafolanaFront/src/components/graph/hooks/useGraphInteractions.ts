@@ -41,7 +41,7 @@ type UseGraphInteractionsReturn = {
  */
 export function useGraphInteractions(
   strategy: ViewStrategy | null,
-  fgRef: RefObject<ForceGraphMethods>
+  fgRef: RefObject<ForceGraphMethods<{}, {}> | null>
 ): UseGraphInteractionsReturn {
   // ---------- NODE SELECTION ----------
   const [nodeSelectionUpdate, setNodeSelectionUpdate] = useState<number>(0);
@@ -49,6 +49,7 @@ export function useGraphInteractions(
 
   // ---------- NODE POSITION FIXING ----------
   const [isAltKeyPressed, setIsAltKeyPressed] = useState<boolean>(false);
+  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState<boolean>(false);
 
   // ---------- CONTEXT MENU ----------
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -71,6 +72,10 @@ export function useGraphInteractions(
       if (event.ctrlKey || event.metaKey) {
         setIsCtrlKeyPressed(true);
       }
+
+      if (event.shiftKey) {
+        setIsShiftKeyPressed(true);
+      }
     };
     
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -79,6 +84,10 @@ export function useGraphInteractions(
       }
       // Check if ctrl key is released
       if (!event.ctrlKey && !event.metaKey) {
+        setIsCtrlKeyPressed(false);
+      }
+      // Check if ctrl key is released
+      if (!event.shiftKey) {
         setIsCtrlKeyPressed(false);
       }
     };
@@ -155,7 +164,7 @@ export function useGraphInteractions(
       console.log(`Node ${node.id} position fixed at x:${node.x}, y:${node.y}`);
       
       // Force a refresh of the graph to reflect changes
-      if (fgRef.current) {
+      if (fgRef?.current) {
         fgRef.current.d3ReheatSimulation();
       }
     }
