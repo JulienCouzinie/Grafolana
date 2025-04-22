@@ -302,17 +302,17 @@ getContextualInfoContent(): React.ReactNode {
             borderRadius: 4, 
             color: '#FFFFFF'
           }}>
-            <b>Account:</b> <AddressLabel address={node.account_vertex.address!} /><br/>
+            <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
             <b>Version:</b> {node.account_vertex.version}<br/>
-            <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} /><br/>
+            <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>
             {mintAddress ? (
               <React.Fragment>
-                <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN}/><br/>
+                <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
                 {mintInfo?.symbol && <React.Fragment><b>Symbol:</b> {mintInfo.symbol}<br/></React.Fragment>}
                 {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
               </React.Fragment>
             ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-            <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} />) : 'Unknown'}<br/>
+            <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
             {authoritiesComponent}
             <b>Token Balance:</b> {node.balance_token}<br/>
             <b>Lamport Balance:</b> {node.balance_lamport}

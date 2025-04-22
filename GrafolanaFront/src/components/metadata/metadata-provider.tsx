@@ -7,6 +7,7 @@ import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos } f
 import { cp } from "fs";
 import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
+import { shortenAddress } from "@/utils/addressUtils";
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
@@ -28,12 +29,6 @@ interface MetadataContextType {
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
-
-// Helper to shorten addresses
-function shortenAddress(address: string): string {
-  if (address.length < 13) return address;
-  return `${address.slice(0, 4)}...${address.slice(-4)}`;
-}
 
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const { publicKey } = useWallet();
@@ -350,7 +345,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       const cacheKey = getCacheKey(address, userId);
       const label = labelsRef.current.get(cacheKey);
-  
+      console.log("label",label, address, type)
+
+
       let computedLabel: SimpleLabel;
       if (label) {
         computedLabel = label;
@@ -363,9 +360,22 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
         };
       } else if (type === AddressType.TOKEN && mintsRef.current.get(address)) {
         const mint = mintsRef.current.get(address)!;
+        // Try to get the mint name from the mint object
+        // If mint name is empty, use the mint symbol or address
+        let mintName;
+        if (mint.name == ""){
+          if (mint.symbol == ""){
+            mintName = address;
+          } else {
+            mintName = mint.symbol;
+          }
+        } else {
+          mintName = mint.name;
+        }
+
         computedLabel = { 
           address, 
-          label: mint.name, 
+          label: mintName, 
           description: mint.description 
         };
       } else {
@@ -374,6 +384,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
           label: address
         };
       }
+      console.log("computedLabel",computedLabel,mintsRef.current, address,)
   
       setComputedLabel(address, computedLabel);
 

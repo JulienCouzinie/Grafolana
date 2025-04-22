@@ -4,6 +4,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
 import { useLabelEditDialog } from './label-edit-dialog-provider';
+import { shortenAddress } from '@/utils/addressUtils';
 
 interface AddressLabelProps {
   address: string;
@@ -46,8 +47,14 @@ export function AddressLabel({
   useEffect(() => {
     function fetchLabel() {
       const label = getLabelComputed(address, type, shortened)
+      let labelInput;
       setDisplayLabel(label.label);
-      setLabelInput(label.label);
+      if (label.label === address || label.label === shortenAddress(address)) {
+        labelInput = "";
+      } else {
+        labelInput = label.label;
+      }
+      setLabelInput(labelInput);
       setDescriptionInput(label.description || '');
       setDisplayDescription(label.description || '');
     }
@@ -292,10 +299,4 @@ export function AddressLabel({
       )}
     </div>
   );
-}
-
-// Helper to shorten addresses
-function shortenAddress(address: string): string {
-  if (address.length <= 8) return address;
-  return `${address.slice(0, 4)}...${address.slice(-4)}`;
 }
