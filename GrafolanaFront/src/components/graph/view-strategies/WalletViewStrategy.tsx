@@ -243,7 +243,7 @@ class WalletViewStrategy extends BaseViewStrategy {
             // Get mint info and image for composite account
             const compMintAddress = comp.mint_address;
             const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
-            const compMintImage = compMintInfo?.image ? this.metadataServices.getMintImage(compMintInfo.image) : null;
+            const compMintImage = this.metadataServices.getMintImage(compMintInfo!.image);
             
             return `<li>
               ${compMintImage ? `<img src="${compMintImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; display: inline-block;">` : ''}
