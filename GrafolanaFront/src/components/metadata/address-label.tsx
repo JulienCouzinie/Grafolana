@@ -194,7 +194,7 @@ export function AddressLabel({
   };
 
   return (
-    <div className="relative inline-flex items-center gap-2">
+    <div className="relative inline-flex items-center gap-2 word-break-all">
       <span 
         style={{ cursor: 'pointer', color: '#14F195' }}
         ref={labelRef}
