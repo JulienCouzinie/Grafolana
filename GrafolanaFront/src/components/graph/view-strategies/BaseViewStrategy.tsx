@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphNode, GraphLink, ProcessedGraphData, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
+import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
@@ -320,7 +320,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Returns content for the Contextual Info accordion section
      * Override in concrete strategies for strategy-specific contextual information
      */
-    getContextualInfoContent(): React.ReactNode {
+    getContextualInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
         return (
             <div className="strategy-panel-content">
                 <p>Base contextual information</p>
@@ -329,6 +329,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                     <h3>Selection</h3>
                     <p>Selected nodes: {this.selectedNodes.current?.size || 0}</p>
                 </div>
+                {(strategyContent) ? strategyContent : ""}
             </div>
         );
     }

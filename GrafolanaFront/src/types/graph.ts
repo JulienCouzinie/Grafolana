@@ -101,14 +101,9 @@ export interface TransactionData {
 
 // Clean up duplicate interface
 export interface GraphData {
-    nodes: GraphNode[];
-    links: GraphLink[];
+    nodes: ForceGraphNode[];
+    links: ForceGraphLink[];
     transactions: Record<string, TransactionData>;
-}
-
-export interface ProcessedGraphData {
-    nodes: GraphNode[];
-    links: GraphLink[];
 }
 
 export interface Swap {

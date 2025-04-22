@@ -268,12 +268,12 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
-                <AccordionItem title="Filters" defaultOpen={true}>
+                <AccordionItem title="Filters" defaultOpen={false}>
                   <div className="accordion-content">
                     {filtersContent || <p>No filters available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Grouping" defaultOpen={true}>
+                <AccordionItem title="Grouping" defaultOpen={false}>
                   <div className="accordion-content">
                     {groupingContent || <p>No grouping options available for this view</p>}
                   </div>

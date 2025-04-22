@@ -1,92 +1,166 @@
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode } from '@/types/graph';
-import { ViewStrategy } from './ViewStrategy';
+import React, { Ref } from 'react';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType } from '@/types/graph';
+import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
 
-
-class FlowViewStrategy extends BaseViewStrategy {
-
-  private assignLinkCurvature(links: GraphLink[]): GraphLink[] {
-    const linkMap = new Map<string, GraphLink[]>();
-
+class AccountViewStrategy extends BaseViewStrategy {
+  
+  // Assign curvature to links based on their duplication
+  // and directionality (source to target or target to source)
+  private assignLinkCurvature(links: ForceGraphLink[]): GraphLink[] {
+    // Local interface for managing curvature calculation
+    interface CurvatureInfo {
+      link: GraphLink;
+      isReverse: boolean;
+    }
+    
+    const linkMap = new Map<string, CurvatureInfo[]>();
+  
+    // Group links by their connection (regardless of direction)
     links.forEach((link) => {
-      const key = `${link.source_account_vertex.id}-${link.target_account_vertex.id}`;
+      const sourceId = link.source;
+      const targetId = link.target;
+      
+      // Use canonical key (always smaller id first) to group related links
+      const [firstId, secondId] = [sourceId, targetId].sort();
+      const key = `${firstId}-${secondId}`;
+      
       if (!linkMap.has(key)) {
         linkMap.set(key, []);
       }
-      linkMap.get(key)!.push(link);
+      
+      // Store the link with information about its direction
+      linkMap.get(key)!.push({
+        link,
+        isReverse: firstId !== sourceId // Track if this is a reverse direction
+      });
     });
-
+  
+    // Apply curvature based on number of links
     linkMap.forEach((duplicates) => {
       const count = duplicates.length;
+      
       if (count === 1) {
-        duplicates[0].curvature = 0;
+        // Single link - keep straight
+        duplicates[0].link.curvature = 0;
       } else if (count % 2 === 1) {
-        duplicates.forEach((link, index) => {
+        // Odd number of links
+        duplicates.forEach(({ link, isReverse }, index) => {
           if (index === 0) {
+            // First link straight
             link.curvature = 0;
           } else {
-            const curveIndex = Math.floor(index / 2) + 1;
-            link.curvature = 0.15 * curveIndex * (index % 2 === 0 ? -1 : 1);
+            // Others alternate curve direction
+            const curveIndex = Math.floor((index + 1) / 2);
+            const baseDirection = index % 2 === 0 ? 1 : -1;
+            // Flip direction for reverse links
+            const direction = isReverse ? -baseDirection : baseDirection;
+            link.curvature = 0.15 * curveIndex * direction;
           }
         });
       } else {
-        duplicates.forEach((link, index) => {
+        // Even number of links - all curved, alternating direction
+        duplicates.forEach(({ link, isReverse }, index) => {
           const curveIndex = Math.floor(index / 2) + 1;
-          link.curvature = 0.15 * curveIndex * (index % 2 === 0 ? -2 : 2);
+          const baseDirection = index % 2 === 0 ? 1 : -1;
+          // Flip direction for reverse links
+          const direction = isReverse ? -baseDirection : baseDirection;
+          link.curvature = 0.15 * curveIndex * direction;
         });
       }
     });
-
+  
     return links;
   }
 
-  private assignNodesID(nodes: ForceGraphNode[]): ForceGraphNode[] {
-    nodes = nodes.map((node) => {
-      node.id = node.account_vertex.id;
-      return node;
+  // Aggregate accounts by address and version
+  // Set the id of the node to the address of the account
+  private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
+    const seen = new Set<string>();
+    const deduplicatedNodes: ForceGraphNode[] = [];
+
+    nodes.forEach((node) => {
+      if (!seen.has(node.account_vertex.address)) {
+        seen.add(node.account_vertex.address);
+        node.id = node.account_vertex.address;
+        deduplicatedNodes.push(node);
+      }
     });
-    return nodes;
+
+    return deduplicatedNodes;
+
   }
 
-  private assignLinksID(links: GraphLink[]): GraphLink[] {
-    links = links.map((link) => {
-      const sourceNodeID = link.source_account_vertex.id;
-      const targetNodeID = link.target_account_vertex.id;
-      link.source = sourceNodeID;
-      link.target = targetNodeID;
-      return link;
+  // Aggregate links that have same target and source accounts
+  // Aggregate the amounts of the links
+  // Keep original links in composite array
+  private aggregateLinks (links: GraphLink[]): GraphLink[]  {
+    const seen = new Set<string>();
+    const deduplicatedLinks: GraphLink[] = [];
+
+    links.forEach((link) => {
+      const key = `${link.source_account_vertex.address}-${link.target_account_vertex.address}`;
+      // Check if the link has already been seen
+      if (!seen.has(key)) {
+        // If not, add it to the deduplicated list
+        // and mark it as seen
+        seen.add(key);
+        link.source = link.source_account_vertex.address;
+        link.target = link.target_account_vertex.address; 
+        deduplicatedLinks.push(link);
+      } else {
+        // If already seen, find the existing link
+        // and aggregate the amounts
+        const existingLink = deduplicatedLinks.find(
+          (l) => l.source_account_vertex.address === link.source_account_vertex.address && l.target_account_vertex.address === link.target_account_vertex.address
+        );
+        // If found, aggregate the amounts
+        if (existingLink) {
+          // Clone the existing link to keep the original
+          // in the composite array
+          if (!existingLink.composite) {
+            existingLink.composite = [];
+            existingLink.composite.push(cloneDeep(existingLink));
+          }
+          // Add the new link to the composite array
+          // and aggregate the amounts
+          existingLink.composite.push(link);
+          existingLink.amount_source += link.amount_source;
+          existingLink.amount_destination += link.amount_destination;
+        }
+      }
     });
-    return links;
+
+    return deduplicatedLinks;
   }
 
-  processData(data: GraphData): GraphData {
+  processData (data: GraphData): GraphData{
     this.originalData.current = data;
     const clonedData = cloneDeep(data);
-
     let links = clonedData.links;
-    links = this.assignLinksID(links);
+    links = this.aggregateLinks(links);
     links = this.assignLinkCurvature(links);
 
     const processed = {
-      nodes: this.assignNodesID(clonedData.nodes),
+      nodes: this.aggregateAccounts(clonedData.nodes),
       links: links,
       transactions: clonedData.transactions,
     };
-
     this.processedData.current = processed;
     return processed;
   }
 
-  nodeTooltip(node: ForceGraphNode): string {
+  nodeTooltip (node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-    const mintImage = this.metadataServices.getMintImage(mintInfo!.image);
+    const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
+
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
       ? `
@@ -100,14 +174,13 @@ class FlowViewStrategy extends BaseViewStrategy {
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
-        <b>Version:</b> ${node.account_vertex.version}<br/>
         ${mintAddress ? `
           <b>Mint:</b> ${mintAddress}<br/>
           ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
           ${mintImage ? `<img src="${mintImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
         ` : '<b>Token:</b> SOL<br/>'}
-        <b>Owner:</b> ${node.owner ? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
+        <b>Owner:</b> ${node.owner? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
         ${authoritiesHtml}
         <b>Token Balance:</b> ${node.balance_token}<br/>
         <b>Lamport Balance:</b> ${node.balance_lamport}
@@ -116,36 +189,6 @@ class FlowViewStrategy extends BaseViewStrategy {
   }
 
   linkCanvasObject(link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number): void{
-    const start = link.source;
-    const end = link.target;
-    
-    // Only proceed if we have position data
-    if (typeof start === 'object' && start !== null && typeof start.x === 'number' && typeof start.y === 'number' && 
-      typeof end === 'object' && end !== null && typeof end.x === 'number' && typeof end.y === 'number') {
-      
-        // Calculate middle point of the link
-        const middleX = start.x + (end.x - start.x) / 2;
-        const middleY = start.y + (end.y - start.y) / 2;
-
-        // Adjust label position based on curvature
-        const curvature = link.curvature || 0;
-        const angle = Math.atan2(end.y - start.y, end.x - start.x);
-        const curveOffset = curvature * 17; // Adjust this value to control the offset
-
-        const labelX = middleX + curveOffset * Math.cos(angle + Math.PI / 2);
-        const labelY = middleY + curveOffset * Math.sin(angle + Math.PI / 2);
-
-        // Set text properties
-        ctx.font = `${12 / globalScale}px Sans-Serif`;
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-
-        // Draw the text
-        const label = String(link.key);
-        ctx.fillText(label, labelX, labelY);
-    }
   }
 
   linkTooltip(link: ForceGraphLink): string {
@@ -240,18 +283,52 @@ class FlowViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM, true).label}<br/>
+        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM).label}<br/>
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
         ${amountLine}
         ${compositesHtml}
     </div>
     `;
+  }
+
+  // Override to provide account-specific context menu items
+  getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
+    const baseItems = super.getNodeContextMenuItems(node);
+    
+    // Add account-specific items
+    return [
+        ...baseItems,
+        {
+            label: "View Transactions",
+            action: "view_transactions"
+        },
+        {
+            label: "Explore Related Accounts",
+            action: "explore_related"
+        }
+    ];
+  }
+  
+  // Override to handle account-specific context menu actions
+  handleNodeContextMenu(node: ForceGraphNode, action: string): void {
+    switch(action) {
+        case "view_transactions":
+            // Handle viewing transactions for this account
+            console.log("View transactions for account:", node.account_vertex.address);
+            break;
+        case "explore_related":
+            // Handle exploring related accounts
+            console.log("Explore related accounts for:", node.account_vertex.address);
+            break;
+        default:
+            // Fall back to base implementation for common actions
+            super.handleNodeContextMenu(node, action);
+    }
+  }
 }
 
-}
-
-export function useFlowViewStrategy(): ViewStrategy {
+export function useAccountViewStrategy(): ViewStrategy {
   const metadataServices = useMetadata();
   const usdServices = useUSDValue();
   const processedDataRef = useRef<GraphData>({
@@ -264,11 +341,11 @@ export function useFlowViewStrategy(): ViewStrategy {
     links: [],
     transactions: {},
   });
-  
+
   const selectedNodes = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
-  return new FlowViewStrategy(
+  return new AccountViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,

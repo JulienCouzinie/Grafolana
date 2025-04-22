@@ -1,3 +1,4 @@
+import React, { Ref } from 'react';
 import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, AccountVertex, GraphNode, TransferType} from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
@@ -179,8 +180,8 @@ class WalletViewStrategy extends BaseViewStrategy {
           program_address: '',
           source: source_address,
           target: target_address,
-          source_account_vertex: link.source_account_vertex,
-          target_account_vertex: link.target_account_vertex,
+          source_account_vertex: new AccountVertex(source_address,0, ''),
+          target_account_vertex: new AccountVertex(target_address,0, ''),
           amount_source: 0,
           amount_destination: 0,
           type: TransferType.WALLET_TO_WALLET,

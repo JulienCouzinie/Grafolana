@@ -1,4 +1,4 @@
-import { ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode, ProcessedGraphData } from '@/types/graph';
+import { ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode } from '@/types/graph';
 import { LinkObject } from 'react-force-graph-2d';
 import { Ref, RefObject } from 'react';
 
