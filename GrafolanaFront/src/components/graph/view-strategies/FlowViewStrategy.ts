@@ -86,8 +86,7 @@ class FlowViewStrategy extends BaseViewStrategy {
   nodeTooltip(node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-    const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
-
+    const mintImage = this.metadataServices.getMintImage(mintInfo!.image);
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
       ? `

@@ -110,7 +110,7 @@ export default function DashboardFeature() {
             GET ORDERS
           </button>
           <br />
-          <input type="text" id="tx_signature" placeholder="Enter Transaction Signature" style={{ width: '1000px', margin: '2px' }} />
+          <input type="text" id="tx_signature" placeholder="Enter Transaction Signature" style={{ width: '1000px', margin: '2px' }} defaultValue={"3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu"}/>
           <button onClick={() => getTransactionFromSignature((document.getElementById('tx_signature') as HTMLInputElement)?.value)}>
             GET TRANSACTION JSON
           </button>

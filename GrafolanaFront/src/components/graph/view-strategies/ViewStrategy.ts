@@ -36,12 +36,12 @@ export interface ViewStrategy {
   /**
    * Handle node hover events
    */
-  handleNodeHover(node: ForceGraphNode | null): void;
+  handleNodeHover(node: ForceGraphNode | null): boolean;
 
   /**
    * Handle link hover events
    */
-  handleLinkHover(link: ForceGraphLink | null): void;
+  handleLinkHover(link: ForceGraphLink | null): boolean;
 
   /**
    * Get context menu items for a node

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useMetadata } from '../metadata/metadata-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { GraphData } from '@/types/graph';
-import { AddressWithType } from '@/types/metadata';
+import { AddressType, AddressWithType } from '@/types/metadata';
 
 interface MetadataPreloaderProps {
   graphData: GraphData;
@@ -56,19 +56,19 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
       // Extract unique signers from all transactions
       Object.values(graphData.transactions).forEach(txData => 
         txData.signers.forEach(signer => 
-          addressesWithTypes.push({ address: signer, type: "unknown" }))
+          addressesWithTypes.push({ address: signer, type: AddressType.UNKNOWN}))
       );
       
       graphData.nodes.forEach(node => {
-        addressesWithTypes.push({ address: node.account_vertex.address, type: "unknown" });
-        if (node.owner) addressesWithTypes.push({ address: node.owner, type: "unknown" });
-        if (node.mint_address) addressesWithTypes.push({ address: node.mint_address, type: "token" });
+        addressesWithTypes.push({ address: node.account_vertex.address, type: AddressType.UNKNOWN });
+        if (node.owner) addressesWithTypes.push({ address: node.owner, type: AddressType.UNKNOWN });
+        if (node.mint_address) addressesWithTypes.push({ address: node.mint_address, type: AddressType.UNKNOWN });
         node.authorities?.forEach(auth => 
-          addressesWithTypes.push({ address: auth, type: "unknown" }));
+          addressesWithTypes.push({ address: auth, type: AddressType.UNKNOWN }));
       });
       
       graphData.links.forEach(link => 
-        addressesWithTypes.push({ address: link.program_address, type: "program" }));
+        addressesWithTypes.push({ address: link.program_address, type: AddressType.PROGRAM }));
 
       await FetchLabelsInfosAndCache(addressesWithTypes, publicKey?.toBase58());
     };

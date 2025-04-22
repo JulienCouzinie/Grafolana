@@ -17,7 +17,7 @@ TOKEN_DEFAULTS: Dict[str, TokenDefaults] = {
         symbol="SOL",
         decimals=9,
         description="Native token of the Solana blockchain",
-        image_path="/logo/sol.svg",
+        image_path="/logo/sol.png",
         website="https://solana.com",
     ),
     "So11111111111111111111111111111111111111112": TokenDefaults(

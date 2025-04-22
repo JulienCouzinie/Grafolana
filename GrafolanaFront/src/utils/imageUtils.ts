@@ -111,3 +111,34 @@ export function cropLogoToSquare(
     }
   });
 }
+
+
+/**
+ * Crops a token logo image to a square, removing uniform background color.
+ * Returns a Promise that resolves to the cropped image element.
+ */
+export function getCanvas(
+  originalImage: HTMLImageElement
+): HTMLCanvasElement {
+  const imgSize = 64
+  // Create a canvas to work with the image
+  const canvas = document.createElement('canvas');
+  // Hack for some SVGs, which have no width or height
+  if (originalImage.width === 0 || originalImage.height === 0) {
+    canvas.width = imgSize;
+    canvas.height = imgSize;
+  } else {
+    canvas.width = imgSize;
+    canvas.height = imgSize;
+  }
+  let ctx = canvas.getContext('2d');
+  
+  
+  if (!ctx) {
+    throw new Error("Could not get 2D context from canvas");
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(originalImage, 0, 0, imgSize, imgSize);
+  
+  return canvas;
+}

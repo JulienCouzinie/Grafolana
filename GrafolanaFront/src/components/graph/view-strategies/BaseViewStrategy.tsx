@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
 import { MintDTO } from '@/types/metadata';
+import { min } from 'lodash';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -51,15 +52,21 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     // Track the hovered node directly
-    handleNodeHover(node: ForceGraphNode | null): void {
-        this.hoveredNode = node;
+    handleNodeHover(node: ForceGraphNode | null): boolean {
+        let hasChanged = false;
+        if (node!=this.hoveredNode)
+            this.hoveredNode = node;
+            hasChanged = true;
+        return hasChanged;
     }
 
     // Update link hover tracking to track the link directly
-    handleLinkHover(link: ForceGraphLink | null): void {
-        this.hoveredLink = link;
-        // We keep this for backward compatibility, but it's not used for hover styling
-        // this.setHoveredGroup(link ? link.group ?? null : null);
+    handleLinkHover(link: ForceGraphLink | null): boolean {
+        let hasChanged = false;
+        if (link!=this.hoveredLink)
+            this.hoveredLink = link;
+            hasChanged = true;
+        return hasChanged;
     }
 
     // Common link style implementation - updated to use direct hoveredLink
@@ -104,14 +111,15 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         ctx.stroke();
 
         if (mintInfo) {
-            let img;
+            //console.log("mintInfo", mintInfo.mint_address);
+            let mintCanvas;
             if (node.type == AccountType.WALLET_ACCOUNT){
-                img = new Image();
-                img.src = '/logo/walletblack.png';
+                mintCanvas = this.metadataServices.walletAccountCanvasState;
+                //console.log("walletAccountCanvas", mintCanvas?.width, mintCanvas?.height);
             } else {
                 // Draw mint logo
                 const imageUrl = mintInfo?.image;
-                img = this.metadataServices.getMintImage(imageUrl);
+                mintCanvas = this.metadataServices.getMintImageCanvas(imageUrl);
             }
             ctx.save();
             ctx.beginPath();
@@ -119,9 +127,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             ctx.clip();
             
             const imgSize = (nodeSize) * 2;
-            if (img){
+            if (mintCanvas){
                 ctx.drawImage(
-                    img, 
+                    mintCanvas, 
                     node.x! - nodeSize + 1, 
                     node.y! - nodeSize + 1, 
                     imgSize - 2, 

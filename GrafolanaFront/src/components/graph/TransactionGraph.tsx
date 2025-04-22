@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import * as d3 from 'd3-force';
 import { ForceGraphNode, GraphData, } from '../../types/graph';
@@ -77,6 +77,8 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     wallet: null,
     program: null,
   });
+
+  const [redraw, setRedraw] = useState<number>(0);
 
   // Add a reference to the graph component at the beginning of your component
   const fgRef = useRef<any>(null);
@@ -205,6 +207,10 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   const handlePanelExpand = () => {
     setIsPanelCollapsed(false);
   };
+
+  const forceRedraw = useCallback(() => {
+    setRedraw(prev => prev + 1);
+  }, []);
 
   return (
     <div className="w-full h-full">
@@ -359,10 +365,20 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                 linkCanvasObjectMode={() => 'after'}
                 // Interactions
                 enableNodeDrag={true}
-                autoPauseRedraw={false}
+                autoPauseRedraw={true}
                 enableZoomInteraction={true}
-                onNodeHover={(node => strategy.handleNodeHover(node))}
-                onLinkHover={(link => strategy.handleLinkHover(link))}
+                onNodeHover={(node) => {
+                  const hover = strategy.handleNodeHover(node)
+                  if (hover){
+                    forceRedraw();
+                  }
+                }}
+                onLinkHover={(link) => {
+                  const hover = strategy.handleLinkHover(link)
+                  if (hover){
+                    forceRedraw();
+                  }
+                }}
                 // Right-click handling
                 onNodeRightClick={handleNodeRightClick}
                 // Add drag end handler

@@ -220,9 +220,8 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   nodeTooltip (node: ForceGraphNode): string {
-    const mintAddress = node.mint_address;
-    const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-    const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
+
+    const walletImage = this.metadataServices.defaultWalletImage;
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -258,12 +257,9 @@ class WalletViewStrategy extends BaseViewStrategy {
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
-        ${mintAddress ? `
-          <b>Mint:</b> ${mintAddress}<br/>
-          ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
-          ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
-          ${mintImage ? `<img src="${mintImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        ` : '<b>Token:</b> SOL<br/>'}
+
+          <img src="${walletImage?.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>
+
         ${compositeHtml}
 
       </div>
