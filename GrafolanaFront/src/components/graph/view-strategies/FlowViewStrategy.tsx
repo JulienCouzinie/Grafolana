@@ -266,12 +266,14 @@ getContextualInfoContent(): React.ReactNode {
 
     // Create React components for selected nodes instead of HTML strings
     const selectedNodesComponents = selectedNodes.map((node, index) => {
+      // Check if node is null
+      if (!node) return null;
       const mintAddress = node?.mint_address;
       const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
       const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
       
       // Create authorities list as a React component
-      const authoritiesComponent = node?.authorities && node.authorities.length > 0 ? (
+      const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
         <React.Fragment>
           <b>Authorities:</b><br/>
           <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -300,8 +302,9 @@ getContextualInfoContent(): React.ReactNode {
             borderRadius: 4, 
             color: '#FFFFFF'
           }}>
-            <b>Account:</b> <AddressLabel address={node?.account_vertex.address!} /><br/>
-            <b>Version:</b> {node?.account_vertex.version}<br/>
+            <b>Account:</b> <AddressLabel address={node.account_vertex.address!} /><br/>
+            <b>Version:</b> {node.account_vertex.version}<br/>
+            <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} /><br/>
             {mintAddress ? (
               <React.Fragment>
                 <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN}/><br/>
@@ -309,10 +312,10 @@ getContextualInfoContent(): React.ReactNode {
                 {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
               </React.Fragment>
             ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-            <b>Owner:</b> {node?.owner ? (<AddressLabel address={node.owner} />) : 'Unknown'}<br/>
+            <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} />) : 'Unknown'}<br/>
             {authoritiesComponent}
-            <b>Token Balance:</b> {node?.balance_token}<br/>
-            <b>Lamport Balance:</b> {node?.balance_lamport}
+            <b>Token Balance:</b> {node.balance_token}<br/>
+            <b>Lamport Balance:</b> {node.balance_lamport}
           </div>
         </React.Fragment>
       );

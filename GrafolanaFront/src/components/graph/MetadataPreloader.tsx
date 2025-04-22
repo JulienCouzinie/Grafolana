@@ -62,7 +62,7 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
       graphData.nodes.forEach(node => {
         addressesWithTypes.push({ address: node.account_vertex.address, type: AddressType.UNKNOWN });
         if (node.owner) addressesWithTypes.push({ address: node.owner, type: AddressType.UNKNOWN });
-        if (node.mint_address) addressesWithTypes.push({ address: node.mint_address, type: AddressType.UNKNOWN });
+        if (node.mint_address) addressesWithTypes.push({ address: node.mint_address, type: AddressType.TOKEN });
         node.authorities?.forEach(auth => 
           addressesWithTypes.push({ address: auth, type: AddressType.UNKNOWN }));
       });

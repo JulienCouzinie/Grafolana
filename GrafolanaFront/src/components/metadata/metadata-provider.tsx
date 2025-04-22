@@ -224,7 +224,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
           if (mint) {
             // Invalidate the computed label cache for this address
             deleteFromComputedLabels(mint.mint_address);
-
             const imageUrl = mint.image;
             if (imageUrl) {
               preloadImage(imageUrl, true);
@@ -278,9 +277,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') {
       return null;
     }    
-    //console.log("imageUrl",imageUrl)
+
     if (imageUrl=== undefined) {
-      //console.log("defaultMintCanvas", defaultMintCanvas?.width,defaultMintCanvas?.height)
       return defaultMintCanvas;
     }
 
