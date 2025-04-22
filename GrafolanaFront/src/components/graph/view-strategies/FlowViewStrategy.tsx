@@ -278,7 +278,7 @@ getContextualInfoContent(): React.ReactNode {
           <b>Authorities:</b><br/>
           <ul style={{ margin: 0, paddingLeft: 20 }}>
             {node.authorities.map((auth, i) => (
-              <li key={i}><AddressLabel address={auth}/></li>
+              <li key={i}><AddressLabel address={auth} shortened={true} /></li>
             ))}
           </ul>
         </React.Fragment>

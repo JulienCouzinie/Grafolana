@@ -199,6 +199,7 @@ export function AddressLabel({
   return (
     <div className="relative inline-flex items-center gap-2">
       <span 
+        style={{ cursor: 'pointer', color: '#14F195' }}
         ref={labelRef}
         className={className}
         onMouseEnter={() => setShowTooltip(true)}
