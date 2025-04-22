@@ -87,50 +87,47 @@ export function AddressLabel({
         left: rect.left + (rect.width / 2),
       };
 
-      // Need to wait for tooltip to be rendered to get its dimensions
-      setTimeout(() => {
-        if (tooltipRef.current) {
-          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      if (tooltipRef.current) {
+        const tooltipRect = tooltipRef.current.getBoundingClientRect();
+        
+        // Check if tooltip would go off-screen and adjust position accordingly
+        
+        // Handle horizontal overflow
+        if (position.left - (tooltipRect.width / 2) < 10) {
+          // Too close to left edge
+          const originalLeft = position.left;
+          position.left = tooltipRect.width / 2 + 10; // Keep tooltip within viewport with padding
           
-          // Check if tooltip would go off-screen and adjust position accordingly
+          // Calculate how much we shifted the tooltip right
+          const shift = position.left - originalLeft;
+          // The arrow should be offset to the left by the same amount
+          position.arrowLeftOffset = -shift;
           
-          // Handle horizontal overflow
-          if (position.left - (tooltipRect.width / 2) < 10) {
-            // Too close to left edge
-            const originalLeft = position.left;
-            position.left = tooltipRect.width / 2 + 10; // Keep tooltip within viewport with padding
-            
-            // Calculate how much we shifted the tooltip right
-            const shift = position.left - originalLeft;
-            // The arrow should be offset to the left by the same amount
-            position.arrowLeftOffset = -shift;
-            
-          } else if (position.left + (tooltipRect.width / 2) > viewportWidth - 10) {
-            // Too close to right edge
-            const originalLeft = position.left;
-            position.left = viewportWidth - (tooltipRect.width / 2) - 10;
-            
-            // Calculate how much we shifted the tooltip left
-            const shift = originalLeft - position.left;
-            // The arrow should be offset to the right by the same amount
-            position.arrowLeftOffset = shift;
-          }
+        } else if (position.left + (tooltipRect.width / 2) > viewportWidth - 10) {
+          // Too close to right edge
+          const originalLeft = position.left;
+          position.left = viewportWidth - (tooltipRect.width / 2) - 10;
           
-          // Handle vertical overflow (if tooltip would go above the viewport)
-          if (position.top - tooltipRect.height < 10) {
-            // Position below the element instead of above
-            position = {
-              top: rect.bottom + 10,
-              left: position.left,
-              transformOrigin: "top center",
-              transformOffset: { x: -50, y: 0 }, // Adjust transform to position the arrow correctly
-              arrowLeftOffset: position.arrowLeftOffset // Preserve the horizontal arrow offset
-            };
-          }
-          
-          setTooltipPosition(position);
+          // Calculate how much we shifted the tooltip left
+          const shift = originalLeft - position.left;
+          // The arrow should be offset to the right by the same amount
+          position.arrowLeftOffset = shift;
         }
-      }, 0);
+        
+        // Handle vertical overflow (if tooltip would go above the viewport)
+        if (position.top - tooltipRect.height < 10) {
+          // Position below the element instead of above
+          position = {
+            top: rect.bottom + 10,
+            left: position.left,
+            transformOrigin: "top center",
+            transformOffset: { x: -50, y: 0 }, // Adjust transform to position the arrow correctly
+            arrowLeftOffset: position.arrowLeftOffset // Preserve the horizontal arrow offset
+          };
+        }
+        
+        setTooltipPosition(position);
+      }
       
       // Initial position estimate
       setTooltipPosition(position);
@@ -221,6 +218,7 @@ export function AddressLabel({
             transformOrigin: tooltipPosition.transformOrigin || 'bottom center',
             zIndex: 99999, // Higher than anything else
             pointerEvents: 'none', // Let mouse events pass through
+            maxWidth: '600px',
           }}
         >
           <div className="bg-gray-800 text-white text-sm rounded-lg shadow-lg p-3 border border-gray-700">
