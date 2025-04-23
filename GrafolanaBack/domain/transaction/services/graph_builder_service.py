@@ -170,7 +170,11 @@ class GraphBuilderService:
             account_type = AccountType.TOKEN_ACCOUNT
         )
 
-        burn_virtual_account_version = self.prepareBurnVirtualAccountVersion(mint_address = mint_address, amount = amount_token)
+        burn_virtual_account_version = self.prepareBurnVirtualAccountVersion(
+            mint_address = mint_address, 
+            amount = amount_token,
+            owner = "BURNER"
+        )
 
         self.transactionContext.graph.add_edge(
             source = source_account_version.get_vertex(),
@@ -184,7 +188,7 @@ class GraphBuilderService:
             )
         )
     
-    def prepareBurnVirtualAccountVersion(self, mint_address: str, amount: int)-> AccountVersion:
+    def prepareBurnVirtualAccountVersion(self, mint_address: str, amount: int, owner: str)-> AccountVersion:
         burn_virtual_address = BURN+"_"+mint_address
 
         # Create a virtual burn account for the mint if not exist
@@ -195,7 +199,9 @@ class GraphBuilderService:
             balance_token = amount, 
             balance_lamport = 0,
             mint_address = mint_address,
-            account_type = AccountType.BURN_ACCOUNT)) is not None:
+            account_type = AccountType.BURN_ACCOUNT,
+            owner = owner)
+        ) is not None:
             self.transactionContext.graph.add_node(burn_account_version.get_vertex())
         else:
            burn_account_version = self.transactionContext.account_repository.get_latest_version(burn_virtual_address)
