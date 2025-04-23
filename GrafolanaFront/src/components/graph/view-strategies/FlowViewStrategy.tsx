@@ -252,10 +252,10 @@ class FlowViewStrategy extends BaseViewStrategy {
 }
 
 /**
- * Returns content for the Contextual Info accordion section with Flow view specific information
+ * Returns content for the Nodes Info accordion section with Flow view specific information
  * Extends the base implementation with flow-specific details
  */
-getContextualInfoContent(): React.ReactNode {
+getNodesInfoContent(): React.ReactNode {
   
   if(this.selectedNodes.current && this.selectedNodes.current.size > 0) {
     // fill info-section with selected nodes
@@ -329,7 +329,7 @@ getContextualInfoContent(): React.ReactNode {
     );
     
     // Pass the flow content to the base implementation
-    const baseContent = super.getContextualInfoContent(flowContent);
+    const baseContent = super.getNodesInfoContent(flowContent);
     return (
       <div className="strategy-panel-content">
         {baseContent}
@@ -338,7 +338,7 @@ getContextualInfoContent(): React.ReactNode {
   }
   
   // Return default content if no nodes are selected
-  return super.getContextualInfoContent();
+  return super.getNodesInfoContent();
 }
 
 }

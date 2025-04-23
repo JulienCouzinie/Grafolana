@@ -317,16 +317,14 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     /**
-     * Returns content for the Contextual Info accordion section
-     * Override in concrete strategies for strategy-specific contextual information
+     * Returns content for the Nodes Info accordion section
+     * Override in concrete strategies for strategy-specific Nodes information
      */
-    getContextualInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
+    getNodesInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
         return (
             <div className="strategy-panel-content">
-                <p>Base contextual information</p>
                 {/* Add common contextual information */}
                 <div className="info-section">
-                    <h3>Selection</h3>
                     <p>Selected nodes: {this.selectedNodes.current?.size || 0}</p>
                 </div>
                 {(strategyContent) ? strategyContent : ""}

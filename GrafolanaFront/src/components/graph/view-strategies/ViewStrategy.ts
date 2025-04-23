@@ -89,8 +89,8 @@ export interface ViewStrategy {
   getGroupingContent(): React.ReactNode;
 
   /**
-   * Returns the content to be displayed in the Contextual Info accordion section
-   * @returns React node with contextual information specific to this strategy
+   * Returns the content to be displayed in the Nodes Info accordion section
+   * @returns React node with Nodes information specific to this strategy
    */
-  getContextualInfoContent(): React.ReactNode;
+  getNodesInfoContent(): React.ReactNode;
 }

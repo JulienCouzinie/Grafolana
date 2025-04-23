@@ -95,7 +95,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Add state to store accordion content
   const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
   const [groupingContent, setGroupingContent] = useState<React.ReactNode | null>(null);
-  const [contextualContent, setContextualContent] = useState<React.ReactNode | null>(null);
+  const [NodesContent, setNodesContent] = useState<React.ReactNode | null>(null);
 
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
@@ -170,15 +170,15 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
       // Update all accordion content from strategy
       setFiltersContent(strategy.getFiltersContent());
       setGroupingContent(strategy.getGroupingContent());
-      setContextualContent(strategy.getContextualInfoContent());
+      setNodesContent(strategy.getNodesInfoContent());
     }
   }, [viewMode]);
 
-  // Add effect to update contextual info when selection changes
+  // Add effect to update Nodes info when selection changes
   useEffect(() => {
     if (strategy) {
-      // Only update contextual content since it's the one showing selection info
-      setContextualContent(strategy.getContextualInfoContent());
+      // Only update nodes content since it's the one showing selection info
+      setNodesContent(strategy.getNodesInfoContent());
     }
   }, [nodeSelectionUpdate]);
 
@@ -278,9 +278,9 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
                     {groupingContent || <p>No grouping options available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Contextual Info" defaultOpen={true}>
+                <AccordionItem title="Nodes" defaultOpen={true}>
                   <div className="accordion-content">
-                    {contextualContent || <p>No contextual information available for this view</p>}
+                    {NodesContent || <p>No nodes information available for this view</p>}
                   </div>
                 </AccordionItem>
               </Accordion>
