@@ -19,7 +19,7 @@ class InstructionParser(ABC):
         pass
     
     @abstractmethod
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> Any:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> Any:
         """Parse the instruction and update the transaction context."""
         pass
 
@@ -32,7 +32,7 @@ class SystemTransferParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "transfer")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         lamports = instruction.parsed["info"]["lamports"]
         source_address = instruction.parsed["info"]["source"]
         destination_address = instruction.parsed["info"]["destination"]
@@ -45,14 +45,16 @@ class SystemTransferParser(InstructionParser):
             authority = instruction.parent_instruction.program_address
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
             source_address = source_address,
             amount_lamport = lamports,
             authority = authority
         )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
             account_version_source = account_version_source, 
             destination_address = destination_address,
             amount_lamport = lamports
@@ -67,7 +69,8 @@ class SystemTransferParser(InstructionParser):
                 program_address = instruction.program_address,
                 amount_source = lamports,
                 amount_destination = lamports,
-                swap_parent_id = swap_parent_id
+                swap_parent_id = swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
@@ -82,14 +85,15 @@ class TokenTransferParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "transfer")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, transaction_context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         amount = int(instruction.parsed["info"]["amount"])
         source_address = str(instruction.parsed["info"]["source"])
         destination_address = str(instruction.parsed["info"]["destination"])
         authority = str(instruction.parsed["info"]["authority"])
         
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = transaction_context,
             source_address = source_address, 
             owner = authority, 
             amount_token = amount,
@@ -97,16 +101,17 @@ class TokenTransferParser(InstructionParser):
         )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
-            account_version_source, 
-            destination_address, 
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = transaction_context,
+            account_version_source = account_version_source, 
+            destination_address = destination_address, 
             amount_token = amount,
             account_type = AccountType.TOKEN_ACCOUNT
         )
 
         
         # Add edge to graph
-        context.graph.add_edge(
+        transaction_context.graph.add_edge(
             source = account_version_source.get_vertex(),
             target = account_version_destination.get_vertex(),
             transfer_properties = TransferProperties(
@@ -114,7 +119,8 @@ class TokenTransferParser(InstructionParser):
                 program_address = instruction.program_address,
                 amount_source = amount,
                 amount_destination = amount,
-                swap_parent_id = swap_parent_id
+                swap_parent_id = swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
@@ -129,7 +135,7 @@ class TokenTransferCheckedParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "transferChecked")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         amount = int(instruction.parsed["info"]["tokenAmount"]["amount"])
         source_address = str(instruction.parsed["info"]["source"])
         destination_address = str(instruction.parsed["info"]["destination"])
@@ -145,7 +151,8 @@ class TokenTransferCheckedParser(InstructionParser):
         mint_address = str(instruction.parsed["info"]["mint"])
         
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
             source_address = source_address,
             mint_address = mint_address,
             owner = authority,
@@ -154,7 +161,8 @@ class TokenTransferCheckedParser(InstructionParser):
         )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
             account_version_source = account_version_source, 
             destination_address = destination_address,
             mint_address = mint_address,
@@ -171,7 +179,8 @@ class TokenTransferCheckedParser(InstructionParser):
                 program_address=instruction.program_address,
                 amount_source=amount,
                 amount_destination=amount,
-                swap_parent_id=swap_parent_id
+                swap_parent_id=swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
@@ -187,7 +196,7 @@ class CreateAccountParser(InstructionParser):
                 (instruction.parsed.get("type") == "createAccount" or
                  instruction.parsed.get("type") == "createAccountWithSeed"))
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         lamports = int(instruction.parsed["info"]["lamports"])
         source_address = str(instruction.parsed["info"]["source"])
         new_account_address = str(instruction.parsed["info"]["newAccount"])
@@ -198,13 +207,15 @@ class CreateAccountParser(InstructionParser):
             account_type = AccountType.STAKE_ACCOUNT
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
             source_address = source_address,
             amount_lamport = lamports
         )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
             account_version_source = account_version_source, 
             destination_address = new_account_address,
             amount_lamport = lamports,
@@ -220,12 +231,12 @@ class CreateAccountParser(InstructionParser):
                 program_address=instruction.program_address,
                 amount_source=lamports,
                 amount_destination=lamports,
-                swap_parent_id=swap_parent_id
+                swap_parent_id=swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
         return True
-
 
 class CloseAccountParser(InstructionParser):
     """Parser for Token Program closeAccount instructions."""
@@ -235,7 +246,7 @@ class CloseAccountParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "closeAccount")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         account_address = str(instruction.parsed["info"]["account"])
         destination_address = str(instruction.parsed["info"]["destination"])
         if "owner" in instruction.parsed["info"]:
@@ -244,7 +255,8 @@ class CloseAccountParser(InstructionParser):
             owner = str(instruction.parsed["info"]["multisigOwner"][0])
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
             source_address=account_address,
             owner = owner,
             balance_token = 0,
@@ -255,7 +267,8 @@ class CloseAccountParser(InstructionParser):
         amount_lamport = account_version_source.balance_token + 203928
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
             account_version_source = account_version_source, 
             destination_address = destination_address,
             amount_lamport = amount_lamport
@@ -270,7 +283,8 @@ class CloseAccountParser(InstructionParser):
                 program_address = instruction.program_address,
                 amount_source = amount_lamport,
                 amount_destination = amount_lamport,
-                swap_parent_id = swap_parent_id
+                swap_parent_id = swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
@@ -284,19 +298,21 @@ class BurnParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "burn")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         amount = int(instruction.parsed["info"]["amount"])
         account_address = str(instruction.parsed["info"]["account"])
         authority = str(instruction.parsed["info"]["authority"])
         mint_address = str(instruction.parsed["info"]["mint"])
         
-        graphBuilderService.burn(
+        GraphBuilderService.burn(
+            transaction_context = context,
             account_address=account_address,
             amount_token = amount,
             mint_address = mint_address,
             authority = authority,
             parent_swap_id = swap_parent_id,
             program_address = instruction.program_address,
+            parent_router_swap_id = parent_router_swap_id,
         )
         
         return True
@@ -309,18 +325,20 @@ class MintToParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "mintTo")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         amount = int(instruction.parsed["info"]["amount"])
         account_address = str(instruction.parsed["info"]["account"])
         mint_authority = str(instruction.parsed["info"]["mintAuthority"])
         mint_address = str(instruction.parsed["info"]["mint"])
         
-        graphBuilderService.mintTo(
+        GraphBuilderService.mintTo(
+            transaction_context = context,
             account_address = account_address,
             amount_token = amount,
             mint_address = mint_address,
             parent_swap_id = swap_parent_id,
             program_address = instruction.program_address,
+            parent_router_swap_id = parent_router_swap_id,
         )
         
         return True
@@ -333,7 +351,7 @@ class SyncNativeParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "syncNative")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         account_address = str(instruction.parsed["info"]["account"])
 
         mint_address = WRAPPED_SOL_ADDRESS
@@ -354,7 +372,7 @@ class SystemAssignParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "assign")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         account_address = str(instruction.parsed["info"]["account"])
         program_owner = str(instruction.parsed["info"]["owner"])
         if program_owner == STAKE_PROGRAM:
@@ -371,7 +389,7 @@ class StakeInitializeParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "initialize")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         stakeAccount_address = str(instruction.parsed["info"]["stakeAccount"])
         withdrawer_address = str(instruction.parsed["info"]["authorized"]["withdrawer"])
 
@@ -390,14 +408,15 @@ class StakeWithdrawParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "withdraw")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         stakeAccount_address = str(instruction.parsed["info"]["stakeAccount"])
         destination_address = str(instruction.parsed["info"]["destination"])
         lamports = instruction.parsed["info"]["lamports"]
         withdrawAuthority_address = str(instruction.parsed["info"]["withdrawAuthority"])
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
             source_address = stakeAccount_address,
             amount_lamport = lamports,
             owner=withdrawAuthority_address,
@@ -405,7 +424,8 @@ class StakeWithdrawParser(InstructionParser):
         )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
             account_version_source = account_version_source, 
             destination_address = destination_address,
             amount_lamport = lamports
@@ -420,7 +440,8 @@ class StakeWithdrawParser(InstructionParser):
                 program_address=instruction.program_address,
                 amount_source=lamports,
                 amount_destination=lamports,
-                swap_parent_id=swap_parent_id
+                swap_parent_id=swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
@@ -435,7 +456,7 @@ class StakeSplitParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") == "split")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         stakeAccount_address = str(instruction.parsed["info"]["stakeAccount"])
         newSplitAccount_address = str(instruction.parsed["info"]["newSplitAccount"])
         authority = str(instruction.parsed["info"]["stakeAuthority"])
@@ -444,19 +465,25 @@ class StakeSplitParser(InstructionParser):
         mint_address = SOL
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(source_address = stakeAccount_address, 
-                                                                                    amount_lamport = lamports,
-                                                                                    mint_address = mint_address,
-                                                                                    owner = authority,
-                                                                                    account_type = AccountType.STAKE_ACCOUNT)
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
+            source_address = stakeAccount_address, 
+            amount_lamport = lamports,
+            mint_address = mint_address,
+            owner = authority,
+            account_type = AccountType.STAKE_ACCOUNT
+        )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(account_version_source = account_version_source, 
-                                                                                            destination_address = newSplitAccount_address, 
-                                                                                            owner = authority,
-                                                                                            amount_lamport = lamports,
-                                                                                            mint_address = mint_address,
-                                                                                            account_type = AccountType.STAKE_ACCOUNT)
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
+            account_version_source = account_version_source, 
+            destination_address = newSplitAccount_address, 
+            owner = authority,
+            amount_lamport = lamports,
+            mint_address = mint_address,
+            account_type = AccountType.STAKE_ACCOUNT
+        )
         
         # Add edge to graph
         context.graph.add_edge(
@@ -467,12 +494,12 @@ class StakeSplitParser(InstructionParser):
                 program_address=instruction.program_address,
                 amount_source=lamports,
                 amount_destination=lamports,
-                swap_parent_id=swap_parent_id
+                swap_parent_id=swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         
         return True
-
 
 class StakeAuthorizeParser(InstructionParser):
     """Parser for Stake Program authorize instructions."""
@@ -483,18 +510,24 @@ class StakeAuthorizeParser(InstructionParser):
                 instruction.parsed.get("type") == "authorize" and
                 instruction.parsed["info"]["authorityType"] == "Withdrawer")
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         stakeAccount_address = str(instruction.parsed["info"]["stakeAccount"])
         newAuthority = str(instruction.parsed["info"]["newAuthority"])
 
         # Get source version account
-        account_version_source = graphBuilderService.prepare_source_account_version(source_address = stakeAccount_address,
-                                                                                    account_type= AccountType.STAKE_ACCOUNT)
+        account_version_source = GraphBuilderService.prepare_source_account_version(
+            transaction_context = context,
+            source_address = stakeAccount_address,
+            account_type= AccountType.STAKE_ACCOUNT
+        )
 
         # Get destination version account
-        account_version_destination = graphBuilderService.prepare_destination_account_version(account_version_source = account_version_source, 
-                                                                                                       destination_address = stakeAccount_address, 
-                                                                                                       owner = newAuthority)
+        account_version_destination = GraphBuilderService.prepare_destination_account_version(
+            transaction_context = context,
+            account_version_source = account_version_source, 
+            destination_address = stakeAccount_address, 
+            owner = newAuthority
+        )
 
         # Add Transfer Edge
         context.graph.add_edge(
@@ -505,7 +538,8 @@ class StakeAuthorizeParser(InstructionParser):
                 program_address = instruction.program_address,
                 amount_source = account_version_source.balance_lamport, 
                 amount_destination = account_version_source.balance_lamport, 
-                swap_parent_id = swap_parent_id, 
+                swap_parent_id = swap_parent_id,
+                parent_router_swap_id = parent_router_swap_id,
             )
         )
         return True
@@ -518,7 +552,7 @@ class AssociatedTokenAccountCreateParser(InstructionParser):
                 instruction.parsed is not None and 
                 instruction.parsed.get("type") in ["create", "createIdempotent"])
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         source_address = str(instruction.parsed["info"]["source"])
         new_account_address = str(instruction.parsed["info"]["account"])
         mint_address = str(instruction.parsed["info"]["mint"])
@@ -530,7 +564,6 @@ class AssociatedTokenAccountCreateParser(InstructionParser):
         new_account.type = AccountType.TOKEN_ACCOUNT
 
         # update owner in all source account's version if it wasn't known yet
-        account_version_destination = context.account_repository.account_versions.get(new_account_address)
         context.account_repository.update_owner_in_all_versions(new_account_address, wallet)
         
         # No transfers involved in account creation (SOL transfer happens in a separate system instruction)
@@ -548,7 +581,7 @@ class ComputeBudgetSetComputeUnitPriceParser(InstructionParser):
             return instruction_discriminator == "03"
         return False
     
-    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, swap_parent_id: int = None) -> None:
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         instruction_bytes = decode_instruction_data(instruction.data)
         micro_lamport = int.from_bytes(instruction_bytes[1:9], "little")
         context.compute_priority_fee(micro_lamport = micro_lamport)

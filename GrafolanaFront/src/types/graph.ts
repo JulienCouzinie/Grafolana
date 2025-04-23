@@ -26,6 +26,7 @@ export enum AccountType {
     TOKEN_ACCOUNT = "TOKEN_ACCOUNT",
     SOL_ACCOUNT = "SOL_ACCOUNT",
     FEE_ACCOUNT = "FEE_ACCOUNT",
+    PROGRAM_ACCOUNT = "PROGRAM_ACCOUNT",
     UNKNOWN = "UNKNOWN"
 }
 
@@ -41,6 +42,8 @@ export enum TransferType {
     MINTTO= "MINTTO",
     NATIVE_SOL = "NATIVE_SOL",
     SWAP = "SWAP",
+    SWAP_INCOMING = "SWAP_INCOMING",
+    SWAP_OUTGOING = "SWAP_OUTGOING",
     FEE = "FEE",
     AUTHORIZE = "AUTHORIZE",
     PRIORITY_FEE = "PRIORITYFEE",
@@ -78,6 +81,7 @@ export interface GraphLink {
     group?: number;             // Group ID for swaps (optional)
     curvature?: number;         // Curvature for multilinks
     swap_id?: number;           // Swap id if transfer is of type == "SWAP"
+    swap_parent_id?: number;     // All links that are part of the same swap
     composite: GraphLink[] | null;     // Composite links (when multiple links are aggregated into one)
 }
 

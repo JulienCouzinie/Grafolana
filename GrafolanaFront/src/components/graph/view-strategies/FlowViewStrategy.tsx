@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode } from '@/types/graph';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, TransferType } from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -67,18 +67,20 @@ class FlowViewStrategy extends BaseViewStrategy {
     return links;
   }
 
-  processData(data: GraphData): GraphData {
-    this.originalData.current = data;
-    const clonedData = cloneDeep(data);
+  
 
-    let links = clonedData.links;
+
+  processData(data: GraphData): GraphData {
+    const baseData = super.processData(data);
+
+    let links = baseData.links;
     links = this.assignLinksID(links);
     links = this.assignLinkCurvature(links);
 
     const processed = {
-      nodes: this.assignNodesID(clonedData.nodes),
+      nodes: this.assignNodesID(baseData.nodes),
       links: links,
-      transactions: clonedData.transactions,
+      transactions: baseData.transactions,
     };
 
     this.processedData.current = processed;
@@ -155,27 +157,36 @@ class FlowViewStrategy extends BaseViewStrategy {
     const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
     const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon;
 
+    let sourceUSD;
+    let mintSource;
+    if (link.type === TransferType.SWAP_OUTGOING) {
+      mintSource = this.metadataServices.getMintInfo(destinationNode?.mint_address!);
+    } else {
+      mintSource = this.metadataServices.getMintInfo(sourceNode?.mint_address!);
+    } 
+    const mintDestination = this.metadataServices.getMintInfo(destinationNode?.mint_address!);
+
     // Calculate USD values and get mint info
-    const sourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
+    sourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
         link.amount_source, 
-        sourceNode.mint_address, 
-        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-    ) : 'N/A';
-    const destinationUSD = destinationNode ? this.usdServices.calculateUSDValue(
-        link.amount_destination, 
-        destinationNode.mint_address, 
+        mintSource!.mint_address, 
         this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
     ) : 'N/A';
 
-    const mintSource = this.metadataServices.getMintInfo(sourceNode?.mint_address!);
-    const mintDestination = this.metadataServices.getMintInfo(destinationNode?.mint_address!);
+    const destinationUSD = destinationNode ? this.usdServices.calculateUSDValue(
+        link.amount_destination, 
+        mintDestination!.mint_address, 
+        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+    ) : 'N/A';
+
+    
 
     // Get formatted amounts for source and destination
     const source = this.getAmountDetails(link, mintSource);
     const destination = this.getAmountDetails(link, mintDestination, true);
 
     // Format the amount line based on link type
-    const amountLine = link.type === 'SWAP' 
+    const amountLine = link.type === TransferType.SWAP 
     ? (() => {
         // Find the swap details
         const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
@@ -250,6 +261,39 @@ class FlowViewStrategy extends BaseViewStrategy {
     </div>
     `;
 }
+
+  /**
+   * Returns the content for the Filters accordion section
+   * This is a placeholder and can be customized as needed
+   */
+  getFiltersContent(): React.ReactNode {
+    // Create a component with internal state that reflects our class properties
+    const Filters = () => {
+
+      return (
+        <div className="filter-options">
+          <div className="filter-option">
+
+          </div>
+        </div>
+      );
+    };
+
+    // Flow-specific content using React components with internal state
+    const flowContent = (
+      <div className="info-section">
+        <Filters />
+      </div>
+    );
+    
+    // Pass the flow content to the base implementation
+    const baseContent = super.getFiltersContent(flowContent);
+    return (
+      <div className="strategy-panel-content">
+        {baseContent}
+      </div>
+    );
+  }
 
 /**
  * Returns content for the Nodes Info accordion section with Flow view specific information

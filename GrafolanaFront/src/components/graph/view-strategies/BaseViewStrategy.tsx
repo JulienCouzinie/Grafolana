@@ -1,11 +1,11 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType } from '@/types/graph';
+import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
 import { MintDTO } from '@/types/metadata';
-import { min } from 'lodash';
+import { cloneDeep, min } from 'lodash';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -29,6 +29,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
 
+    isCollapseSwapRouters: React.RefObject<boolean>;
+    isCollapseSwapPrograms: React.RefObject<boolean>;
+
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
         usdServices: ReturnType<typeof useUSDValue>,
@@ -45,6 +48,80 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.hoveredNode = null;
         this.hoveredLink = null;
         this.selectedNodes = selectedNodesRef;
+        this.isCollapseSwapRouters = useRef(true);
+        this.isCollapseSwapPrograms = useRef(true);
+    }
+
+    private CollapseSwapPrograms(data: GraphData): GraphData {
+        // If isCollapseSwapPrograms
+        // For each transaction
+        //   For each swaps that is not a router
+        //     Get the related links of type SWAP_INCOMING and SWAP_OUTGOING
+        //     Remove each link with the same swap_id
+        //     Only keep the nodes that are not part of the SWAP_INCOMING and SWAP_OUTGOING links
+
+        if (this.isCollapseSwapPrograms.current) {
+            const transactions = data.transactions;
+            const swapPrograms = new Set<string>();
+            const swapLinks = new Set<number>();
+            const swapNodes = new Set<string>();
+
+            for (const txSignature in transactions) {
+                const transaction = transactions[txSignature];
+                for (const swap of transaction.swaps) {
+                    if (!swap.router) {
+                        swapPrograms.add(swap.program_name);
+                        swapLinks.add(swap.id);
+                    }
+                }
+            }
+
+            // Get the list of SWAP_INCOMING and SWAP_OUTGOING links
+            const swapIncomingOutgoingLinks = data.links.filter((link) => link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING);
+            
+
+            // Remove the links that are part of the swaps
+            data.links = data.links.filter((link) => {
+                if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
+                    return true;
+                }
+                if (swapLinks.has(link.swap_parent_id!)) {
+                    return false;
+                }
+                return true;
+            });
+
+            // Build the list of nodes that are source and target in data.links
+            const activeVertices = new Set<string>();
+                        
+            // Add all node account vertices that appear in any remaining link
+            data.links.forEach((link) => {
+                if (link.source_account_vertex) {
+                    // Use the built-in id getter from AccountVertex
+                    activeVertices.add(link.source_account_vertex.id);
+                }
+                if (link.target_account_vertex) {
+                    // Use the built-in id getter from AccountVertex
+                    activeVertices.add(link.target_account_vertex.id);
+                }
+            });
+
+            // Filter nodes to keep only those that are used in links
+            data.nodes = data.nodes.filter((node) => {
+                // Compare using the same id format
+                return activeVertices.has(node.account_vertex.id);
+            });       
+        }     
+        return data;
+    }
+
+    processData(data: GraphData): GraphData{
+        this.originalData.current = data;
+        const clonedData = cloneDeep(data);
+
+        data = this.CollapseSwapPrograms(clonedData);
+
+        return clonedData;
     }
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
@@ -115,11 +192,13 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             let mintCanvas;
             if (node.type == AccountType.WALLET_ACCOUNT){
                 mintCanvas = this.metadataServices.walletAccountCanvasState;
-                //console.log("walletAccountCanvas", mintCanvas?.width, mintCanvas?.height);
+            } else if (node.type == AccountType.PROGRAM_ACCOUNT){
+                const progreamImageUrl = this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon;
+                mintCanvas = this.metadataServices.getImageCanvas(progreamImageUrl, AccountType.PROGRAM_ACCOUNT);
             } else {
                 // Draw mint logo
                 const imageUrl = mintInfo?.image;
-                mintCanvas = this.metadataServices.getMintImageCanvas(imageUrl);
+                mintCanvas = this.metadataServices.getImageCanvas(imageUrl);
             }
             ctx.save();
             ctx.beginPath();
@@ -293,11 +372,62 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Returns content for the Filters accordion section
      * Override in concrete strategies for strategy-specific filtering options
      */
-    getFiltersContent(): React.ReactNode {
+    getFiltersContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        const CheckboxFilters = () => {
+              // Use React state to track checkbox values
+              const [routerChecked, setRouterChecked] = React.useState<boolean>(this.isCollapseSwapRouters.current);
+              const [programChecked, setProgramChecked] = React.useState<boolean>(this.isCollapseSwapPrograms.current);
+              
+              // Update class properties and state together
+              const handleRouterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const isChecked = e.target.checked;
+                this.isCollapseSwapRouters.current = isChecked;
+                setRouterChecked(isChecked);
+                
+                // If router is checked, program must also be checked
+                if (isChecked) {
+                  this.isCollapseSwapPrograms.current = true;
+                  setProgramChecked(true);
+                }
+              };
+              
+              const handleProgramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const isChecked = e.target.checked;
+                this.isCollapseSwapPrograms.current = isChecked;
+                setProgramChecked(isChecked);
+              };
+              
+              return (
+                <div className="filter-options">
+                  <div className="filter-option">
+                    <label className="filter-checkbox">
+                      <input 
+                        type="checkbox" 
+                        onChange={handleRouterChange}
+                        checked={routerChecked}
+                      />
+                      <span className="filter-label">Collapse Swap Routers</span>
+                    </label>
+                  </div>
+                  <div className="filter-option">
+                    <label className="filter-checkbox">
+                      <input 
+                        type="checkbox"
+                        onChange={handleProgramChange}
+                        checked={programChecked}
+                        disabled={routerChecked}
+                      />
+                      <span className="filter-label">Collapse Swap Programs</span>
+                    </label>
+                  </div>
+                </div>
+              );
+            };
+        
         return (
             <div className="strategy-panel-content">
-                <p>Base filtering options</p>
-                
+                <CheckboxFilters />
+                {(strategyContent) ? strategyContent : ""}
             </div>
         );
     }
@@ -306,12 +436,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Returns content for the Grouping accordion section
      * Override in concrete strategies for strategy-specific grouping options
      */
-    getGroupingContent(): React.ReactNode {
+    getGroupingContent(strategyContent:React.ReactNode=null): React.ReactNode {
         return (
             <div className="strategy-panel-content">
                 <p>Base grouping options</p>
                 {/* No common grouping controls in base strategy */}
-                <p>Select a specific view for more grouping options</p>
+                {(strategyContent) ? strategyContent : ""}
             </div>
         );
     }
@@ -333,7 +463,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
     
     // Abstract methods that must be implemented by derived classes
-    abstract processData(data: GraphData): GraphData;
     abstract nodeTooltip(node: GraphNode): string;
     abstract linkCanvasObject(link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number): void;
     abstract linkTooltip(link: GraphLink): string;

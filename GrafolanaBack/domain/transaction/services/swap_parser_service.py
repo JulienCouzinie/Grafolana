@@ -14,7 +14,7 @@ from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Inst
 class SwapParserService():
         
     @staticmethod
-    def parse_swap(instruction: Parsed_Instruction, transaction_context: TransactionContext, graphBuilderService: GraphBuilderService, swap_router_parent_id: int = None) -> Optional[Swap]:
+    def parse_swap(instruction: Parsed_Instruction, transaction_context: TransactionContext, swap_router_parent_id: int = None) -> Optional[Swap]:
         """Parse a swap instruction to extract trade details."""
         # If instruction has accounts, then proceeds
         if (instruction.accounts):
@@ -112,12 +112,18 @@ class SwapParserService():
                                 transfer = param.native_sol_transfer_inference.infer(instruction, swap)
                                 
                                 # Prepare source account
-                                source_account_version = graphBuilderService.prepare_source_account_version(source_address = transfer.accounts.source, 
-                                                                                                            amount_token = transfer.amount )
+                                source_account_version = GraphBuilderService.prepare_source_account_version(
+                                    transaction_context = transaction_context,
+                                    source_address = transfer.accounts.source, 
+                                    amount_token = transfer.amount
+                                )
                                 # Prepare destination account
-                                destination_accout_version = graphBuilderService.prepare_destination_account_version(account_version_source = source_account_version, 
-                                                                                                                    destination_address=transfer.accounts.destination,
-                                                                                                                    amount_token = transfer.amount)
+                                destination_accout_version = GraphBuilderService.prepare_destination_account_version(
+                                    transaction_context = transaction_context,
+                                    account_version_source = source_account_version, 
+                                    destination_address=transfer.accounts.destination,
+                                    amount_token = transfer.amount
+                                )
 
                                 # Add transfer to graph
                                 transaction_context.graph.add_edge(
@@ -129,6 +135,7 @@ class SwapParserService():
                                         amount_source = transfer.amount,
                                         amount_destination = transfer.amount,
                                         swap_parent_id = swap.id,
+                                        swap_router_parent_id = swap_router_parent_id,
                                     )
                                 )
                         

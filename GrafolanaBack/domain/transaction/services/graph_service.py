@@ -190,7 +190,6 @@ class GraphService:
                 'reference_mint': mint
             }
         
-
         source: AccountVertex
         destination: AccountVertex
         data: dict
@@ -326,7 +325,11 @@ class GraphService:
 
             # Handle swap-specific data
             if "swap_parent_id" in data and data["swap_parent_id"]:
-                swap_id = data["swap_parent_id"]
+                edge_data["swap_parent_id"] = data["swap_parent_id"]
+            
+            if "parent_router_swap_id" in data and data["parent_router_swap_id"]:
+                edge_data["parent_router_swap_id"] = data["parent_router_swap_id"]
+
 
             edges_data.append(edge_data)
 

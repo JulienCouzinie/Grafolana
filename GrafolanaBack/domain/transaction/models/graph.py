@@ -21,6 +21,8 @@ class TransferType(str, Enum):
     MINTTO= "MINTTO"
     NATIVE_SOL = "NATIVE_SOL"
     SWAP = "SWAP"
+    SWAP_INCOMING = "SWAP_INCOMING"
+    SWAP_OUTGOING = "SWAP_OUTGOING"
     FEE = "FEE"
     AUTHORIZE = "AUTHORIZE"
     PRIORITY_FEE = "PRIORITYFEE"
@@ -39,6 +41,7 @@ class TransferProperties:
     amount_destination: int
     swap_id: Optional[int] = None
     swap_parent_id: Optional[int] = None
+    parent_router_swap_id: Optional[int] = None
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> TransferProperties:
@@ -50,6 +53,7 @@ class TransferProperties:
             amount_destination=data.get("amount_destination", 0),
             swap_id=data.get("swap_id"),
             swap_parent_id=data.get("swap_parent_id"),
+            parent_router_swap_id=data.get("parent_router_swap_id"),
             key=data.get("key")
         )
     
@@ -67,6 +71,9 @@ class TransferProperties:
         
         if self.swap_parent_id is not None:
             result["swap_parent_id"] = self.swap_parent_id
+
+        if self.parent_router_swap_id is not None:
+            result["parent_router_swap_id"] = self.parent_router_swap_id
             
         return result
 
@@ -244,65 +251,65 @@ class TransactionGraph:
         """
         self.graph.remove_nodes_from(nodes)
     
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the graph to a dictionary representation.
+    # def to_dict(self) -> Dict[str, Any]:
+    #     """
+    #     Convert the graph to a dictionary representation.
         
-        Returns:
-            Dictionary representation of the graph
-        """
-        result = {
-            "nodes": [],
-            "links": []
-        }
+    #     Returns:
+    #         Dictionary representation of the graph
+    #     """
+    #     result = {
+    #         "nodes": [],
+    #         "links": []
+    #     }
         
-        # Process nodes
-        node_ids = set()
-        for vertex in self.graph.nodes():
-            node_id = f"{vertex.address}_v{vertex.version}"
-            if node_id not in node_ids:
-                node_ids.add(node_id)
-                result["nodes"].append({
-                    "account_vertex": {
-                        "address": vertex.address,
-                        "version": vertex.version
-                    }
-                })
+    #     # Process nodes
+    #     node_ids = set()
+    #     for vertex in self.graph.nodes():
+    #         node_id = f"{vertex.address}_v{vertex.version}"
+    #         if node_id not in node_ids:
+    #             node_ids.add(node_id)
+    #             result["nodes"].append({
+    #                 "account_vertex": {
+    #                     "address": vertex.address,
+    #                     "version": vertex.version
+    #                 }
+    #             })
         
-        # Process edges - sort by key for consistent ordering
-        sorted_edges = sorted(self.graph.edges(data=True, keys=True), key=lambda x: x[2])
+    #     # Process edges - sort by key for consistent ordering
+    #     sorted_edges = sorted(self.graph.edges(data=True, keys=True), key=lambda x: x[2])
         
-        for index, (source, target, key, data) in enumerate(sorted_edges, start=1):
-            edge_data = {
-                "key": index,
-                "program_address": data["program_address"],
-                "source_account_vertex": {
-                    "address": source.address,
-                    "version": source.version
-                },
-                "target_account_vertex": {
-                    "address": target.address,
-                    "version": target.version
-                },
-                "amount_source": data["amount_source"],
-                "amount_destination": data["amount_destination"],
-                "type": data["transfer_type"]
-            }
+    #     for index, (source, target, key, data) in enumerate(sorted_edges, start=1):
+    #         edge_data = {
+    #             "key": index,
+    #             "program_address": data["program_address"],
+    #             "source_account_vertex": {
+    #                 "address": source.address,
+    #                 "version": source.version
+    #             },
+    #             "target_account_vertex": {
+    #                 "address": target.address,
+    #                 "version": target.version
+    #             },
+    #             "amount_source": data["amount_source"],
+    #             "amount_destination": data["amount_destination"],
+    #             "type": data["transfer_type"]
+    #         }
             
-            if "swap_id" in data:
-                edge_data["swap_id"] = data["swap_id"]
-                edge_data["group"] = data["swap_id"]
+    #         if "swap_id" in data:
+    #             edge_data["swap_id"] = data["swap_id"]
+    #             edge_data["group"] = data["swap_id"]
                 
-            if "swap_parent_id" in data:
-                edge_data["swap_parent_id"] = data["swap_parent_id"]
-                if "swap_id" not in data:  # Only set group if not already set
-                    edge_data["group"] = data["swap_parent_id"]
+    #         if "swap_parent_id" in data:
+    #             edge_data["swap_parent_id"] = data["swap_parent_id"]
+    #             if "swap_id" not in data:  # Only set group if not already set
+    #                 edge_data["group"] = data["swap_parent_id"]
             
-            result["links"].append(edge_data)
+    #         result["links"].append(edge_data)
         
-        return result
+    #     return result
     
-    def create_subgraph_for_swap(self, swap: Swap)-> Graph:
+    def create_subgraph_for_swap(self, swap: Swap)-> MultiDiGraph:
         """
         Creates a subgraph containing only edges associated with the given swap.
         
@@ -322,7 +329,8 @@ class TransactionGraph:
             return
         
         # Create a new subgraph with just these edges
-        return self.graph.edge_subgraph(swap_edges)
+        return MultiDiGraph.edge_subgraph(self.graph, swap_edges)
+        #return self.graph.edge_subgraph(swap_edges)
     
     @staticmethod
     def get_last_transfer(path: Dict, graph: MultiDiGraph)-> Tuple[AccountVertex,AccountVertex,Dict]:

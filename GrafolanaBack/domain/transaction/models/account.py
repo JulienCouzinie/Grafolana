@@ -14,6 +14,7 @@ class AccountType(str, Enum):
     TOKEN_ACCOUNT = "TOKEN_ACCOUNT" 
     SOL_ACCOUNT = "SOL_ACCOUNT"
     FEE_ACCOUNT = "FEE_ACCOUNT"
+    PROGRAM_ACCOUNT = "PROGRAM_ACCOUNT"
     UNKNOWN = "UNKNOWN"
 
 
@@ -27,8 +28,8 @@ class Account:
     various entities like wallets, token accounts, pools, etc.
     """
     address: str
-    mint_address: str
     type: AccountType = AccountType.UNKNOWN
+    mint_address: str = None
     is_pool: bool = False
     authorities: List[str] = field(default_factory=list)
     metadata: Optional[Dict] = field(default_factory=dict)

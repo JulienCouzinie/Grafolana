@@ -98,13 +98,11 @@ class TransactionParserService:
             fee_payer=fee_payer,
             compute_units_consumed=transaction.meta.compute_units_consumed
         )
-
-        graphBuilderService = GraphBuilderService(transaction_context)
         
         # Process instructions to build the graph
-        self._process_instructions(instructions, transaction_context, graphBuilderService)
+        self._process_instructions(instructions, transaction_context)
         
-        graphBuilderService.add_fee_transfers(transaction_context)
+        GraphBuilderService.add_fee_transfers(transaction_context)
 
         swap_resolver_service = SwapResolverService(account_repository)
 
@@ -235,22 +233,27 @@ class TransactionParserService:
             logger.error(f"Error fetching transaction {str(signature)}: {str(error)}", exc_info=True)
             return None    
 
-    def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, graphBuilderService: GraphBuilderService, parent_swap_id: int = None) -> None:
+    def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, parent_swap_id: int = None, parent_router_swap_id: int = None) -> None:
         """Process a list of instructions and its inner instructions recursively."""
         for instruction in instructions:
             # Try to parse as a transfer
-            transfer_parsed = self.instruction_parser_service.parse_transfer(instruction, context, graphBuilderService, parent_swap_id)
+            transfer_parsed = self.instruction_parser_service.parse_transfer(instruction, context, parent_swap_id, parent_router_swap_id)
             
             if not transfer_parsed:
                 # Try to parse as a swap
-                swap = self.instruction_parser_service.parse_swap(instruction, context, graphBuilderService, parent_swap_id)
-                inner_parent_swap_id = swap.id if swap else parent_swap_id
+                swap = self.instruction_parser_service.parse_swap(instruction, context, parent_router_swap_id)
+                if swap:
+                    inner_parent_swap_id = swap.id 
+                    if swap.router:
+                        parent_router_swap_id = swap.id
+                else:
+                    inner_parent_swap_id = parent_swap_id
             else:
                 inner_parent_swap_id = parent_swap_id
             
             # Process inner instructions recursively
             if instruction.inner_instructions:
-                self._process_instructions(instruction.inner_instructions, context, graphBuilderService, inner_parent_swap_id)
+                self._process_instructions(instruction.inner_instructions, context, inner_parent_swap_id, parent_router_swap_id)
 
     def getJSONTransaction(self, tx_sig: str):
         tx = self._get_transaction(Signature.from_string(tx_sig))

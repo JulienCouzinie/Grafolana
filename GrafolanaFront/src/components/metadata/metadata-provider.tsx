@@ -8,6 +8,7 @@ import { cp } from "fs";
 import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
+import { AccountType } from "@/types/graph";
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
@@ -20,7 +21,7 @@ interface MetadataContextType {
   getLabel: (address: string, userId?: string) => Label | null;
 
   getMintImage: (imageUrl: string | undefined) => HTMLImageElement | null;
-  getMintImageCanvas: (imageUrl: string | undefined) => HTMLCanvasElement | null;
+  getImageCanvas: (imageUrl: string | undefined, type?: AccountType) => HTMLCanvasElement | null;
   getProgramImage: (imageUrl: string) => HTMLImageElement;
   walletAccountCanvasState: HTMLCanvasElement | null;
   defaultWalletImage: HTMLImageElement | null;
@@ -61,7 +62,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     clearPrograms
   ] = useImmediateState<string, Program | null>(new Map());
   const images = useRef(new Map<string, HTMLImageElement>());
-  const mintsCanvas = useRef(new Map<string, HTMLCanvasElement>());
+  const canvas = useRef(new Map<string, HTMLCanvasElement>());
 
   // Loading states
   const imageLoadingStates = useRef(new Map<string, boolean>());
@@ -95,7 +96,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   // State for default/wallet canvases
   const [defaultMintCanvas, setDefaultMintCanvas] = useState<HTMLCanvasElement | null>(null);
   const [walletAccountCanvasState, setWalletAccountCanvasState] = useState<HTMLCanvasElement | null>(null);
-
+  const [defaultProgramCanvasState, setDefaultProgramCanvasState] = useState<HTMLCanvasElement | null>(null);
 
   // Effect to load and create the default mint canvas
   useEffect(() => {
@@ -116,7 +117,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     img.onerror = () => {
         console.error("Failed to load default mint image for canvas");
     };
-    img.src = '/logo/default.png'; // Path to your default image for canvas
+    img.src = '/logo/default.png'; 
 
     return () => {
         isMounted = false; // Cleanup function to set flag false when component unmounts
@@ -142,13 +143,38 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     img.onerror = () => {
         console.error("Failed to load wallet account image for canvas");
     };
-    img.src = '/logo/walletblack.png'; // Path to your wallet image
+    img.src = '/logo/walletblack.png';
 
     return () => {
         isMounted = false; // Cleanup function
     };
   }, []); // Empty dependency array ensures this runs once on mount
 
+  // Effect to load and create the wallet account canvas
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let isMounted = true; // Flag to prevent state update on unmounted component
+    const img = new window.Image();
+    img.onload = () => {
+      if (isMounted) {
+         try {
+            const canvas = getCanvas(img);
+            setDefaultProgramCanvasState(canvas);
+         } catch (error) {
+            console.error("Error creating wallet account canvas:", error);
+         }
+      }
+    };
+    img.onerror = () => {
+        console.error("Failed to load wallet account image for canvas");
+    };
+    img.src = '/program/default.png';
+
+    return () => {
+        isMounted = false; // Cleanup function
+    };
+  }, []); // Empty dependency array ensures this runs once on mount
 
   // Create a default image that will be returned when no cached image is found
   const defaultProgramImage = useMemo(() => {
@@ -169,12 +195,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       img.onload = async () => {
         try {
-          // Crop the image when it loads
-          //const croppedImg = await cropLogoToSquare(img);
-          if (mint) {
-            const mintCanvas = getCanvas(img);
-            mintsCanvas.current.set(imageUrl, mintCanvas);
-          }
+          const imgCanvas = getCanvas(img);
+          // Keep cache of images and canvas
+          canvas.current.set(imageUrl, imgCanvas);
           images.current.set(imageUrl, img);
         } catch (error) {
           // If cropping fails, use original image
@@ -193,7 +216,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       img.src = imageUrl;
     }
-  }, [images,mintsCanvas]);
+  }, [images,canvas]);
 
   const FetchMintInfosAndCache = useCallback(async (mintAddresses: string[]): Promise<void> => {
     // Remove duplicates from input array
@@ -268,13 +291,17 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return defaultMintImage;
   }, [images, defaultMintImage]);
 
-  const getMintImageCanvas = useCallback((imageUrl: string | undefined): HTMLCanvasElement | null => {
+  const getImageCanvas = useCallback((imageUrl: string | undefined, type: AccountType = AccountType.UNKNOWN): HTMLCanvasElement | null => {
     if (typeof window === 'undefined') {
       return null;
     }    
 
     if (imageUrl=== undefined) {
-      return defaultMintCanvas;
+      if (type === AccountType.PROGRAM_ACCOUNT) {
+        return defaultProgramCanvasState;
+      } else {
+        return defaultMintCanvas;
+      }
     }
 
     // If image is still loading, return null
@@ -283,13 +310,13 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     // If image is in cache, return it
-    if (mintsCanvas.current.has(imageUrl)) {
-      return mintsCanvas.current.get(imageUrl)!;
+    if (canvas.current.has(imageUrl)) {
+      return canvas.current.get(imageUrl)!;
     }
 
     // If no image URL was provided or image failed to load, return default
     return defaultMintCanvas;
-  }, [mintsCanvas, defaultMintCanvas]);
+  }, [canvas, defaultMintCanvas]);
 
   const getProgramImage = useCallback((imageUrl: string): HTMLImageElement => {
     if (typeof window === 'undefined') { // Type assertion for SSR
@@ -345,8 +372,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       const cacheKey = getCacheKey(address, userId);
       const label = labelsRef.current.get(cacheKey);
-      console.log("label",label, address, type)
-
 
       let computedLabel: SimpleLabel;
       if (label) {
@@ -384,8 +409,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
           label: address
         };
       }
-      console.log("computedLabel",computedLabel,mintsRef.current, address,)
-  
+
       setComputedLabel(address, computedLabel);
 
   },[labelsState,programsState,mintsState,computedLabelsState]);
@@ -518,7 +542,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       getMintInfo,
       getMintImage,
-      getMintImageCanvas,
+      getImageCanvas,
       walletAccountCanvasState,
       defaultWalletImage,
       

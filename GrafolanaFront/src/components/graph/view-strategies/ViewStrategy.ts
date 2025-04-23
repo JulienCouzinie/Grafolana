@@ -70,6 +70,9 @@ export interface ViewStrategy {
   hoveredNode: ForceGraphNode | null;
   hoveredLink: ForceGraphLink | null;
 
+  isCollapseSwapRouters: React.RefObject<boolean>;
+  isCollapseSwapPrograms: React.RefObject<boolean>;
+
   /**
    * Reference to the currently selected nodes set
    * Uses React.Ref to allow mutations to the current value

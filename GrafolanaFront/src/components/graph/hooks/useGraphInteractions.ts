@@ -161,7 +161,7 @@ export function useGraphInteractions(
       node.fy = node.y;
       
       // Provide user feedback (optional)
-      console.log(`Node ${node.id} position fixed at x:${node.x}, y:${node.y}`);
+      // console.log(`Node ${node.id} position fixed at x:${node.x}, y:${node.y}`);
       
       // Force a refresh of the graph to reflect changes
       if (fgRef?.current) {

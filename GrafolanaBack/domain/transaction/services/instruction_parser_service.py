@@ -9,7 +9,6 @@ from GrafolanaBack.domain.transaction.parsers.instruction_parsers import (
     StakeSplitParser, StakeAuthorizeParser, AssociatedTokenAccountCreateParser,
     ComputeBudgetSetComputeUnitPriceParser, SyncNativeParser, SystemAssignParser
 )
-from GrafolanaBack.domain.transaction.services.graph_builder_service import GraphBuilderService
 from GrafolanaBack.domain.transaction.services.swap_parser_service import SwapParserService
 from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction
 
@@ -41,7 +40,7 @@ class InstructionParserService:
             SystemAssignParser()
         ]
     
-    def parse_transfer(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, parent_swap_id: int = None) -> bool:
+    def parse_transfer(self, instruction: Parsed_Instruction, context: TransactionContext, parent_swap_id: int = None, parent_router_swap_id: int = None) -> bool:
         """
         Parse an instruction as a transfer, if possible.
         
@@ -56,8 +55,8 @@ class InstructionParserService:
         """
         for parser in self.transfer_parsers:
             if parser.can_parse(instruction):
-                return parser.parse(instruction, context, graphBuilderService, parent_swap_id)
+                return parser.parse(instruction, context, parent_swap_id, parent_router_swap_id)
         return False
     
-    def parse_swap(self, instruction: Parsed_Instruction, context: TransactionContext, graphBuilderService: GraphBuilderService, parent_swap_id: int = None) -> Optional[Swap]:
-        return SwapParserService.parse_swap(instruction, context, graphBuilderService, parent_swap_id)
+    def parse_swap(self, instruction: Parsed_Instruction, context: TransactionContext, parent_swap_id: int = None) -> Optional[Swap]:
+        return SwapParserService.parse_swap(instruction, context, parent_swap_id)

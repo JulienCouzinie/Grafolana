@@ -7,6 +7,7 @@ from GrafolanaBack.domain.transaction.models.swap import Swap, TransferAccountAd
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.transaction.repositories.account_repository import AccountRepository
 from GrafolanaBack.domain.logging.logging import logger
+from GrafolanaBack.domain.transaction.services.graph_builder_service import GraphBuilderService
 
 class SwapResolverService:
     """
@@ -40,6 +41,19 @@ class SwapResolverService:
             # Use the swap resolver service to resolve the swap paths
             self.resolve_swap(transaction_context, swap)
 
+    def resolve_router_swap_paths(self, transaction_context: TransactionContext, router_swap: Swap) -> None:
+        """
+        Resolve paths for a router swap operation in the graph.
+        
+        This adds a virtual program account and 2 edges:
+        - from the user source account to the router program account
+        - from the router program account to the user destination account
+        
+        Args:
+            graph: The transaction graph
+            router_swap: The router_swap swap operation to resolve
+        """
+        # Get 
 
     def resolve_swap(self, transaction_context: TransactionContext, swap: Swap) -> None:
         """
@@ -139,6 +153,7 @@ class SwapResolverService:
         
         swap.fee = real_swap_amount_out - amount_out
 
+        # Add virtual transfer from pool to pool to represent the swap
         transaction_context.graph.add_edge(
                     source = pool_dest_vertex, 
                     target = pool_source_vertex,
@@ -148,8 +163,51 @@ class SwapResolverService:
                         amount_source = amount_in,
                         amount_destination = amount_out,
                         swap_id = swap.id,
+                        swap_parent_id= swap.id,
+                        parent_router_swap_id = swap.swap_router_parent_id,
                     ),
                     key = swap_transfer_key)
+        
+        swap_program_account =  GraphBuilderService.prepare_swap_program_account(
+            transaction_context = transaction_context,
+            program_address = swap.program_address,
+        )
+
+        # get lower key of all the swap's edges
+        swap_incoming_transfer_key = min([int(key) for _,_,key in subgraph.edges(keys=True)]) if len(subgraph.edges(keys=True)) > 0 else 0
+
+        # get maximum key of all the swap's edges
+        swap_outgoing_transfer_key = max([int(key) for _,_,key in subgraph.edges(keys=True)]) if len(subgraph.edges(keys=True)) > 0 else 0
+
+        # Add virtual transfer from user source to swap_program_account 
+        transaction_context.graph.add_edge(
+                    source = user_source_vertex, 
+                    target = swap_program_account.get_vertex(),
+                    transfer_properties = TransferProperties(
+                        transfer_type = TransferType.SWAP_INCOMING,
+                        program_address = swap.program_address,
+                        amount_source = amount_in,
+                        amount_destination = amount_in,
+                        swap_id = swap.id,
+                        swap_parent_id= swap.id,
+                        parent_router_swap_id = swap.swap_router_parent_id,
+                    ),
+                    key = swap_incoming_transfer_key)
+        
+        # Add virtual transfer from swap_program_account to user destination
+        transaction_context.graph.add_edge(
+                    source = swap_program_account.get_vertex(), 
+                    target = user_dest_vertex,
+                    transfer_properties = TransferProperties(
+                        transfer_type = TransferType.SWAP_OUTGOING,
+                        program_address = swap.program_address,
+                        amount_source = amount_out,
+                        amount_destination = amount_out,
+                        swap_id = swap.id,
+                        swap_parent_id= swap.id,
+                        parent_router_swap_id = swap.swap_router_parent_id,
+                    ),
+                    key = swap_outgoing_transfer_key)
         
         logger.info(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
     
