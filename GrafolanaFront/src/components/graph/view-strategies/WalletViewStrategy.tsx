@@ -204,17 +204,17 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   processData (data: GraphData): GraphData{
-    this.originalData.current = data;
-    const clonedData = cloneDeep(data);
-    let nodes = this.aggregateAccounts(clonedData.nodes);
+    const baseData = super.processData(data);
 
-    let links = this.aggregateLinks(clonedData);
+    let nodes = this.aggregateAccounts(baseData.nodes);
+
+    let links = this.aggregateLinks(baseData);
     links = this.assignLinkCurvature(links);
 
     const processed = {
       nodes: nodes,
       links: links,
-      transactions: clonedData.transactions,
+      transactions: baseData.transactions,
     };
     this.processedData.current = processed;
     return processed;

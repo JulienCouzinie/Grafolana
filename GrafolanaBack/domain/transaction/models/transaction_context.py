@@ -81,7 +81,7 @@ class TransactionContext:
                        instruction_name : str,
                        user_addresses: TransferAccountAddresses,
                        pool_addresses: TransferAccountAddresses | Tuple[str,...],
-                       swap_router_parent_id: int)-> Swap:
+                       parent_router_swap_id: int)-> Swap:
         """Add a swap to the context."""
         # Create a new swap
         self.swap_id_counter += 1
@@ -93,7 +93,7 @@ class TransactionContext:
                     instruction_name = instruction_name,
                     user_addresses = user_addresses,
                     pool_addresses = pool_addresses,
-                    swap_router_parent_id = swap_router_parent_id)
+                    parent_router_swap_id = parent_router_swap_id)
         
         self.swaps.append(swap)
         

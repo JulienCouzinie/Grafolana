@@ -141,16 +141,16 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 
   processData (data: GraphData): GraphData{
-    this.originalData.current = data;
-    const clonedData = cloneDeep(data);
-    let links = clonedData.links;
+    const baseData = super.processData(data);
+
+    let links = baseData.links;
     links = this.aggregateLinks(links);
     links = this.assignLinkCurvature(links);
 
     const processed = {
-      nodes: this.aggregateAccounts(clonedData.nodes),
+      nodes: this.aggregateAccounts(baseData.nodes),
       links: links,
-      transactions: clonedData.transactions,
+      transactions: baseData.transactions,
     };
     this.processedData.current = processed;
     return processed;

@@ -19,12 +19,12 @@ class Swap:
     instruction_name: str
     user_addresses: TransferAccountAddresses
     pool_addresses: Union[TransferAccountAddresses, Tuple[str, ...], None]
-    swap_router_parent_id: Optional[int] = None
+    parent_router_swap_id: Optional[int] = None
     fee: int = 0
         
     def is_child_swap(self) -> bool:
         """Check if this is a child swap (part of a router swap)."""
-        return self.swap_router_parent_id is not None
+        return self.parent_router_swap_id is not None
     
     def get_pool_addresses_list(self) -> List[str]:
         """Get a list of all pool addresses involved in this swap."""
@@ -72,7 +72,7 @@ class Swap:
             else:
                 result["pool_addresses"] = list(self.pool_addresses)
         
-        if self.swap_router_parent_id is not None:
-            result["swap_router_parent_id"] = self.swap_router_parent_id
+        if self.parent_router_swap_id is not None:
+            result["parent_router_swap_id"] = self.parent_router_swap_id
         
         return result

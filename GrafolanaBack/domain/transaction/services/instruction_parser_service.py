@@ -58,5 +58,5 @@ class InstructionParserService:
                 return parser.parse(instruction, context, parent_swap_id, parent_router_swap_id)
         return False
     
-    def parse_swap(self, instruction: Parsed_Instruction, context: TransactionContext, parent_swap_id: int = None) -> Optional[Swap]:
-        return SwapParserService.parse_swap(instruction, context, parent_swap_id)
+    def parse_swap(self, instruction: Parsed_Instruction, context: TransactionContext, parent_router_swap_id: int = None) -> Optional[Swap]:
+        return SwapParserService.parse_swap(instruction, context, parent_router_swap_id)

@@ -24,7 +24,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
 
-    // Change selectedNodes to be a Ref instead of a direct Set
     selectedNodes: React.RefObject<Set<string>>;
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
@@ -52,40 +51,15 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.isCollapseSwapPrograms = useRef(true);
     }
 
-    private CollapseSwapPrograms(data: GraphData): GraphData {
-        // If isCollapseSwapPrograms
-        // For each transaction
-        //   For each swaps that is not a router
-        //     Get the related links of type SWAP_INCOMING and SWAP_OUTGOING
-        //     Remove each link with the same swap_id
-        //     Only keep the nodes that are not part of the SWAP_INCOMING and SWAP_OUTGOING links
-
+    private CollapseExpandSwapPrograms(data: GraphData, swapIdList: Set<number>): GraphData {
         if (this.isCollapseSwapPrograms.current) {
-            const transactions = data.transactions;
-            const swapPrograms = new Set<string>();
-            const swapLinks = new Set<number>();
-            const swapNodes = new Set<string>();
-
-            for (const txSignature in transactions) {
-                const transaction = transactions[txSignature];
-                for (const swap of transaction.swaps) {
-                    if (!swap.router) {
-                        swapPrograms.add(swap.program_name);
-                        swapLinks.add(swap.id);
-                    }
-                }
-            }
-
-            // Get the list of SWAP_INCOMING and SWAP_OUTGOING links
-            const swapIncomingOutgoingLinks = data.links.filter((link) => link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING);
             
-
             // Remove the links that are part of the swaps
             data.links = data.links.filter((link) => {
                 if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
                     return true;
                 }
-                if (swapLinks.has(link.swap_parent_id!)) {
+                if (swapIdList.has(link.swap_parent_id!)) {
                     return false;
                 }
                 return true;
@@ -110,16 +84,37 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             data.nodes = data.nodes.filter((node) => {
                 // Compare using the same id format
                 return activeVertices.has(node.account_vertex.id);
-            });       
-        }     
+            });
+        }
+        else {
+
+        }
+        
         return data;
+    }
+
+    private CollapseExpandSwapProgram(data: GraphData, swap_id: number): GraphData {
+        return this.CollapseExpandSwapPrograms(data, new Set<number>([swap_id]));
+    }
+
+    private CollapseExpandAllSwapPrograms(data: GraphData): GraphData {
+        // Get all swaps from data.transactions
+        const swapIdList = new Set<number>();
+        Object.values(data.transactions).forEach((transaction) => {
+            transaction.swaps.forEach((swap) => {
+                swapIdList.add(swap.id);
+            });
+        });
+        // Collapse all swaps
+        return this.CollapseExpandSwapPrograms(data, swapIdList);
+
     }
 
     processData(data: GraphData): GraphData{
         this.originalData.current = data;
         const clonedData = cloneDeep(data);
 
-        data = this.CollapseSwapPrograms(clonedData);
+        data = this.CollapseExpandAllSwapPrograms(clonedData);
 
         return clonedData;
     }

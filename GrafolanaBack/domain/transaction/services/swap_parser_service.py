@@ -14,7 +14,7 @@ from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Inst
 class SwapParserService():
         
     @staticmethod
-    def parse_swap(instruction: Parsed_Instruction, transaction_context: TransactionContext, swap_router_parent_id: int = None) -> Optional[Swap]:
+    def parse_swap(instruction: Parsed_Instruction, transaction_context: TransactionContext, parent_router_swap_id: int = None) -> Optional[Swap]:
         """Parse a swap instruction to extract trade details."""
         # If instruction has accounts, then proceeds
         if (instruction.accounts):
@@ -68,7 +68,7 @@ class SwapParserService():
                                                             instruction_name = param.getInstructionName(),
                                                             user_addresses = TransferAccountAddresses(user_source_token_account, user_destination_token_account),
                                                             pool_addresses = None,
-                                                            swap_router_parent_id = swap_router_parent_id
+                                                            parent_router_swap_id = parent_router_swap_id
                                 )
                         else:
                             # If there is a list of pools :
@@ -81,7 +81,7 @@ class SwapParserService():
                                                                 instruction_name = param.getInstructionName(),
                                                                 user_addresses = TransferAccountAddresses(user_source_token_account, user_destination_token_account),
                                                                 pool_addresses = pool_addresses,
-                                                                swap_router_parent_id=swap_router_parent_id
+                                                                parent_router_swap_id=parent_router_swap_id
                                 ) 
 
                             # If there is a classic source/destination for pools :
@@ -104,7 +104,7 @@ class SwapParserService():
                                                                 instruction_name = param.getInstructionName(),
                                                                 user_addresses = TransferAccountAddresses(user_source_token_account, user_destination_token_account),
                                                                 pool_addresses = TransferAccountAddresses(pool_source_token_account, pool_destination_token_account),
-                                                                swap_router_parent_id=swap_router_parent_id
+                                                                parent_router_swap_id=parent_router_swap_id
                                 )
 
                             # If there is a SOL transfer to be infered
@@ -135,7 +135,7 @@ class SwapParserService():
                                         amount_source = transfer.amount,
                                         amount_destination = transfer.amount,
                                         swap_parent_id = swap.id,
-                                        swap_router_parent_id = swap_router_parent_id,
+                                        parent_router_swap_id = parent_router_swap_id,
                                     )
                                 )
                         

@@ -164,7 +164,7 @@ class SwapResolverService:
                         amount_destination = amount_out,
                         swap_id = swap.id,
                         swap_parent_id= swap.id,
-                        parent_router_swap_id = swap.swap_router_parent_id,
+                        parent_router_swap_id = swap.parent_router_swap_id,
                     ),
                     key = swap_transfer_key)
         
@@ -190,7 +190,7 @@ class SwapResolverService:
                         amount_destination = amount_in,
                         swap_id = swap.id,
                         swap_parent_id= swap.id,
-                        parent_router_swap_id = swap.swap_router_parent_id,
+                        parent_router_swap_id = swap.parent_router_swap_id,
                     ),
                     key = swap_incoming_transfer_key)
         
@@ -205,7 +205,7 @@ class SwapResolverService:
                         amount_destination = amount_out,
                         swap_id = swap.id,
                         swap_parent_id= swap.id,
-                        parent_router_swap_id = swap.swap_router_parent_id,
+                        parent_router_swap_id = swap.parent_router_swap_id,
                     ),
                     key = swap_outgoing_transfer_key)
         
