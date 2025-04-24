@@ -67,22 +67,13 @@ class FlowViewStrategy extends BaseViewStrategy {
     return links;
   }
 
-  initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): GraphData {
-    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setProcessedData));
+  initializeGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
+    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setGraphData));
 
     this.setupGraphData(data);
-
-    const initialData = {
-      nodes: [],
-      links: [],
-      transactions: {}
-    };
-    setProcessedData(initialData);
-    return initialData;
   }
 
-  processGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): void {
-    console.log("data", data);
+  processGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
     let links = data.links;
     links = this.assignLinksID(links);
     links = this.assignLinkCurvature(links);
@@ -90,11 +81,15 @@ class FlowViewStrategy extends BaseViewStrategy {
     let nodes = this.assignNodesID(data.nodes);
     let transactions = data.transactions;
 
-    setProcessedData({
-      nodes,
-      links,
-      transactions
-    });
+    this.processedData.current.nodes = nodes;
+    this.processedData.current.links = links; 
+    this.processedData.current.transactions = transactions;
+
+    setGraphData(prevData => ({
+      nodes: [...nodes],
+      links: [...links],
+      transactions: {...transactions}
+    }));
   }
 
   nodeTooltip(node: ForceGraphNode): string {
@@ -155,7 +150,6 @@ class FlowViewStrategy extends BaseViewStrategy {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-
         // Draw the text
         const label = String(link.key);
         ctx.fillText(label, labelX, labelY);
@@ -166,7 +160,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
     const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
     const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon;
-
+    console.log("sourceNode", sourceNode, "destinationNode", destinationNode, "link", link);
     let sourceUSD;
     let mintSource;
     if (link.type === TransferType.SWAP_OUTGOING) {

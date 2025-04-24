@@ -127,7 +127,7 @@ export default function DashboardFeature() {
         </div>
         
         <div className="graph-container">
-          <TransactionGraph graphData={graphData} />
+          <TransactionGraph apiGraphData={graphData} />
         </div>
       </div>
     );

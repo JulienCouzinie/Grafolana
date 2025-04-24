@@ -11,7 +11,7 @@ export interface ViewStrategy {
   /**
    * Transform input data into the view-specific format
    */
-  initializeGraphData: (data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>) => GraphData;
+  initializeGraphData: (data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>) => void;
 
   /**
    * Define how nodes should be rendered

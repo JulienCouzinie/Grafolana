@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType } from '@/types/graph';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, TransactionData } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -140,22 +140,13 @@ class AccountViewStrategy extends BaseViewStrategy {
     return deduplicatedLinks;
   }
 
-  initializeGraphData(data: GraphData): GraphData {
-    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess));
+  initializeGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
+    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setGraphData));
 
     this.setupGraphData(data);
-
-    // Create empty processed data
-    this.processedData.current = {
-      nodes: [],
-      links: [],
-      transactions: {}
-    };
-
-    return this.processedData.current
   }
   
-  processGraphData(data: GraphData): void {
+  processGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
     let links = data.links;
     links = this.aggregateLinks(links);
     links = this.assignLinkCurvature(links);
@@ -166,6 +157,12 @@ class AccountViewStrategy extends BaseViewStrategy {
     this.processedData.current.nodes = nodes;
     this.processedData.current.links = links;
     this.processedData.current.transactions = transactions;
+
+    setGraphData(prevData => ({
+      nodes: [...nodes],
+      links: [...links],
+      transactions: {...transactions}
+    }));
   }
 
   nodeTooltip (node: ForceGraphNode): string {
@@ -364,4 +361,8 @@ export function useAccountViewStrategy(): ViewStrategy {
     originalDataRef,
     selectedNodes
   );
+}
+
+function setGraphData(arg0: (prevData: any) => { nodes: ForceGraphNode[]; links: ForceGraphLink[]; transactions: { [x: string]: TransactionData; }; }) {
+  throw new Error('Function not implemented.');
 }

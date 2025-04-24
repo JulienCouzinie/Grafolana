@@ -12,6 +12,7 @@ import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '../ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
+import { GraphDataProvider } from '@/context/GraphDataProvider';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -55,24 +56,24 @@ const SOLANA_COLORS = {
 type ViewMode = 'flow' | 'account' | 'wallet' | 'program';
 
 interface TransactionGraphProps {
-  graphData: GraphData;
+  apiGraphData: GraphData;
 }
 
-// Create an interface to store processed data by view mode
-interface ProcessedDataCache {
+// Create an interface to store graph data by view mode
+interface GraphDataCache {
   [key: string]: GraphData | null;
 }
 
-export function TransactionGraph({ graphData }: TransactionGraphProps) {
+export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('flow');
-  const [processedData, setProcessedData] = useState<GraphData>({ 
+  const [graphData, setGraphData] = useState<GraphData>({ 
     nodes: [], 
     links: [], 
     transactions: {},
   });
 
-  // Cache for storing processed data by view mode
-  const processedDataCache = useRef<ProcessedDataCache>({
+  // Cache for storing graph data by view mode
+  const graphDataCache = useRef<GraphDataCache>({
     flow: null,
     account: null,
     wallet: null,
@@ -119,16 +120,24 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
     handleBackGroundClick,
   } = useGraphInteractions(strategy, fgRef);
 
+  
+  // Add an effect to cache the processed data for the current view mode
+  useEffect(() => {
+    if (strategy) {
+      graphDataCache.current[viewMode] = graphData;
+    }
+    
+  }, [graphData]); // Re-run when data changes
 
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
-    console.log('processedData',processedData);
+    console.log('processedData in TransactionGraph',graphData);
     if (!fgRef.current) return;
 
     // Configure collision force - properly access the d3Force API
     fgRef.current.d3Force('collide', d3.forceCollide());
     
-  }, [processedData]); // Re-run when data changes
+  }, [graphData]); // Re-run when data changes
 
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
 
@@ -136,16 +145,16 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   useEffect(() => {
     if (strategy) {
       // Check if we have cached data for the current view mode
-      if (processedDataCache.current[viewMode]) {
+      if (graphDataCache.current[viewMode]) {
         // Use cached data
-        setProcessedData(processedDataCache.current[viewMode]!);
+        setGraphData(graphDataCache.current[viewMode]!);
 
       // Don't reheat simulation if data is cached
       } else {
         // Process and cache the data
-        const processed = strategy.initializeGraphData(graphData, setProcessedData);
-        processedDataCache.current[viewMode] = processed;
-        setProcessedData(processed);
+        const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+        // graphDataCache.current[viewMode] = viewGraphData;
+        // setGraphData(viewGraphData);
       }
     }
   }, [viewMode]);
@@ -153,17 +162,16 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Process data using current strategy
   useEffect(() => {
     if (strategy) {
-      const processed = strategy.initializeGraphData(graphData, setProcessedData);
-      setProcessedData(processed);
+      const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
       // Invalidate cache for all view modes
-      processedDataCache.current['flow'] = null;
-      processedDataCache.current['account'] = null;
-      processedDataCache.current['wallet'] = null;
-      processedDataCache.current['program'] = null;
+      graphDataCache.current['flow'] = null;
+      graphDataCache.current['account'] = null;
+      graphDataCache.current['wallet'] = null;
+      graphDataCache.current['program'] = null;
       // Cache the processed data for the current view mode
-      processedDataCache.current[viewMode] = processed;
+      //graphDataCache.current[viewMode] = viewGraphData;
     }
-  }, [graphData]);
+  }, [apiGraphData]);
 
   // Use an effect to update accordion content whenever strategy changes or selectedNodes changes
   useEffect(() => {
@@ -217,8 +225,9 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   }, []);
 
   return (
+  <GraphDataProvider>
     <div className="w-full h-full">
-      <MetadataPreloader graphData={graphData} />
+      <MetadataPreloader graphData={apiGraphData} />
       {/* Context Menu */}
       {contextMenu.isOpen && contextMenu.node && (
         <div 
@@ -351,7 +360,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             <div className="graph-container">
               <NoSSRForceGraph
                 ref={fgRef}
-                graphData={processedData}
+                graphData={graphData}
                 width={window ? window.innerWidth * 0.8 : 800} // Responsive width
                 height={window ? window.innerHeight - 150 : 600} // Adjusted height to account for control bar
                 backgroundColor="#000000"
@@ -551,5 +560,6 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
         }
       `}</style>
     </div>
+    </GraphDataProvider>
   );
 }

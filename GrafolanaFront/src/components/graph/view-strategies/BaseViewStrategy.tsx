@@ -620,7 +620,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
     
     // Abstract methods that must be implemented by derived classes
-    abstract initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): GraphData;
+    abstract initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): void;
     abstract nodeTooltip(node: GraphNode): string;
     abstract linkCanvasObject(link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number): void;
     abstract linkTooltip(link: GraphLink): string;

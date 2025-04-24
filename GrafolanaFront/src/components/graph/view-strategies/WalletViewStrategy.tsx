@@ -211,22 +211,13 @@ class WalletViewStrategy extends BaseViewStrategy {
     return deduplicatedLinks;
   }
 
-  initializeGraphData(data: GraphData): GraphData {
-    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess));
+  initializeGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
+    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setGraphData));
 
     this.setupGraphData(data);
-
-    // Create empty processed data
-    this.processedData.current = {
-      nodes: [],
-      links: [],
-      transactions: {}
-    };
-
-    return this.processedData.current
   }
 
-  processGraphData(data: GraphData): void {
+  processGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
     let nodes = this.aggregateAccounts(data.nodes);
     let links = this.aggregateLinks(data);
     links = this.assignLinkCurvature(links);
@@ -236,6 +227,12 @@ class WalletViewStrategy extends BaseViewStrategy {
     this.processedData.current.nodes = nodes;
     this.processedData.current.links = links;
     this.processedData.current.transactions = transactions;
+
+    setGraphData(prevData => ({
+      nodes: [...nodes],
+      links: [...links],
+      transactions: {...transactions}
+    }));
   }
 
   nodeTooltip (node: ForceGraphNode): string {
