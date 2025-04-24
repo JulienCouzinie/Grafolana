@@ -1604,7 +1604,6 @@ swap_programs_data = {
         ]
     },
     "SOLFI": {
-        
         PROGRAM_ADDRESS: "SoLFiHG9TfgtdUXUjWAxi3LtvYuFyDLVhBWxdMZxyCe",
         LABEL: "Solfi",
         ROUTER: False,
