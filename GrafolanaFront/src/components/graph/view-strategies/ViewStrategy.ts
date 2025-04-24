@@ -11,7 +11,7 @@ export interface ViewStrategy {
   /**
    * Transform input data into the view-specific format
    */
-  processData: (data: GraphData) => GraphData;
+  initializeGraphData: (data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>) => GraphData;
 
   /**
    * Define how nodes should be rendered
@@ -70,14 +70,19 @@ export interface ViewStrategy {
   hoveredNode: ForceGraphNode | null;
   hoveredLink: ForceGraphLink | null;
 
-  isCollapseSwapRouters: React.RefObject<boolean>;
-  isCollapseSwapPrograms: React.RefObject<boolean>;
+  mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
 
   /**
    * Reference to the currently selected nodes set
    * Uses React.Ref to allow mutations to the current value
    */
   selectedNodes: RefObject<Set<string>>;
+
+  /**
+   * Returns the content to be displayed in the General accordion section
+   * @returns React node with general controls specific to this strategy
+   */
+  getGeneralContent: () => React.ReactNode;
 
   /**
    * Returns the content to be displayed in the Filters accordion section

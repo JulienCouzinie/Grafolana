@@ -91,8 +91,9 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   const flowStrategy = useFlowViewStrategy();
   const accountStrategy = useAccountViewStrategy();
   const walletStrategy = useWalletViewStrategy();
-  
+
   // Add state to store accordion content
+  const [generalContent, setGeneralContent] = useState<React.ReactNode | null>(null);
   const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
   const [groupingContent, setGroupingContent] = useState<React.ReactNode | null>(null);
   const [NodesContent, setNodesContent] = useState<React.ReactNode | null>(null);
@@ -121,6 +122,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
 
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
+    console.log('processedData',processedData);
     if (!fgRef.current) return;
 
     // Configure collision force - properly access the d3Force API
@@ -133,16 +135,15 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Process data using current strategy
   useEffect(() => {
     if (strategy) {
-
-
       // Check if we have cached data for the current view mode
       if (processedDataCache.current[viewMode]) {
         // Use cached data
         setProcessedData(processedDataCache.current[viewMode]!);
-        // Don't reheat simulation if data is cached
+
+      // Don't reheat simulation if data is cached
       } else {
         // Process and cache the data
-        const processed = strategy.processData(graphData);
+        const processed = strategy.initializeGraphData(graphData, setProcessedData);
         processedDataCache.current[viewMode] = processed;
         setProcessedData(processed);
       }
@@ -152,7 +153,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   // Process data using current strategy
   useEffect(() => {
     if (strategy) {
-      const processed = strategy.processData(graphData);
+      const processed = strategy.initializeGraphData(graphData, setProcessedData);
       setProcessedData(processed);
       // Invalidate cache for all view modes
       processedDataCache.current['flow'] = null;
@@ -168,6 +169,7 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
   useEffect(() => {
     if (strategy) {
       // Update all accordion content from strategy
+      setGeneralContent(strategy.getGeneralContent());
       setFiltersContent(strategy.getFiltersContent());
       setGroupingContent(strategy.getGroupingContent());
       setNodesContent(strategy.getNodesInfoContent());
@@ -268,6 +270,11 @@ export function TransactionGraph({ graphData }: TransactionGraphProps) {
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
+              <AccordionItem title="General" defaultOpen={false}>
+                  <div className="accordion-content">
+                    {generalContent || <p>No general options available for this view</p>}
+                  </div>
+                </AccordionItem>
                 <AccordionItem title="Filters" defaultOpen={false}>
                   <div className="accordion-content">
                     {filtersContent || <p>No filters available for this view</p>}

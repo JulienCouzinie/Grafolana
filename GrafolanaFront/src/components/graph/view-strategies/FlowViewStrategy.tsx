@@ -67,24 +67,34 @@ class FlowViewStrategy extends BaseViewStrategy {
     return links;
   }
 
-  
+  initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): GraphData {
+    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setProcessedData));
 
+    this.setupGraphData(data);
 
-  processData(data: GraphData): GraphData {
-    const baseData = super.processData(data);
+    const initialData = {
+      nodes: [],
+      links: [],
+      transactions: {}
+    };
+    setProcessedData(initialData);
+    return initialData;
+  }
 
-    let links = baseData.links;
+  processGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): void {
+    console.log("data", data);
+    let links = data.links;
     links = this.assignLinksID(links);
     links = this.assignLinkCurvature(links);
 
-    const processed = {
-      nodes: this.assignNodesID(baseData.nodes),
-      links: links,
-      transactions: baseData.transactions,
-    };
+    let nodes = this.assignNodesID(data.nodes);
+    let transactions = data.transactions;
 
-    this.processedData.current = processed;
-    return processed;
+    setProcessedData({
+      nodes,
+      links,
+      transactions
+    });
   }
 
   nodeTooltip(node: ForceGraphNode): string {
@@ -260,7 +270,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         ${compositesHtml}
     </div>
     `;
-}
+  }
 
   /**
    * Returns the content for the Filters accordion section
@@ -295,95 +305,95 @@ class FlowViewStrategy extends BaseViewStrategy {
     );
   }
 
-/**
- * Returns content for the Nodes Info accordion section with Flow view specific information
- * Extends the base implementation with flow-specific details
- */
-getNodesInfoContent(): React.ReactNode {
-  
-  if(this.selectedNodes.current && this.selectedNodes.current.size > 0) {
-    // fill info-section with selected nodes
-    // in a format that is similar to the nodeTooltip
-    const selectedNodes = Array.from(this.selectedNodes.current).map(nodeId => {
-      return this.processedData.current.nodes.find(node => node.id === nodeId);
-    });
+  /**
+   * Returns content for the Nodes Info accordion section with Flow view specific information
+   * Extends the base implementation with flow-specific details
+   */
+  getNodesInfoContent(): React.ReactNode {
+    
+    if(this.selectedNodes.current && this.selectedNodes.current.size > 0) {
+      // fill info-section with selected nodes
+      // in a format that is similar to the nodeTooltip
+      const selectedNodes = Array.from(this.selectedNodes.current).map(nodeId => {
+        return this.processedData.current.nodes.find(node => node.id === nodeId);
+      });
 
-    // Create React components for selected nodes instead of HTML strings
-    const selectedNodesComponents = selectedNodes.map((node, index) => {
-      // Check if node is null
-      if (!node) return null;
-      const mintAddress = node?.mint_address;
-      const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-      const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
+      // Create React components for selected nodes instead of HTML strings
+      const selectedNodesComponents = selectedNodes.map((node, index) => {
+        // Check if node is null
+        if (!node) return null;
+        const mintAddress = node?.mint_address;
+        const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+        const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
+        
+        // Create authorities list as a React component
+        const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
+          <React.Fragment>
+            <b>Authorities:</b><br/>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {node.authorities.map((auth, i) => (
+                <li key={i}><AddressLabel address={auth} shortened={true} /></li>
+              ))}
+            </ul>
+          </React.Fragment>
+        ) : null;
+
+        // Create node info component with optional separator
+        return (
+          <React.Fragment key={index}>
+            {/* Add separator before nodes (except the first one) */}
+            {index > 0 && (
+              <div style={{
+                height: 1,
+                backgroundColor: '#444444',
+                margin: '12px 0',
+                width: '100%'
+              }} />
+            )}
+            <div style={{ 
+              background: '#1A1A1A', 
+              padding: 8, 
+              borderRadius: 4, 
+              color: '#FFFFFF'
+            }}>
+              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              <b>Version:</b> {node.account_vertex.version}<br/>
+              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>
+              {mintAddress ? (
+                <React.Fragment>
+                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
+                  {mintInfo?.symbol && <React.Fragment><b>Symbol:</b> {mintInfo.symbol}<br/></React.Fragment>}
+                  {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+                </React.Fragment>
+              ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
+              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
+              {authoritiesComponent}
+              <b>Token Balance:</b> {node.balance_token}<br/>
+              <b>Lamport Balance:</b> {node.balance_lamport}
+            </div>
+          </React.Fragment>
+        );
+      });
       
-      // Create authorities list as a React component
-      const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
-        <React.Fragment>
-          <b>Authorities:</b><br/>
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
-            {node.authorities.map((auth, i) => (
-              <li key={i}><AddressLabel address={auth} shortened={true} /></li>
-            ))}
-          </ul>
-        </React.Fragment>
-      ) : null;
-
-      // Create node info component with optional separator
-      return (
-        <React.Fragment key={index}>
-          {/* Add separator before nodes (except the first one) */}
-          {index > 0 && (
-            <div style={{
-              height: 1,
-              backgroundColor: '#444444',
-              margin: '12px 0',
-              width: '100%'
-            }} />
-          )}
-          <div style={{ 
-            background: '#1A1A1A', 
-            padding: 8, 
-            borderRadius: 4, 
-            color: '#FFFFFF'
-          }}>
-            <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
-            <b>Version:</b> {node.account_vertex.version}<br/>
-            <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>
-            {mintAddress ? (
-              <React.Fragment>
-                <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
-                {mintInfo?.symbol && <React.Fragment><b>Symbol:</b> {mintInfo.symbol}<br/></React.Fragment>}
-                {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
-              </React.Fragment>
-            ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-            <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
-            {authoritiesComponent}
-            <b>Token Balance:</b> {node.balance_token}<br/>
-            <b>Lamport Balance:</b> {node.balance_lamport}
-          </div>
-        </React.Fragment>
+      // Flow-specific content using React components
+      const flowContent = (
+        <div className="info-section">
+          {selectedNodesComponents}
+        </div>
       );
-    });
+      
+      // Pass the flow content to the base implementation
+      const baseContent = super.getNodesInfoContent(flowContent);
+      return (
+        <div className="strategy-panel-content">
+          {baseContent}
+        </div>
+      );
+    }
     
-    // Flow-specific content using React components
-    const flowContent = (
-      <div className="info-section">
-        {selectedNodesComponents}
-      </div>
-    );
-    
-    // Pass the flow content to the base implementation
-    const baseContent = super.getNodesInfoContent(flowContent);
-    return (
-      <div className="strategy-panel-content">
-        {baseContent}
-      </div>
-    );
+    // Return default content if no nodes are selected
+    return super.getNodesInfoContent();
   }
-  
-  // Return default content if no nodes are selected
-  return super.getNodesInfoContent();
-}
 
 }
 
@@ -409,6 +419,6 @@ export function useFlowViewStrategy(): ViewStrategy {
     usdServices,
     processedDataRef,
     originalDataRef,
-    selectedNodes
+    selectedNodes, 
   );
 }

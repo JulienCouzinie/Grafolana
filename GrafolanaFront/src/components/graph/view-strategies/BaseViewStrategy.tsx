@@ -34,8 +34,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
 
-    isCollapseSwapRouters: React.RefObject<boolean>;
-    isCollapseSwapPrograms: React.RefObject<boolean>;
+    mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
+
+    private processGraphDataCallBack: ((data:GraphData) => void) | null = null;
 
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
@@ -53,76 +54,121 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.hoveredNode = null;
         this.hoveredLink = null;
         this.selectedNodes = selectedNodesRef;
-        this.isCollapseSwapRouters = useRef(true);
-        this.isCollapseSwapPrograms = useRef(true);
+        this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
+
+        this.processGraphDataCallBack = null;
     }
 
-    private CollapseExpandSwapPrograms(data: GraphData, swapIdList: Set<number>): GraphData {
-        if (this.isCollapseSwapPrograms.current) {
-            
-            // Remove the links that are part of the swaps
-            data.links = data.links.filter((link) => {
-                if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
-                    return true;
-                }
-                if (swapIdList.has(link.swap_parent_id!)) {
-                    return false;
-                }
-                return true;
-            });
-
-            // Build the list of nodes that are source and target in data.links
-            const activeVertices = new Set<string>();
-                        
-            // Add all node account vertices that appear in any remaining link
-            data.links.forEach((link) => {
-                if (link.source_account_vertex) {
-                    // Use the built-in id getter from AccountVertex
-                    activeVertices.add(link.source_account_vertex.id);
-                }
-                if (link.target_account_vertex) {
-                    // Use the built-in id getter from AccountVertex
-                    activeVertices.add(link.target_account_vertex.id);
-                }
-            });
-
-            // Filter nodes to keep only those that are used in links
-            data.nodes = data.nodes.filter((node) => {
-                // Compare using the same id format
-                return activeVertices.has(node.account_vertex.id);
-            });
+    /**
+     * Set the callback function that will be called when data needs to be reprocessed
+     * @param callback Function to trigger reprocessing
+     */
+    setReprocessCallback(callback: (dataToProcess: GraphData) => void): void {
+        this.processGraphDataCallBack = callback;
+    }
+    
+    /**
+     * Trigger reprocessing by calling the registered callback
+     */
+    forceReProcess(data: GraphData): void {
+        // Simply call the callback if it exists
+        if (this.processGraphDataCallBack) {
+            this.processGraphDataCallBack(data);
         }
-        else {
+    }
 
-        }
-        
+    private CollapseExpandSwapPrograms(data: GraphData): GraphData {
+
+        // Remove the links that are part of the depending on mapSwapProgramsCollapsed
+        data.links = data.links.filter((link) => {
+            if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
+                return this.mapSwapProgramsCollapsed.current.get(link.swap_parent_id!) === true;
+            }
+            if (link.swap_parent_id !== undefined) {
+                return this.mapSwapProgramsCollapsed.current.get(link.swap_parent_id!) === false;
+            }
+            return true;
+        });
+
+        // Build the list of nodes that are source and target in data.links
+        const activeVertices = new Set<string>();
+                    
+        // Get All account vertices that appear in any remaining link
+        data.links.forEach((link) => {
+            if (link.source_account_vertex) {
+                // Use the built-in id getter from AccountVertex
+                activeVertices.add(link.source_account_vertex.id);
+            }
+            if (link.target_account_vertex) {
+                // Use the built-in id getter from AccountVertex
+                activeVertices.add(link.target_account_vertex.id);
+            }
+        });
+
+        // Filter nodes to keep only those that are used in links
+        data.nodes = data.nodes.filter((node) => {
+            // Compare using the same id format
+            return activeVertices.has(node.account_vertex.id);
+        });
+
+       
+
         return data;
     }
 
-    private CollapseExpandSwapProgram(data: GraphData, swap_id: number): GraphData {
-        return this.CollapseExpandSwapPrograms(data, new Set<number>([swap_id]));
-    }
-
-    private CollapseExpandAllSwapPrograms(data: GraphData): GraphData {
-        // Get all swaps from data.transactions
-        const swapIdList = new Set<number>();
-        Object.values(data.transactions).forEach((transaction) => {
-            transaction.swaps.forEach((swap) => {
-                swapIdList.add(swap.id);
+    /**
+     * Set the map of swap programs to collapse or expand all swap based on their type,
+     * @param router - true to collapse/expand all swap routers, false to collapse/expand all swap programs
+     * @param collapse - true to collapse, false to expand them
+     */
+    protected SetCollapseAllSwap(router: boolean, collapse: boolean) {
+        // Set the collapse state for all swap programs in the data
+        Object.values(this.originalData.current.transactions).forEach((transaction) => {
+            transaction.swaps.forEach((swap) => { 
+                if (swap.router == router) {
+                    this.mapSwapProgramsCollapsed.current.set(swap.id, collapse);
+                } 
             });
         });
-        // Collapse all swaps
-        return this.CollapseExpandSwapPrograms(data, swapIdList);
-
     }
 
-    processData(data: GraphData): GraphData{
-        this.originalData.current = data;
-        const clonedData = cloneDeep(data);
+    /**
+     * Set the map of swap programs to collapse or expand all swap 
+     * @param collapse - true to collapse all swap, false to expand them
+     */
+    protected SetCollapseAllSwaps(collapse: boolean) {
+        // Set the collapse state for all swap programs in the data
+        Object.values(this.originalData.current.transactions).forEach((transaction) => {
+            transaction.swaps.forEach((swap) => {
+                if (swap.router) {
+                    // Not implemented yet
+                } else {    
+                    this.mapSwapProgramsCollapsed.current.set(swap.id, collapse);
+                }
+            });
+        });
+    }
 
-        data = this.CollapseExpandAllSwapPrograms(clonedData);
+    protected applyFilters() {
+        // Start with the original data
+        let data = cloneDeep(this.originalData.current); 
 
-        return clonedData;
+        // Collapse or expand swap programs based on the current state
+        this.CollapseExpandSwapPrograms(data);
+
+        this.forceReProcess(data); // Trigger reprocessing with the updated data
+
+        // Apply filters to the data
+        // This is a placeholder for any filtering logic you want to implement
+        // For example, you might want to filter out certain nodes or links based on specific criteria
+        //return data;
+    }
+
+    setupGraphData(data: GraphData) {
+        this.originalData.current = cloneDeep(data);
+        this.SetCollapseAllSwaps(true); // Collapse all swap programs by default
+
+        this.applyFilters();
     }
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
@@ -382,65 +428,162 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         }
     }
 
+    getGeneralContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        const CheckboxFilters = () => {
+            // Track hover states for all buttons
+            const [routerCollapseHovered, setRouterCollapseHovered] = React.useState<boolean>(false);
+            const [routerExpandHovered, setRouterExpandHovered] = React.useState<boolean>(false);
+            const [programCollapseHovered, setProgramCollapseHovered] = React.useState<boolean>(false);
+            const [programExpandHovered, setProgramExpandHovered] = React.useState<boolean>(false);
+            
+            // Handlers for router buttons
+            const handleRouterCollapse = (): void => {
+                this.SetCollapseAllSwap(true, true); // true for router, true for collapse
+                const filteredData = this.applyFilters();
+                if (this.processedData.current) {
+                    Object.assign(this.processedData.current, filteredData);
+                }
+            };
+            
+            const handleRouterExpand = (): void => {
+                this.SetCollapseAllSwap(true, false); // true for router, false for expand
+                const filteredData = this.applyFilters();
+                if (this.processedData.current) {
+                    Object.assign(this.processedData.current, filteredData);
+                }
+            };
+            
+            // Handlers for program buttons
+            const handleProgramCollapse = (): void => {
+                this.SetCollapseAllSwap(false, true); // false for program, true for collapse
+                const filteredData = this.applyFilters();
+                if (this.processedData.current) {
+                    Object.assign(this.processedData.current, filteredData);
+                }
+            };
+            
+            const handleProgramExpand = (): void => {
+                this.SetCollapseAllSwap(false, false); // false for program, false for expand
+                const filteredData = this.applyFilters();
+                if (this.processedData.current) {
+                    Object.assign(this.processedData.current, filteredData);
+                }
+            };
+            
+            // Common button style
+            const buttonStyle = {
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                backgroundColor: '#2A2A2A',
+                marginLeft: '8px',
+                transition: 'background-color 0.2s'
+            };
+            
+            return (
+                <div className="filter-options">
+                    {/* Swap Routers row */}
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ flex: 1 }}>Swap Routers</span>
+                        <div 
+                            style={buttonStyle}
+                            onClick={handleRouterCollapse}
+                            onMouseEnter={() => setRouterCollapseHovered(true)}
+                            onMouseLeave={() => setRouterCollapseHovered(false)}
+                        >
+                            <img 
+                                src="/collapse.svg" 
+                                alt="Collapse" 
+                                style={{ 
+                                    width: '16px', 
+                                    height: '16px', 
+                                    marginRight: '4px',
+                                    filter: routerCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                }} 
+                            />
+                            <span>Collapse All</span>
+                        </div>
+                        <div 
+                            style={buttonStyle}
+                            onClick={handleRouterExpand}
+                            onMouseEnter={() => setRouterExpandHovered(true)}
+                            onMouseLeave={() => setRouterExpandHovered(false)}
+                        >
+                            <img 
+                                src="/expand.svg" 
+                                alt="Expand" 
+                                style={{ 
+                                    width: '16px', 
+                                    height: '16px', 
+                                    marginRight: '4px',
+                                    filter: routerExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                }} 
+                            />
+                            <span>Expand All</span>
+                        </div>
+                    </div>
+                    
+                    {/* Swap Programs row */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={{ flex: 1 }}>Swap Programs</span>
+                        <div 
+                            style={buttonStyle}
+                            onClick={handleProgramCollapse}
+                            onMouseEnter={() => setProgramCollapseHovered(true)}
+                            onMouseLeave={() => setProgramCollapseHovered(false)}
+                        >
+                            <img 
+                                src="/collapse.svg" 
+                                alt="Collapse" 
+                                style={{ 
+                                    width: '16px', 
+                                    height: '16px', 
+                                    marginRight: '4px',
+                                    filter: programCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                }} 
+                            />
+                            <span>Collapse All</span>
+                        </div>
+                        <div 
+                            style={buttonStyle}
+                            onClick={handleProgramExpand}
+                            onMouseEnter={() => setProgramExpandHovered(true)}
+                            onMouseLeave={() => setProgramExpandHovered(false)}
+                        >
+                            <img 
+                                src="/expand.svg" 
+                                alt="Expand" 
+                                style={{ 
+                                    width: '16px', 
+                                    height: '16px', 
+                                    marginRight: '4px',
+                                    filter: programExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                }} 
+                            />
+                            <span>Expand All</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        
+        return (
+            <div className="strategy-panel-content">
+                <CheckboxFilters />
+                {(strategyContent) ? strategyContent : ""}
+            </div>
+        );
+    }
+
     /**
      * Returns content for the Filters accordion section
      * Override in concrete strategies for strategy-specific filtering options
      */
     getFiltersContent(strategyContent:React.ReactNode=null): React.ReactNode {
-        const CheckboxFilters = () => {
-              // Use React state to track checkbox values
-              const [routerChecked, setRouterChecked] = React.useState<boolean>(this.isCollapseSwapRouters.current);
-              const [programChecked, setProgramChecked] = React.useState<boolean>(this.isCollapseSwapPrograms.current);
-              
-              // Update class properties and state together
-              const handleRouterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                const isChecked = e.target.checked;
-                this.isCollapseSwapRouters.current = isChecked;
-                setRouterChecked(isChecked);
-                
-                // If router is checked, program must also be checked
-                if (isChecked) {
-                  this.isCollapseSwapPrograms.current = true;
-                  setProgramChecked(true);
-                }
-              };
-              
-              const handleProgramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                const isChecked = e.target.checked;
-                this.isCollapseSwapPrograms.current = isChecked;
-                setProgramChecked(isChecked);
-              };
-              
-              return (
-                <div className="filter-options">
-                  <div className="filter-option">
-                    <label className="filter-checkbox">
-                      <input 
-                        type="checkbox" 
-                        onChange={handleRouterChange}
-                        checked={routerChecked}
-                      />
-                      <span className="filter-label">Collapse Swap Routers</span>
-                    </label>
-                  </div>
-                  <div className="filter-option">
-                    <label className="filter-checkbox">
-                      <input 
-                        type="checkbox"
-                        onChange={handleProgramChange}
-                        checked={programChecked}
-                        disabled={routerChecked}
-                      />
-                      <span className="filter-label">Collapse Swap Programs</span>
-                    </label>
-                  </div>
-                </div>
-              );
-            };
-        
         return (
             <div className="strategy-panel-content">
-                <CheckboxFilters />
                 {(strategyContent) ? strategyContent : ""}
             </div>
         );
@@ -477,6 +620,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
     
     // Abstract methods that must be implemented by derived classes
+    abstract initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): GraphData;
     abstract nodeTooltip(node: GraphNode): string;
     abstract linkCanvasObject(link: ForceGraphLink, ctx: CanvasRenderingContext2D, globalScale: number): void;
     abstract linkTooltip(link: GraphLink): string;

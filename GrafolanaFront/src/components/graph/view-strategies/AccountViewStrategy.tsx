@@ -140,20 +140,32 @@ class AccountViewStrategy extends BaseViewStrategy {
     return deduplicatedLinks;
   }
 
-  processData (data: GraphData): GraphData{
-    const baseData = super.processData(data);
+  initializeGraphData(data: GraphData): GraphData {
+    this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess));
 
-    let links = baseData.links;
+    this.setupGraphData(data);
+
+    // Create empty processed data
+    this.processedData.current = {
+      nodes: [],
+      links: [],
+      transactions: {}
+    };
+
+    return this.processedData.current
+  }
+  
+  processGraphData(data: GraphData): void {
+    let links = data.links;
     links = this.aggregateLinks(links);
     links = this.assignLinkCurvature(links);
 
-    const processed = {
-      nodes: this.aggregateAccounts(baseData.nodes),
-      links: links,
-      transactions: baseData.transactions,
-    };
-    this.processedData.current = processed;
-    return processed;
+    let nodes = this.aggregateAccounts(data.nodes);
+    let transactions = data.transactions;
+
+    this.processedData.current.nodes = nodes;
+    this.processedData.current.links = links;
+    this.processedData.current.transactions = transactions;
   }
 
   nodeTooltip (node: ForceGraphNode): string {
