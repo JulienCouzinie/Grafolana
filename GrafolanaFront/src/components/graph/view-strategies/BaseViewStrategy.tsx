@@ -14,6 +14,12 @@ export const SOLANA_COLORS = {
     blue: '#19D3F3',
     darkGray: '#2A2A2A',
 };
+export const COLORS = {
+    mango: '#F4BB44',
+    lightgray: "#C0C0C0",
+    red: "#db2432",
+    blue: "#382cd3"
+}
 
 export abstract class BaseViewStrategy implements ViewStrategy {
     // Common data and state references that all strategies need
@@ -169,6 +175,19 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Set nodeSize based on hover state (larger when hovered)
         const nodeSize = isHovered ? 14 : 8;
 
+        let nodeColor;
+        if (node.type == AccountType.SOL_ACCOUNT) {
+            nodeColor = SOLANA_COLORS.green;
+        } else if (node.type == AccountType.PROGRAM_ACCOUNT) {
+            nodeColor = COLORS.blue;
+        } else if (node.type == AccountType.WALLET_ACCOUNT) {
+            nodeColor = COLORS.lightgray;
+        } else if (node.type == AccountType.FEE_ACCOUNT) {
+            nodeColor = COLORS.red;
+        } else {
+            nodeColor = COLORS.mango;
+        }
+
         // Draw circle background with dark gray fill
         ctx.beginPath();
         ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
@@ -179,7 +198,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         ctx.beginPath();
         ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = isSelected ? SOLANA_COLORS.purple : SOLANA_COLORS.green;
+        ctx.strokeStyle = isSelected ? SOLANA_COLORS.purple : nodeColor;
         ctx.stroke();
 
         if (mintInfo) {

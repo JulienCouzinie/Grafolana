@@ -101,10 +101,18 @@ class WalletViewStrategy extends BaseViewStrategy {
     nodes.forEach((node) => {
       let address = this.getWalletAddress(node);
       if (!seen.has(address)) {
-        // Create new node of type WALLET_ACCOUNT
+        let type;
+        if (node.type==AccountType.PROGRAM_ACCOUNT) {
+          type = AccountType.PROGRAM_ACCOUNT;
+        } else if (node.type==AccountType.FEE_ACCOUNT) {
+          type = AccountType.FEE_ACCOUNT;
+        } else {
+          type = AccountType.WALLET_ACCOUNT;
+        }
+        // Create new node
         let aggregatedNode: ForceGraphNode = {
           id: address,
-          type: AccountType.WALLET_ACCOUNT,
+          type: type,
           account_vertex: new AccountVertex(
             address, 
             0, 
