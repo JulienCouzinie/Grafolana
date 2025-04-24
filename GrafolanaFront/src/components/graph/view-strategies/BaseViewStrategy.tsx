@@ -36,7 +36,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
 
-    private processGraphDataCallBack: ((data:GraphData) => void) | null = null;
+    private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
 
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
@@ -56,7 +56,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.selectedNodes = selectedNodesRef;
         this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
 
-        this.processGraphDataCallBack = null;
+        this.processGraphDataCallBack = useRef(null);
     }
 
     /**
@@ -64,16 +64,17 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * @param callback Function to trigger reprocessing
      */
     setReprocessCallback(callback: (dataToProcess: GraphData) => void): void {
-        this.processGraphDataCallBack = callback;
+        // Store callback in the ref instead of directly as a property
+        this.processGraphDataCallBack.current = callback;
     }
     
     /**
      * Trigger reprocessing by calling the registered callback
      */
     forceReProcess(data: GraphData): void {
-        // Simply call the callback if it exists
-        if (this.processGraphDataCallBack) {
-            this.processGraphDataCallBack(data);
+        // Access callback through the ref
+        if (this.processGraphDataCallBack.current) {
+            this.processGraphDataCallBack.current(data);
         }
     }
 
@@ -439,35 +440,23 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             // Handlers for router buttons
             const handleRouterCollapse = (): void => {
                 this.SetCollapseAllSwap(true, true); // true for router, true for collapse
-                const filteredData = this.applyFilters();
-                if (this.processedData.current) {
-                    Object.assign(this.processedData.current, filteredData);
-                }
+                this.applyFilters();
             };
             
             const handleRouterExpand = (): void => {
                 this.SetCollapseAllSwap(true, false); // true for router, false for expand
-                const filteredData = this.applyFilters();
-                if (this.processedData.current) {
-                    Object.assign(this.processedData.current, filteredData);
-                }
+                this.applyFilters();
             };
             
             // Handlers for program buttons
             const handleProgramCollapse = (): void => {
                 this.SetCollapseAllSwap(false, true); // false for program, true for collapse
-                const filteredData = this.applyFilters();
-                if (this.processedData.current) {
-                    Object.assign(this.processedData.current, filteredData);
-                }
+                this.applyFilters();
             };
             
             const handleProgramExpand = (): void => {
                 this.SetCollapseAllSwap(false, false); // false for program, false for expand
-                const filteredData = this.applyFilters();
-                if (this.processedData.current) {
-                    Object.assign(this.processedData.current, filteredData);
-                }
+                this.applyFilters();
             };
             
             // Common button style

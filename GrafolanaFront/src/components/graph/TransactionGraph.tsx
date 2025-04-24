@@ -131,7 +131,6 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
 
   // Add an effect to properly initialize and configure the force simulation
   useEffect(() => {
-    console.log('processedData in TransactionGraph',graphData);
     if (!fgRef.current) return;
 
     // Configure collision force - properly access the d3Force API

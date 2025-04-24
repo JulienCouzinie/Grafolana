@@ -84,7 +84,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     this.processedData.current.nodes = nodes;
     this.processedData.current.links = links; 
     this.processedData.current.transactions = transactions;
-
+    
     setGraphData(prevData => ({
       nodes: [...nodes],
       links: [...links],
