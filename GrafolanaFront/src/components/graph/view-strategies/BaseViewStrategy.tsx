@@ -39,6 +39,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Filters
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
     hideFees: React.RefObject<boolean>;
+    minSolAmount: React.RefObject<number>;
+    maxSolAmount: React.RefObject<number|null>;
+    minTokenAmount: React.RefObject<number>;
+    maxTokenAmount: React.RefObject<number|null>;
+    minValuetUSD: React.RefObject<number>;
+    maxValueUSD: React.RefObject<number|null>;
 
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
 
@@ -64,6 +70,14 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         this.processGraphDataCallBack = useRef(null);
         this.hideFees = useRef(false);
+
+        this.minSolAmount = useRef(0);
+        this.maxSolAmount = useRef(null);
+        this.minTokenAmount = useRef(0);
+        this.maxTokenAmount = useRef(null);
+        this.minValuetUSD = useRef(0);
+        this.maxValueUSD = useRef(null);
+
     }
 
     /**
@@ -235,6 +249,130 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.applyFilters();
     }
 
+    protected setMinSolAmount(amount: number): void {
+        this.minSolAmount.current = amount;
+    }
+
+    protected setMaxSolAmount(amount: number|null): void {
+        this.maxSolAmount.current = amount;
+    }
+
+    protected setMinTokenAmount(amount: number): void {
+        this.minTokenAmount.current = amount;
+    }
+
+    protected setMaxTokenAmount(amount: number|null): void {
+        this.maxTokenAmount.current = amount;
+    }
+
+    protected setMinValueUSD(amount: number): void {
+        this.minValuetUSD.current = amount;
+    }
+
+    protected setMaxValueUSD(amount: number|null): void {
+        this.maxValueUSD.current = amount;
+    }
+
+    private filterTransfer(data: GraphData, link: ForceGraphLink, nodeType: string): boolean {
+        // Try to determine mint address from either the source node or directly from link
+        let mintAddress: string | undefined;
+        let node: ForceGraphNode | undefined;
+        let amount: number | undefined;
+        if (nodeType === "source") {
+            node = data.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
+            amount = cloneDeep(link.amount_source);
+        } else {
+            node = data.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+            amount = cloneDeep(link.amount_destination);
+        }
+        mintAddress = node!.mint_address;
+
+        // If we couldn't get a mint address, keep the link (don't filter)
+        if (!mintAddress) return true;
+        
+        // Get mint info
+        const mintInfo = this.metadataServices.getMintInfo(mintAddress);
+        
+        // Determine if this is SOL
+        const isSOL = mintAddress === "So11111111111111111111111111111111111111112" || (mintAddress === "SOL");
+                    
+        
+        // Calculate actual token amount based on decimals
+        const amountReal = this.calculateTokenAmount(amount, mintInfo);
+        
+        // Try to get USD value if available
+        let usdValue: number | null = null;
+        const transactionData = this.originalData.current.transactions[link.transaction_signature];
+        if (transactionData && transactionData.mint_usd_price_ratio && mintAddress) {
+            const usdValue = this.usdServices.calculateUSDValue(
+                amount,
+                mintAddress,
+                transactionData.mint_usd_price_ratio
+            );
+        }
+
+        // Apply filters in priority order:
+        // 1. USD value filter if available
+        // 2. SOL amount filter if it's SOL
+        // 3. Token amount filter for other tokens
+        
+        if (usdValue !== null && !isNaN(usdValue)) {
+            // Filter by USD value
+            const minUSD = this.minValuetUSD.current;
+            const maxUSD = this.maxValueUSD.current;
+            
+            if (minUSD > 0 && usdValue < minUSD) return false;
+            if (maxUSD !== null && usdValue > maxUSD) return false;
+        } 
+        if (isSOL) {
+            
+            // Filter by SOL amount
+            const minAmount = this.minSolAmount.current;
+            const maxAmount = this.maxSolAmount.current;
+            
+            if (minAmount > 0 && amountReal < minAmount) return false;
+            if (maxAmount !== null && amountReal > maxAmount) return false;
+        }
+        else {
+            // Filter by token amount for non-SOL tokens
+            const minAmount = this.minTokenAmount.current;
+            const maxAmount = this.maxTokenAmount.current;
+            
+            if (minAmount > 0 && amountReal < minAmount) return false;
+            if (maxAmount !== null && amountReal > maxAmount) return false;
+        }
+
+        return true; // Link passes all filters
+    }
+
+    protected applyTransferFilters(data: GraphData): GraphData {
+       
+        // Filter out the links by min/max amount depending on the type of mint of the source
+        // If mint is SOL, use minSolAmount and maxSolAmount
+        // If mint is not SOL, use minTokenAmount and maxTokenAmount
+        // If USD value is available (calculateUSDValue), use minValueUSD and maxValueUSD
+        data.links = data.links.filter((link) => {
+            // Skip filtering for swap-related links for now
+            if (link.type === TransferType.SWAP) {
+                return this.filterTransfer(data, link, "source") && this.filterTransfer(data, link, "destination");
+            }
+
+            // const filterTranfser = (link:ForceGraphLink, nodeType: string):boolean => {
+            //     return true;
+
+            // }
+
+            //if ()
+            if (link.type === TransferType.SWAP_OUTGOING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
+                return this.filterTransfer(data, link, "destination");
+            }
+            return this.filterTransfer(data, link, "source");
+            
+        });
+        return data;
+    }
+
+
     protected applyFilters() {
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
@@ -245,6 +383,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Hide fees if the option is enabled
         this.ApplyHideFees(data);
 
+        this.applyTransferFilters(data);
 
         this.saveCurrentNodePositions()
         this.forceReProcess(data); // Trigger reprocessing with the updated data
@@ -415,27 +554,35 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         );
     }
 
+    protected getFormattedUSDValueString = (amount: number | null): string => {
+        return amount !== null ? `$${amount.toFixed(5)}` : 'N/A';
+    }
+
     protected formatSwapAmount = (
         sourceAmount: string,
         sourceImage: string,
-        sourceUSD: string,
+        sourceUSD: number | null,
         destAmount: string,
         destImage: string,
-        destUSD: string,
+        destUSD: number | null,
         feeAmount: string | null = null,
-        feeUSD: string | null = null
+        feeUSD: number | null = null
     ): string => {
-        const baseLine = `Swapped ${sourceAmount}${sourceImage} (${sourceUSD}) for ${destAmount}${destImage} (${destUSD})`;
-        const feeLine = feeAmount ? `<br/>Explicit Swap fee: ${feeAmount}${destImage} (${feeUSD})` : '';
+        const sourceUSDString = this.getFormattedUSDValueString(sourceUSD);
+        const destUSDString = this.getFormattedUSDValueString(destUSD);
+        const feeUSDString = this.getFormattedUSDValueString(feeUSD);
+        const baseLine = `Swapped ${sourceAmount}${sourceImage} (${sourceUSDString}) for ${destAmount}${destImage} (${destUSDString})`;
+        const feeLine = feeAmount ? `<br/>Explicit Swap fee: ${feeAmount}${destImage} (${feeUSDString})` : '';
         return baseLine + feeLine + '<br/>';
     };
     
     protected formatNormalAmount = (
         amount: string,
         image: string,
-        usd: string
+        usd: number | null
     ): string => {
-        return `Amount: ${amount}${image} (${usd})<br/>`;
+        const usdString = usd !== null ? `$${usd.toFixed(5)}` : 'N/A';
+        return `Amount: ${amount}${image} (${usdString})<br/>`;
     };
 
     protected calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
@@ -457,6 +604,88 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         
         return { amountString, imageHTML };
     };
+
+
+    protected getTransferDetailsHTML(link: ForceGraphLink): string {
+        let mintSource;
+        let sourceNode: ForceGraphNode | undefined;
+        let destinationNode: ForceGraphNode | undefined;
+
+        // Check if source and target are objects (ForceGraphNode instances) rather than IDs
+        if (typeof link.source === 'object' && link.source !== null && 
+            typeof link.target === 'object' && link.target !== null) {
+            sourceNode = link.source as ForceGraphNode;
+            destinationNode = link.target as ForceGraphNode;
+        } else {
+            console.log("Link source or target is not a ForceGraphNode instance. Attempting to find nodes by address.");
+            // Find nodes by address if they're not direct references
+            sourceNode = this.originalData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
+            destinationNode = this.originalData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+        }
+
+        if (!sourceNode || !destinationNode) {
+            console.error("Source or destination node not found in the graph data.");
+            return "Error: Node not found";
+        }
+        
+        if (link.type === TransferType.SWAP_OUTGOING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
+            mintSource = this.metadataServices.getMintInfo(destinationNode.mint_address!);
+        } else {
+            mintSource = this.metadataServices.getMintInfo(sourceNode.mint_address!);
+        } 
+        const mintDestination = this.metadataServices.getMintInfo(destinationNode.mint_address!);
+    
+        // Calculate USD values and get mint info
+        const sourceUSD = this.usdServices.calculateUSDValue(
+            link.amount_source, 
+            mintSource!.mint_address, 
+            this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+        );
+    
+        const destinationUSD = this.usdServices.calculateUSDValue(
+            link.amount_destination, 
+            mintDestination!.mint_address, 
+            this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+        );
+    
+        // Get formatted amounts for source and destination
+        const sourceAmountDetails = this.getAmountDetails(link, mintSource);
+        const destinationAmountDetails = this.getAmountDetails(link, mintDestination, true);
+    
+        // Format the amount line based on link type
+        const TransferDetailsHTML = link.type === TransferType.SWAP 
+        ? (() => {
+            // Find the swap details
+            const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
+            let feeAmount = null;
+            let feeUSD = null;
+            
+            if (swapDetails?.fee) {
+                // Format fee using destination mint decimals
+                const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
+                feeAmount = formattedFee + " " + mintDestination?.symbol;
+                feeUSD = this.usdServices.calculateUSDValue(
+                    swapDetails.fee,
+                    destinationNode.mint_address,
+                    this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
+                );
+            }
+    
+            return this.formatSwapAmount(
+                sourceAmountDetails.amountString, 
+                sourceAmountDetails.imageHTML, 
+                sourceUSD,
+                destinationAmountDetails.amountString, 
+                destinationAmountDetails.imageHTML, 
+                destinationUSD,
+                feeAmount, 
+                feeUSD
+            );
+        })()
+        : this.formatNormalAmount(sourceAmountDetails.amountString, sourceAmountDetails.imageHTML, sourceUSD);
+        return TransferDetailsHTML;
+    }
+
     
     // Default implementation for context menu items
     getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
@@ -692,8 +921,214 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Override in concrete strategies for strategy-specific filtering options
      */
     getFiltersContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        // TransferFilters component to handle transfer filtering options
+        const TransferFilters = () => {
+            // State for input values
+            const [minSolAmount, setMinSolAmount] = React.useState<string>(this.minSolAmount.current.toString());
+            const [maxSolAmount, setMaxSolAmount] = React.useState<string>(this.maxSolAmount.current?.toString() || '');
+            const [minTokenAmount, setMinTokenAmount] = React.useState<string>(this.minTokenAmount.current.toString());
+            const [maxTokenAmount, setMaxTokenAmount] = React.useState<string>(this.maxTokenAmount.current?.toString() || '');
+            const [minValueUSD, setMinValueUSD] = React.useState<string>(this.minValuetUSD.current.toString());
+            const [maxValueUSD, setMaxValueUSD] = React.useState<string>(this.maxValueUSD.current?.toString() || '');
+            
+            // Validation helpers
+            const isValidNumber = (val: string): boolean => {
+                if (val === '') return true;
+                const num = parseFloat(val);
+                return !isNaN(num) && isFinite(num);
+            };
+
+            const parseNumberOrNull = (val: string): number | null => {
+                return val === '' ? null : parseFloat(val);
+            };
+
+            // Handle apply filters
+            const handleApplyFilters = (): void => {
+                // Only update if all values are valid
+                if (isValidNumber(minSolAmount) && 
+                    isValidNumber(maxSolAmount) &&
+                    isValidNumber(minTokenAmount) &&
+                    isValidNumber(maxTokenAmount) &&
+                    isValidNumber(minValueUSD) &&
+                    isValidNumber(maxValueUSD)) {
+                    
+                    // Update filter values using class setters
+                    this.setMinSolAmount(parseFloat(minSolAmount) || 0);
+                    this.setMaxSolAmount(parseNumberOrNull(maxSolAmount));
+                    this.setMinTokenAmount(parseFloat(minTokenAmount) || 0);
+                    this.setMaxTokenAmount(parseNumberOrNull(maxTokenAmount));
+                    this.setMinValueUSD(parseFloat(minValueUSD) || 0);
+                    this.setMaxValueUSD(parseNumberOrNull(maxValueUSD));
+                    
+                    // Apply the filters
+                    this.applyFilters();
+                }
+            };
+
+            // Common styles
+            const containerStyle = {
+                marginBottom: '16px'
+            };
+
+            const fieldStyle = {
+                marginBottom: '8px'
+            };
+
+            const labelStyle = {
+                display: 'block',
+                marginBottom: '4px',
+                fontSize: '14px'
+            };
+
+            const inputStyle = {
+                width: '100%',
+                padding: '6px',
+                backgroundColor: '#2A2A2A',
+                color: 'white',
+                border: '1px solid #444',
+                borderRadius: '4px'
+            };
+
+            const errorStyle = {
+                color: 'red',
+                fontSize: '12px',
+                marginTop: '2px'
+            };
+
+            const buttonStyle = {
+                padding: '8px 16px',
+                backgroundColor: '#9945FF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginTop: '8px'
+            };
+
+            return (
+                <div style={containerStyle}>
+                    <h3 style={{ marginBottom: '12px' }}>Transfer Filters</h3>
+                    
+                    {/* SOL Amounts */}
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Minimum SOL Amount</label>
+                        <input
+                            type="text"
+                            value={minSolAmount}
+                            onChange={(e) => setMinSolAmount(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(minSolAmount) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(minSolAmount) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Maximum SOL Amount (empty for no limit)</label>
+                        <input
+                            type="text"
+                            value={maxSolAmount}
+                            onChange={(e) => setMaxSolAmount(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(maxSolAmount) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(maxSolAmount) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    {/* Token Amounts */}
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Minimum Token Amount</label>
+                        <input
+                            type="text"
+                            value={minTokenAmount}
+                            onChange={(e) => setMinTokenAmount(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(minTokenAmount) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(minTokenAmount) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Maximum Token Amount (empty for no limit)</label>
+                        <input
+                            type="text"
+                            value={maxTokenAmount}
+                            onChange={(e) => setMaxTokenAmount(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(maxTokenAmount) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(maxTokenAmount) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    {/* USD Values */}
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Minimum USD Value</label>
+                        <input
+                            type="text"
+                            value={minValueUSD}
+                            onChange={(e) => setMinValueUSD(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(minValueUSD) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(minValueUSD) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Maximum USD Value (empty for no limit)</label>
+                        <input
+                            type="text"
+                            value={maxValueUSD}
+                            onChange={(e) => setMaxValueUSD(e.target.value)}
+                            style={{
+                                ...inputStyle,
+                                borderColor: isValidNumber(maxValueUSD) ? '#444' : 'red'
+                            }}
+                        />
+                        {!isValidNumber(maxValueUSD) && (
+                            <div style={errorStyle}>Please enter a valid number</div>
+                        )}
+                    </div>
+                    
+                    <button 
+                        onClick={handleApplyFilters}
+                        style={buttonStyle}
+                        disabled={
+                            !isValidNumber(minSolAmount) || 
+                            !isValidNumber(maxSolAmount) || 
+                            !isValidNumber(minTokenAmount) ||
+                            !isValidNumber(maxTokenAmount) || 
+                            !isValidNumber(minValueUSD) || 
+                            !isValidNumber(maxValueUSD)
+                        }
+                    >
+                        Apply Filters
+                    </button>
+                </div>
+            );
+        };
+
         return (
             <div className="strategy-panel-content">
+                <TransferFilters />
                 {(strategyContent) ? strategyContent : ""}
             </div>
         );

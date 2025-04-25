@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, TransactionData } from '@/types/graph';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, TransactionData, TransferType } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -210,89 +210,16 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 
   linkTooltip(link: ForceGraphLink): string {
-    const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
-    const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
     const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon;
 
-    // Calculate USD values and get mint info
-    const sourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
-        link.amount_source, 
-        sourceNode.mint_address, 
-        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-    ) : 'N/A';
-    const destinationUSD = destinationNode ? this.usdServices.calculateUSDValue(
-        link.amount_destination, 
-        destinationNode.mint_address, 
-        this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-    ) : 'N/A';
-
-    const mintSource = this.metadataServices.getMintInfo(sourceNode?.mint_address!);
-    const mintDestination = this.metadataServices.getMintInfo(destinationNode?.mint_address!);
-
-    // Get formatted amounts for source and destination
-    const source = this.getAmountDetails(link, mintSource);
-    const destination = this.getAmountDetails(link, mintDestination, true);
-
-    // Format the amount line based on link type
-    const amountLine = link.type === 'SWAP' 
-    ? (() => {
-        // Find the swap details
-        const swapDetails = this.processedData.current.transactions[link.transaction_signature].swaps.find(s => s.id === link.swap_id);
-        let feeAmount = null;
-        let feeUSD = 'N/A';
-        
-        if (swapDetails?.fee) {
-            // Format fee using destination mint decimals
-            const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
-            feeAmount = formattedFee + " " + mintDestination?.symbol;
-            feeUSD = destinationNode ? this.usdServices.calculateUSDValue(
-                swapDetails.fee,
-                destinationNode.mint_address,
-                this.processedData.current.transactions[link.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-        }
-
-        return this.formatSwapAmount(
-            source.amountString, source.imageHTML, sourceUSD,
-            destination.amountString, destination.imageHTML, destinationUSD,
-            feeAmount, feeUSD
-        );
-    })()
-    : this.formatNormalAmount(source.amountString, source.imageHTML, sourceUSD);
+    const transferDetailsHTML = this.getTransferDetailsHTML(link);
 
     // Format composite links if they exist
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
-            const compSource = this.getAmountDetails(
-            compLink, 
-            this.metadataServices.getMintInfo(sourceNode?.mint_address!));
-            const compDest = this.getAmountDetails(
-            compLink,
-            this.metadataServices.getMintInfo(destinationNode?.mint_address!),
-            true
-            );
-
-            // Calculate USD values for the composite link specifically
-            const compSourceUSD = sourceNode ? this.usdServices.calculateUSDValue(
-                compLink.amount_source, 
-                sourceNode.mint_address, 
-                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-            const compDestUSD = destinationNode ? this.usdServices.calculateUSDValue(
-                compLink.amount_destination, 
-                destinationNode.mint_address, 
-                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-
-            return `<li>${
-            compLink.type === 'SWAP'
-                ? this.formatSwapAmount(
-                    compSource.amountString, compSource.imageHTML, compSourceUSD,
-                    compDest.amountString, compDest.imageHTML, compDestUSD
-                )
-                : this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
-            }</li>`;
+          const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
+            return `<li>${compositeTransferDetailsHTML}</li>`;
         }).join('')}
         </ul>`
     : '';
@@ -304,7 +231,7 @@ class AccountViewStrategy extends BaseViewStrategy {
         <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM).label}<br/>
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
-        ${amountLine}
+        ${transferDetailsHTML}
         ${compositesHtml}
     </div>
     `;

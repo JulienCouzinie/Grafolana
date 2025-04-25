@@ -299,47 +299,12 @@ class WalletViewStrategy extends BaseViewStrategy {
     const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
     const imageUrl = '/logo/wallettowallet.png';
 
-    
-
     // Format composite links if they exist
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
-            // Get source and destination nodes for composite link
-            const compLinkSourceNode = this.originalData.current.nodes.find(n => n.account_vertex.address === compLink.source_account_vertex.address);
-            const compLinkDestinationNode = this.originalData.current.nodes.find(n => n.account_vertex.address === compLink.target_account_vertex.address);
-
-
-            const compSource = this.getAmountDetails(
-            compLink, 
-            this.metadataServices.getMintInfo(compLinkSourceNode!.mint_address!));
-            const compDest = this.getAmountDetails(
-            compLink,
-            this.metadataServices.getMintInfo(compLinkDestinationNode!.mint_address!),
-            true
-            );
-
-            // Calculate USD values for the composite link specifically
-            const compSourceUSD = compLinkSourceNode ? this.usdServices.calculateUSDValue(
-                compLink.amount_source, 
-                compLinkSourceNode.mint_address, 
-                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-            const compDestUSD = compLinkDestinationNode ? this.usdServices.calculateUSDValue(
-                compLink.amount_destination, 
-                compLinkDestinationNode.mint_address, 
-                this.processedData.current.transactions[compLink.transaction_signature].mint_usd_price_ratio
-            ) : 'N/A';
-
-            console.log("compLink.type", compLink.type);
-            return `<li>${
-            compLink.type === 'SWAP'
-                ? this.formatSwapAmount(
-                    compSource.amountString, compSource.imageHTML, compSourceUSD,
-                    compDest.amountString, compDest.imageHTML, compDestUSD
-                )
-                : compLink.type + ": " + this.formatNormalAmount(compSource.amountString, compSource.imageHTML, compSourceUSD)
-            }</li>`;
+          const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
+            return `<li>${compositeTransferDetailsHTML}</li>`;
         }).join('')}
         </ul>`
     : '';
