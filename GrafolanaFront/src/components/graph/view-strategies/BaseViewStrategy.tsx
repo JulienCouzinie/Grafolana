@@ -126,6 +126,29 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
+    private pruneIsolatedNodes(data: GraphData): void {
+        // Build the list of nodes that are source and target in data.links
+        const activeVertices = new Set<string>();
+                    
+        // Get All account vertices that appear in any remaining link
+        data.links.forEach((link) => {
+            if (link.source_account_vertex) {
+                // Use the built-in id getter from AccountVertex
+                activeVertices.add(link.source_account_vertex.id);
+            }
+            if (link.target_account_vertex) {
+                // Use the built-in id getter from AccountVertex
+                activeVertices.add(link.target_account_vertex.id);
+            }
+        });
+
+        // Filter nodes to keep only those that are used in links
+        data.nodes = data.nodes.filter((node) => {
+            // Compare using the same id format
+            return activeVertices.has(node.account_vertex.id);
+        });
+    }
+
     private ApplyCollapseExpandSwapPrograms(data: GraphData): void {
 
         // Filter out the links that are not relevant based on the collapse state of swap programs
@@ -159,30 +182,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return true;
         });
 
-        // Build the list of nodes that are source and target in data.links
-        const activeVertices = new Set<string>();
-                    
-        // Get All account vertices that appear in any remaining link
-        data.links.forEach((link) => {
-            if (link.source_account_vertex) {
-                // Use the built-in id getter from AccountVertex
-                activeVertices.add(link.source_account_vertex.id);
-            }
-            if (link.target_account_vertex) {
-                // Use the built-in id getter from AccountVertex
-                activeVertices.add(link.target_account_vertex.id);
-            }
-        });
-
-        // Filter nodes to keep only those that are used in links
-        data.nodes = data.nodes.filter((node) => {
-            // Compare using the same id format
-            return activeVertices.has(node.account_vertex.id);
-        });
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
 
     }
 
-    private ApplyHideFees(data: GraphData): GraphData {
+    private ApplyHideFees(data: GraphData): void {
         // Filter out the links that have FEE as source or target address
         data.links = data.links.filter((link) => {
             if (link.source_account_vertex.address === "FEE" || link.target_account_vertex.address === "FEE") {
@@ -199,7 +203,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return true;
         });
 
-        return data;
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
     /**
@@ -345,7 +349,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return true; // Link passes all filters
     }
 
-    protected applyTransferFilters(data: GraphData): GraphData {
+    protected applyTransferFilters(data: GraphData): void {
        
         // Filter out the links by min/max amount depending on the type of mint of the source
         // If mint is SOL, use minSolAmount and maxSolAmount
@@ -369,7 +373,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return this.filterTransfer(data, link, "source");
             
         });
-        return data;
+        
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
 
