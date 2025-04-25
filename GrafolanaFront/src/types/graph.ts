@@ -50,6 +50,8 @@ export enum TransferType {
     SWAP = "SWAP",
     SWAP_INCOMING = "SWAP_INCOMING",
     SWAP_OUTGOING = "SWAP_OUTGOING",
+    SWAP_ROUTER_INCOMING = "SWAP_ROUTER_INCOMING",
+    SWAP_ROUTER_OUTGOING = "SWAP_ROUTER_OUTGOING",
     FEE = "FEE",
     AUTHORIZE = "AUTHORIZE",
     PRIORITY_FEE = "PRIORITYFEE",
@@ -88,6 +90,7 @@ export interface GraphLink {
     curvature?: number;         // Curvature for multilinks
     swap_id?: number;           // Swap id if transfer is of type == "SWAP"
     swap_parent_id?: number;     // All links that are part of the same swap
+    parent_router_swap_id?: number; // All links that are part of the same router swap
     composite: GraphLink[] | null;     // Composite links (when multiple links are aggregated into one)
 }
 

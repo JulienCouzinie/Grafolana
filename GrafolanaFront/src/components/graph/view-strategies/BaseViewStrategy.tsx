@@ -109,14 +109,34 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
     private CollapseExpandSwapPrograms(data: GraphData): GraphData {
 
-        // Remove the links that are part of the depending on mapSwapProgramsCollapsed
+        // Filter out the links that are not relevant based on the collapse state of swap programs
         data.links = data.links.filter((link) => {
-            if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
-                return this.mapSwapProgramsCollapsed.current.get(link.swap_parent_id!) === true;
+            // For now keep the router link, they will be dealt with later
+            if (link.type === TransferType.SWAP_ROUTER_INCOMING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
+                return true;
             }
+
+            if (link.type === TransferType.SWAP_INCOMING || link.type === TransferType.SWAP_OUTGOING) {
+                return this.mapSwapProgramsCollapsed.current.get(link.swap_parent_id!) === true ;
+            }
+            
             if (link.swap_parent_id !== undefined) {
                 return this.mapSwapProgramsCollapsed.current.get(link.swap_parent_id!) === false;
             }
+            return true;
+        });
+        
+        // Filter out the links that are not relevant based on the collapse state of swap routers
+        data.links = data.links.filter((link) => {
+            
+            if (link.type === TransferType.SWAP_ROUTER_INCOMING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
+                return this.mapSwapProgramsCollapsed.current.get(link.parent_router_swap_id!) === true;
+            }
+           
+            if (link.parent_router_swap_id !== undefined) {
+                return this.mapSwapProgramsCollapsed.current.get(link.parent_router_swap_id!) === false;
+            }
+           
             return true;
         });
 
@@ -171,7 +191,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         Object.values(this.originalData.current.transactions).forEach((transaction) => {
             transaction.swaps.forEach((swap) => {
                 if (swap.router) {
-                    // Not implemented yet
+                    this.mapSwapProgramsCollapsed.current.set(swap.id, collapse);
                 } else {    
                     this.mapSwapProgramsCollapsed.current.set(swap.id, collapse);
                 }

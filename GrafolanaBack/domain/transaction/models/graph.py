@@ -23,6 +23,8 @@ class TransferType(str, Enum):
     SWAP = "SWAP"
     SWAP_INCOMING = "SWAP_INCOMING"
     SWAP_OUTGOING = "SWAP_OUTGOING"
+    SWAP_ROUTER_INCOMING = "SWAP_ROUTER_INCOMING"
+    SWAP_ROUTER_OUTGOING = "SWAP_ROUTER_OUTGOING"
     FEE = "FEE"
     AUTHORIZE = "AUTHORIZE"
     PRIORITY_FEE = "PRIORITYFEE"
@@ -320,9 +322,12 @@ class TransactionGraph:
         Returns:
             NetworkX DiGraph containing only the relevant edges
         """
-        # Get all edges with this swap
+        # Determine which field to filter by based on swap.router property
+        filter_field = 'parent_router_swap_id' if swap.router else 'swap_parent_id'
+        
+        # Get all edges with this swap using the appropriate field
         swap_edges = [(u, v, k) for u, v, k, data in self.graph.edges(data=True, keys=True) 
-                    if data.get('swap_parent_id') == swap.id]
+                    if data.get(filter_field) == swap.id]
         
         if not swap_edges:
             logger.warning(f"No edges found for swap {swap.id}")
@@ -330,7 +335,6 @@ class TransactionGraph:
         
         # Create a new subgraph with just these edges
         return MultiDiGraph.edge_subgraph(self.graph, swap_edges)
-        #return self.graph.edge_subgraph(swap_edges)
     
     @staticmethod
     def get_last_transfer(path: Dict, graph: MultiDiGraph)-> Tuple[AccountVertex,AccountVertex,Dict]:

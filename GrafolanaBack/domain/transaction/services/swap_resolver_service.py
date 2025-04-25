@@ -33,13 +33,15 @@ class SwapResolverService:
         """Resolve swap paths in the transaction graph."""
         # For each swap, find paths between accounts
         swap: Swap
+        # First resolve all swaps that are not router swaps
         for swap in transaction_context.swaps:
-            # Skip swaps that are router
+            if not swap.router:
+                self.resolve_swap(transaction_context, swap)
+
+        # Then resolve all router swaps using the path resolved from normal swaps
+        for swap in transaction_context.swaps:
             if swap.router:
-                continue
-                
-            # Use the swap resolver service to resolve the swap paths
-            self.resolve_swap(transaction_context, swap)
+                self.resolve_router_swap_paths(transaction_context, swap)
 
     def resolve_router_swap_paths(self, transaction_context: TransactionContext, router_swap: Swap) -> None:
         """
@@ -50,10 +52,100 @@ class SwapResolverService:
         - from the router program account to the user destination account
         
         Args:
-            graph: The transaction graph
+            transaction_context: The transaction context containing the graph
             router_swap: The router_swap swap operation to resolve
         """
-        # Get 
+        subgraph = transaction_context.graph.create_subgraph_for_swap(router_swap)
+        if subgraph is None:
+            logger.error(f"No subgraph found for router swap {router_swap.id}, tx: {transaction_context.transaction_signature}")
+            return
+
+        # Find first link of type SWAP_INCOMING by selecting min key
+        # and then the first link of type SWAP_OUTGOING by selecting max key
+        # This is done to find the first and last transfer in the swap
+        # and to calculate the amount_in and amount_out
+        # So we can add the virtual program account and the two edges
+        
+        # Get all edges with data and filter by transfer_type
+        all_edges: List[Tuple[AccountVertex, AccountVertex, int, Dict[str, Any]]] = list(subgraph.edges(data=True, keys=True))
+        
+        if not all_edges:
+            logger.error(f"No edges found in subgraph for router swap {router_swap.id}, tx: {transaction_context.transaction_signature}")
+            return
+        
+        # Filter for SWAP_INCOMING edges and find the one with minimum key
+        incoming_edges = [(u, v, k, data) for u, v, k, data in all_edges 
+                         if data.get("transfer_type") == TransferType.SWAP_INCOMING]
+        if not incoming_edges:
+            logger.warning(f"No SWAP_INCOMING edges found for router swap {router_swap.id}")
+            return
+        
+        swap_incoming_edge = min(incoming_edges, key=lambda edge: int(edge[2]))
+        incoming_source, incoming_target, incoming_key, incoming_data = swap_incoming_edge
+        amount_in = incoming_data["amount_source"]  # Use the proper field from the edge data
+        
+        # Filter for SWAP_OUTGOING edges and find the one with maximum key
+        outgoing_edges = [(u, v, k, data) for u, v, k, data in all_edges 
+                         if data.get("transfer_type") == TransferType.SWAP_OUTGOING]
+        if not outgoing_edges:
+            logger.warning(f"No SWAP_OUTGOING edges found for router swap {router_swap.id}")
+            return
+        
+        swap_outgoing_edge = max(outgoing_edges, key=lambda edge: int(edge[2]))
+        outgoing_source, outgoing_target, outgoing_key, outgoing_data = swap_outgoing_edge
+        amount_out = outgoing_data["amount_destination"]  # Use the proper field from the edge data
+
+        swap_program_account =  GraphBuilderService.prepare_swap_program_account(
+            transaction_context = transaction_context,
+            program_address = router_swap.program_address,
+        )
+
+        # # Get all vertices with the relevant addresses
+        # user_source_vertices = [v for v in subgraph.nodes() if v.address == router_swap.get_user_source()]
+        # user_dest_vertices = [v for v in subgraph.nodes() if v.address == router_swap.get_user_destination()]
+        
+        # # Find the best source and destination vertices
+        # # Usually the earliest version for source (before swap happens) and 
+        # # latest version for destination (after swap completes)
+        # user_source_vertex = min(user_source_vertices, key=lambda v: v.version) if user_source_vertices else None
+        # user_dest_vertex = max(user_dest_vertices, key=lambda v: v.version) if user_dest_vertices else None
+        # if (user_source_vertex is None) or (user_dest_vertex is None):
+        #     logger.error(f"user vertices not found for swap {router_swap}, source: {user_source_vertex}, destination: {user_dest_vertex}, tx: {transaction_context.transaction_signature}")
+        #     return
+        
+        # Add virtual transfer from user source to swap_program_account 
+        transaction_context.graph.add_edge(
+                    source = incoming_source, 
+                    target = swap_program_account.get_vertex(),
+                    transfer_properties = TransferProperties(
+                        transfer_type = TransferType.SWAP_ROUTER_INCOMING,
+                        program_address = router_swap.program_address,
+                        amount_source = amount_in,
+                        amount_destination = amount_in,
+                        swap_id = router_swap.id,
+                        swap_parent_id= router_swap.id,
+                        parent_router_swap_id = router_swap.id,
+                    ),
+                    key = incoming_key)
+        
+        # Add virtual transfer from swap_program_account to user destination
+        transaction_context.graph.add_edge(
+                    source = swap_program_account.get_vertex(), 
+                    target = outgoing_target,
+                    transfer_properties = TransferProperties(
+                        transfer_type = TransferType.SWAP_ROUTER_OUTGOING,
+                        program_address = router_swap.program_address,
+                        amount_source = amount_out,
+                        amount_destination = amount_out,
+                        swap_id = router_swap.id,
+                        swap_parent_id= router_swap.id,
+                        parent_router_swap_id = router_swap.id,
+                    ),
+                    key = outgoing_key)
+        
+        logger.info(f"Resolved swap {router_swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={router_swap.fee}, tx: {transaction_context.transaction_signature}")
+    
+        
 
     def resolve_swap(self, transaction_context: TransactionContext, swap: Swap) -> None:
         """

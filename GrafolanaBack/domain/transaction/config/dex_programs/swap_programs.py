@@ -559,18 +559,18 @@ swap_programs_data = {
         INSTRUCTION_PARSE_PARAM: [
             {
                 INSTRUCTION_NAME: "exact_out_route",
-                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
-                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 3,
             },
             {
                 INSTRUCTION_NAME: "route",
-                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
-                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 3,
             },
             {
                 INSTRUCTION_NAME: "route_with_token_ledger",
-                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
-                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 3,
             },
             {
                 INSTRUCTION_NAME: "shared_accounts_exact_out_route",
