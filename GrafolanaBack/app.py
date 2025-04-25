@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_compress import Compress
 #from GrafolanaBack.grafolanas_utils import get_orders, getTransaction
 #from GrafolanaBack.utils.transaction_utils.transaction_parser import get_transaction_graph_data
 from GrafolanaBack.domain.metadata import metadata_service
@@ -10,6 +11,8 @@ from GrafolanaBack.domain.transaction.services.transaction_parser_service import
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+compress = Compress()
+compress.init_app(app)
 
 start_price_updater() # Start the price updater in a separate thread
 
