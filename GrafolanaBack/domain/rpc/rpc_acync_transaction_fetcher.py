@@ -25,7 +25,7 @@ class RateLimiter:
     Uses a lock to ensure thread safety and accurate timing in async context.
     """
     def __init__(self, requests_per_second: int):
-        self.interval = 1.0 / requests_per_second * 0.9  # Time between requests in seconds
+        self.interval = 1.0 / requests_per_second * 1.2  # Time between requests in seconds
         self.last_request = 0.0
         self._lock = asyncio.Lock()
     
@@ -198,7 +198,7 @@ class SolanaTransactionFetcher:
                         
                         # If all workers have failed, mark as failed and complete
                         if len(failed_workers) >= total_workers:
-                            logger.warning(f"[Dispatcher]: All workers have failed for {sig_str[:10]} - giving up")
+                            logger.warning(f"[Dispatcher]: All workers have failed for {sig_str} - giving up")
                             
                             with self._lock:
                                 self.results_dict[sig_str] = None  # No data available
@@ -272,7 +272,7 @@ class SolanaTransactionFetcher:
         # Maximum parallel requests
         max_parallel_requests = requests_per_second * 2
         
-        logger.debug(f"[Worker {worker_id} ({url[:40]})]: Starting. Rate limit: {requests_per_second} req/sec, max parallel: {max_parallel_requests}")
+        logger.info(f"[Worker {worker_id} ({url[:40]})]: Starting. Rate limit: {requests_per_second} req/sec, max parallel: {max_parallel_requests}")
         
         # Use the worker's dedicated queue
         worker_queue = self.worker_queues[worker_id]
@@ -355,14 +355,14 @@ class SolanaTransactionFetcher:
                         completion_event.set()
                             
                 except SolanaRpcException as e:
-                    logger.error(f"[Worker {worker_id} ({url[:40]})]: SolanaRpcException for {sig_str[:10]}: {e}")
+                    logger.error(f"[Worker {worker_id} ({url[:40]})]: SolanaRpcException for {sig_str}: {e.__cause__}")
                     await handle_failure(e, signature, sig_str, result_callback, completion_event, retry_count, callback_params)
                 except asyncio.TimeoutError:
                     logger.error(f"[Worker {worker_id} ({url[:40]})]: Timeout fetching {sig_str[:10]}")
                     await handle_failure(TimeoutError(f"Request timed out for {signature}"), 
                                          signature, sig_str, result_callback, completion_event, retry_count, callback_params)
                 except Exception as e:
-                    logger.error(f"[Worker {worker_id} ({url[:40]})]: Unexpected error for {sig_str[:10]}: {e}")
+                    logger.error(f"[Worker {worker_id} ({url[:40]})]: Unexpected error for {sig_str}: {e}")
                     await handle_failure(e, signature, sig_str, result_callback, completion_event, retry_count, callback_params)
 
             # Main worker loop
