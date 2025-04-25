@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, TransferType } from '@/types/graph';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, TransferType, AccountType } from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '../../metadata/metadata-provider';
 import { useUSDValue } from '../../../hooks/useUSDValue';
@@ -95,7 +95,12 @@ class FlowViewStrategy extends BaseViewStrategy {
   nodeTooltip(node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-    const mintImage = this.metadataServices.getMintImage(mintInfo!.image);
+    let nodeImage;
+    if (node.type === AccountType.PROGRAM_ACCOUNT) {
+      nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+    } else {
+      nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
+    }
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
       ? `
@@ -108,13 +113,15 @@ class FlowViewStrategy extends BaseViewStrategy {
 
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
+        <b>Type:</b> ${node.type}<br/>
+        ${nodeImage ? `<img src="${nodeImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
         <b>Version:</b> ${node.account_vertex.version}<br/>
         ${mintAddress ? `
           <b>Mint:</b> ${mintAddress}<br/>
           ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
-          ${mintImage ? `<img src="${mintImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
+          
         ` : '<b>Token:</b> SOL<br/>'}
         <b>Owner:</b> ${node.owner ? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
         ${authoritiesHtml}
@@ -318,7 +325,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        const mintImage = mintInfo?.image ? this.metadataServices.getMintImage(mintInfo.image) : null;
+        const mintImage = this.metadataServices.getMintImage(mintInfo!.image);
         
         // Create authorities list as a React component
         const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
@@ -350,6 +357,7 @@ class FlowViewStrategy extends BaseViewStrategy {
               borderRadius: 4, 
               color: '#FFFFFF'
             }}>
+              {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
               <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>
@@ -357,7 +365,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                 <React.Fragment>
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
                   {mintInfo?.symbol && <React.Fragment><b>Symbol:</b> {mintInfo.symbol}<br/></React.Fragment>}
-                  {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+                  
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
               <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>

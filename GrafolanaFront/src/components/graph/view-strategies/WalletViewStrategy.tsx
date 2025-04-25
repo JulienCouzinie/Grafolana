@@ -236,8 +236,13 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   nodeTooltip (node: ForceGraphNode): string {
+    let nodeImage;
+    if (node.type === AccountType.PROGRAM_ACCOUNT) {
+      nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+    } else {
+      nodeImage = this.metadataServices.defaultWalletImage;
+    }
 
-    const walletImage = this.metadataServices.defaultWalletImage;
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -272,9 +277,9 @@ class WalletViewStrategy extends BaseViewStrategy {
 
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
+        <b>Type:</b> ${node.type}<br/>
+        <img src="${nodeImage?.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
-
-          <img src="${walletImage?.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>
 
         ${compositeHtml}
 
