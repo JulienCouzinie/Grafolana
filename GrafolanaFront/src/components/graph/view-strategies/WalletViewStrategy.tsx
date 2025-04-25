@@ -473,6 +473,7 @@ class WalletViewStrategy extends BaseViewStrategy {
               <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
               {/* Display composite accounts info if available */}
               <CompositeAccounts />
+              {/* Display transactions this account is appearing */}
             </div>
           </React.Fragment>
         );
