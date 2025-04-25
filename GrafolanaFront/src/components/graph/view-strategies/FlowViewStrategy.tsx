@@ -367,6 +367,7 @@ class FlowViewStrategy extends BaseViewStrategy {
               borderRadius: 4, 
               color: '#FFFFFF'
             }}>
+              <b>Type:</b> {node.type}<br/>
               {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
@@ -374,14 +375,13 @@ class FlowViewStrategy extends BaseViewStrategy {
               {mintAddress ? (
                 <React.Fragment>
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
-                  {mintInfo?.symbol && <React.Fragment><b>Symbol:</b> {mintInfo.symbol}<br/></React.Fragment>}
-                  
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
               <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
               {authoritiesComponent}
               <b>Token Balance:</b> {node.balance_token}<br/>
               <b>Lamport Balance:</b> {node.balance_lamport}
+              
             </div>
           </React.Fragment>
         );

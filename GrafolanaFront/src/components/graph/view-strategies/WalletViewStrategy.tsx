@@ -7,6 +7,8 @@ import { useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
+import { AddressLabel } from '@/components/metadata/address-label';
+import { AddressType } from '@/types/metadata';
 
 
 class WalletViewStrategy extends BaseViewStrategy {
@@ -351,6 +353,149 @@ class WalletViewStrategy extends BaseViewStrategy {
         ${compositesHtml}
     </div>
     `;
+  }
+
+  /**
+   * Returns content for the Nodes Info accordion section with Flow view specific information
+   * Extends the base implementation with flow-specific details
+   */
+  getNodesInfoContent(): React.ReactNode {
+    
+    if(this.selectedNodes.current && this.selectedNodes.current.size > 0) {
+      // fill info-section with selected nodes
+      // in a format that is similar to the nodeTooltip
+      const selectedNodes = Array.from(this.selectedNodes.current).map(nodeId => {
+        return this.processedData.current.nodes.find(node => node.id === nodeId);
+      });
+
+      // Create React components for selected nodes instead of HTML strings
+      const selectedNodesComponents = selectedNodes.map((node, index) => {
+        // Check if node is null
+        if (!node) return null;
+        const mintAddress = node?.mint_address;
+        const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+        let nodeImage;
+        if (node.type == AccountType.WALLET_ACCOUNT){
+          nodeImage = this.metadataServices.defaultWalletImage;
+        } else if (node.type === AccountType.PROGRAM_ACCOUNT) {
+          nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+        } else if (node.type === AccountType.FEE_ACCOUNT) {
+          nodeImage = this.metadataServices.feeImage;
+        } else {
+          nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
+        }
+
+        // Component to display composite accounts with toggle functionality
+        const CompositeAccounts = () => {
+          const [showComposites, setShowComposites] = React.useState<boolean>(false);
+          
+          // Only render if there are composite accounts
+          if (!node.composite || node.composite.length === 0) return null;
+          
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div 
+                onClick={() => setShowComposites(!showComposites)}
+                style={{ 
+                  cursor: 'pointer', 
+                  color: '#7B61FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ marginRight: '4px' }}>
+                  {showComposites ? '▼' : '►'}
+                </span>
+                <span>
+                  {showComposites ? 'Hide composite accounts' : 'Show composite accounts'}
+                </span>
+              </div>
+              
+              {showComposites && (
+                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                  {node.composite.map((comp, compIndex) => {
+                    // Get mint info and image for composite account
+                    const compMintAddress = comp.mint_address;
+                    const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
+                    const compMintImage = this.metadataServices.getMintImage(compMintInfo?.image);
+                    
+                    return (
+                      <li key={compIndex} style={{ margin: '4px 0' }}>
+                        {compMintImage && (
+                          <img 
+                            src={compMintImage.src} 
+                            crossOrigin="anonymous" 
+                            style={{ 
+                              width: 16, 
+                              height: 16, 
+                              verticalAlign: 'middle', 
+                              marginRight: 5, 
+                              display: 'inline-block' 
+                            }} 
+                          />
+                        )}
+                        {compMintInfo?.symbol && `${compMintInfo.symbol}: `}
+                        <AddressLabel 
+                          address={comp.account_vertex.address!} 
+                          shortened={true} 
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          );
+        };
+
+        // Create node info component with optional separator
+        return (
+          <React.Fragment key={index}>
+            {/* Add separator before nodes (except the first one) */}
+            {index > 0 && (
+              <div style={{
+                height: 1,
+                backgroundColor: '#444444',
+                margin: '12px 0',
+                width: '100%'
+              }} />
+            )}
+            <div style={{ 
+              background: '#1A1A1A', 
+              padding: 8, 
+              borderRadius: 4, 
+              color: '#FFFFFF'
+            }}>
+              <b>Type:</b> {node.type}<br/>
+              {/* Display node image if available */}
+              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              {/* Display composite accounts info if available */}
+              <CompositeAccounts />
+            </div>
+          </React.Fragment>
+        );
+      });
+      
+      // Flow-specific content using React components
+      const flowContent = (
+        <div className="info-section">
+          {selectedNodesComponents}
+        </div>
+      );
+      
+      // Pass the flow content to the base implementation
+      const baseContent = super.getNodesInfoContent(flowContent);
+      return (
+        <div className="strategy-panel-content">
+          {baseContent}
+        </div>
+      );
+    }
+    
+    // Return default content if no nodes are selected
+    return super.getNodesInfoContent();
   }
 }
 

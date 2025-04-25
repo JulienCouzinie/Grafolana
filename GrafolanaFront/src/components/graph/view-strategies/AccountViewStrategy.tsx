@@ -8,6 +8,7 @@ import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
+import { AddressLabel } from '@/components/metadata/address-label';
 
 class AccountViewStrategy extends BaseViewStrategy {
   
@@ -343,6 +344,102 @@ class AccountViewStrategy extends BaseViewStrategy {
             super.handleNodeContextMenu(node, action);
     }
   }
+
+  /**
+   * Returns content for the Nodes Info accordion section with Flow view specific information
+   * Extends the base implementation with flow-specific details
+   */
+  getNodesInfoContent(): React.ReactNode {
+    
+    if(this.selectedNodes.current && this.selectedNodes.current.size > 0) {
+      // fill info-section with selected nodes
+      // in a format that is similar to the nodeTooltip
+      const selectedNodes = Array.from(this.selectedNodes.current).map(nodeId => {
+        return this.processedData.current.nodes.find(node => node.id === nodeId);
+      });
+
+      // Create React components for selected nodes instead of HTML strings
+      const selectedNodesComponents = selectedNodes.map((node, index) => {
+        // Check if node is null
+        if (!node) return null;
+        const mintAddress = node?.mint_address;
+        const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+        let nodeImage;
+        if (node.type === AccountType.PROGRAM_ACCOUNT) {
+          nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+        } else if (node.type === AccountType.FEE_ACCOUNT) {
+          nodeImage = this.metadataServices.feeImage;
+        } else {
+          nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
+        }
+        
+        // Create authorities list as a React component
+        const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
+          <React.Fragment>
+            <b>Authorities:</b><br/>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {node.authorities.map((auth, i) => (
+                <li key={i}><AddressLabel address={auth} shortened={true} /></li>
+              ))}
+            </ul>
+          </React.Fragment>
+        ) : null;
+
+        // Create node info component with optional separator
+        return (
+          <React.Fragment key={index}>
+            {/* Add separator before nodes (except the first one) */}
+            {index > 0 && (
+              <div style={{
+                height: 1,
+                backgroundColor: '#444444',
+                margin: '12px 0',
+                width: '100%'
+              }} />
+            )}
+            <div style={{ 
+              background: '#1A1A1A', 
+              padding: 8, 
+              borderRadius: 4, 
+              color: '#FFFFFF'
+            }}>
+              <b>Type:</b> {node.type}<br/>
+              {/* Display node image if available */}
+              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              {mintAddress ? (
+                <React.Fragment>
+                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
+                </React.Fragment>
+              ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
+              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
+              {authoritiesComponent}
+            </div>
+          </React.Fragment>
+        );
+      });
+      
+      // Flow-specific content using React components
+      const flowContent = (
+        <div className="info-section">
+          {selectedNodesComponents}
+        </div>
+      );
+      
+      // Pass the flow content to the base implementation
+      const baseContent = super.getNodesInfoContent(flowContent);
+      return (
+        <div className="strategy-panel-content">
+          {baseContent}
+        </div>
+      );
+    }
+    
+    // Return default content if no nodes are selected
+    return super.getNodesInfoContent();
+  }
+  
+  
 }
 
 export function useAccountViewStrategy(): ViewStrategy {
