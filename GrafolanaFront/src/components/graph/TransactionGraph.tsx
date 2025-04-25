@@ -12,7 +12,6 @@ import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '../ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
-import { GraphDataProvider } from '@/context/GraphDataProvider';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -228,7 +227,6 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   }, []);
 
   return (
-  <GraphDataProvider>
     <div className="w-full h-full">
       <MetadataPreloader graphData={apiGraphData} />
       {/* Context Menu */}
@@ -563,6 +561,5 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
         }
       `}</style>
     </div>
-    </GraphDataProvider>
   );
 }
