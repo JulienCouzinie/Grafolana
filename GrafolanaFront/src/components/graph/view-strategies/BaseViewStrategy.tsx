@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType } from '@/types/graph';
+import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType, NodePosition } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
@@ -37,6 +37,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
 
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
+
+    savedNodePositions: Map<string, {position: NodePosition}> | null = null;
 
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
@@ -76,6 +78,33 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         if (this.processGraphDataCallBack.current) {
             this.processGraphDataCallBack.current(data);
         }
+    }
+
+    private saveCurrentNodePositions(): void {
+        if (!this.savedNodePositions) {
+            this.savedNodePositions = new Map<string, {position: NodePosition}>();
+        }
+
+        this.processedData.current.nodes.forEach((node) => {
+            if (node.id !== undefined) {
+                const position: NodePosition = { x: node.x!, y: node.y!, fx: node.fx!, fy: node.fy! };
+                this.savedNodePositions!.set(node.id.toString(), {position});
+            }
+        });
+    }
+
+    private restoreNodePositions(): void {
+        this.processedData.current.nodes.forEach((node) => {
+            if (node.id !== undefined && this.savedNodePositions?.has(node.id.toString())) {
+                const position = this.savedNodePositions.get(node.id.toString())?.position;
+                if (position) {
+                    node.x = position.x;
+                    node.y = position.y;
+                    node.fx = position.fx;
+                    node.fy = position.fy;
+                }
+            }
+        });
     }
 
     private CollapseExpandSwapPrograms(data: GraphData): GraphData {
@@ -157,12 +186,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Collapse or expand swap programs based on the current state
         this.CollapseExpandSwapPrograms(data);
 
+        this.saveCurrentNodePositions()
         this.forceReProcess(data); // Trigger reprocessing with the updated data
-
-        // Apply filters to the data
-        // This is a placeholder for any filtering logic you want to implement
-        // For example, you might want to filter out certain nodes or links based on specific criteria
-        //return data;
     }
 
     setupGraphData(data: GraphData) {

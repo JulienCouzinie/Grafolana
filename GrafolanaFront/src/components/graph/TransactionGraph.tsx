@@ -151,7 +151,9 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       // Don't reheat simulation if data is cached
       } else {
         // Process and cache the data
-        const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+        if (apiGraphData.nodes.length !== 0) {
+          const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+        }
         // graphDataCache.current[viewMode] = viewGraphData;
         // setGraphData(viewGraphData);
       }
@@ -161,7 +163,9 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   // Process data using current strategy
   useEffect(() => {
     if (strategy) {
-      const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+      if (apiGraphData.nodes.length !== 0) {
+        const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+      }
       // Invalidate cache for all view modes
       graphDataCache.current['flow'] = null;
       graphDataCache.current['account'] = null;

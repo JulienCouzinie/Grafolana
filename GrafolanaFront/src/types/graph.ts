@@ -1,5 +1,11 @@
 import { LinkObject, NodeObject } from 'react-force-graph-2d';
 
+export interface NodePosition {
+    x: number;
+    y: number;
+    fx?: number;
+    fy?: number;
+}
 
 export class AccountVertex {
     address: string = '';
