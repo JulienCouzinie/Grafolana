@@ -15,10 +15,12 @@ export const SOLANA_COLORS = {
     darkGray: '#2A2A2A',
 };
 export const COLORS = {
-    mango: '#F4BB44',
+    mango: '#F29661',
     lightgray: "#C0C0C0",
     red: "#db2432",
-    blue: "#382cd3"
+    blue: "#382cd3",
+    yellow: "#F5CB14",
+    darkgreen: '#006400',
 }
 
 export abstract class BaseViewStrategy implements ViewStrategy {
@@ -275,7 +277,13 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         } else if (node.type == AccountType.WALLET_ACCOUNT) {
             nodeColor = COLORS.lightgray;
         } else if (node.type == AccountType.FEE_ACCOUNT) {
+            nodeColor = COLORS.yellow;
+        } else if (node.type == AccountType.BURN_ACCOUNT) {
             nodeColor = COLORS.red;
+        } else if (node.type == AccountType.MINTTO_ACCOUNT) {
+            nodeColor = COLORS.darkgreen;
+        } else if (node.type == AccountType.STAKE_ACCOUNT) {
+            nodeColor = SOLANA_COLORS.green;
         } else {
             nodeColor = COLORS.mango;
         }
@@ -298,6 +306,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             let mintCanvas;
             if (node.type == AccountType.WALLET_ACCOUNT){
                 mintCanvas = this.metadataServices.walletAccountCanvasState;
+            } else if (node.type == AccountType.FEE_ACCOUNT){
+                mintCanvas = this.metadataServices.feeCanvas;
             } else if (node.type == AccountType.PROGRAM_ACCOUNT){
                 const progreamImageUrl = this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon;
                 mintCanvas = this.metadataServices.getImageCanvas(progreamImageUrl, AccountType.PROGRAM_ACCOUNT);

@@ -98,6 +98,8 @@ class FlowViewStrategy extends BaseViewStrategy {
     let nodeImage;
     if (node.type === AccountType.PROGRAM_ACCOUNT) {
       nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+    } else if (node.type === AccountType.FEE_ACCOUNT) {
+      nodeImage = this.metadataServices.feeImage;
     } else {
       nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
     }
@@ -325,7 +327,15 @@ class FlowViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        const mintImage = this.metadataServices.getMintImage(mintInfo!.image);
+        let nodeImage;
+        if (node.type === AccountType.PROGRAM_ACCOUNT) {
+          nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
+        } else if (node.type === AccountType.FEE_ACCOUNT) {
+          nodeImage = this.metadataServices.feeImage;
+        } else {
+          nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
+        }
+
         
         // Create authorities list as a React component
         const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
@@ -357,7 +367,7 @@ class FlowViewStrategy extends BaseViewStrategy {
               borderRadius: 4, 
               color: '#FFFFFF'
             }}>
-              {mintImage && <img src={mintImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
               <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>

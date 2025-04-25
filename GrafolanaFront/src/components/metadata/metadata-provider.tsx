@@ -25,6 +25,8 @@ interface MetadataContextType {
   getProgramImage: (imageUrl: string) => HTMLImageElement;
   walletAccountCanvasState: HTMLCanvasElement | null;
   defaultWalletImage: HTMLImageElement | null;
+  feeCanvas: HTMLCanvasElement | null;
+  feeImage: HTMLImageElement | null;
   updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
 }
@@ -95,6 +97,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
   // State for default/wallet canvases
   const [defaultMintCanvas, setDefaultMintCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [feeCanvas, setFeeCanvas] = useState<HTMLCanvasElement | null>(null);
   const [walletAccountCanvasState, setWalletAccountCanvasState] = useState<HTMLCanvasElement | null>(null);
   const [defaultProgramCanvasState, setDefaultProgramCanvasState] = useState<HTMLCanvasElement | null>(null);
 
@@ -123,6 +126,32 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
         isMounted = false; // Cleanup function to set flag false when component unmounts
     };
   }, []); // Empty dependency array ensures this runs once on mount
+
+    // Effect to load and create the fee canvas
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+  
+      let isMounted = true; // Flag to prevent state update on unmounted component
+      const img = new window.Image();
+      img.onload = () => {
+        if (isMounted) {
+          try {
+              const canvas = getCanvas(img);
+              setFeeCanvas(canvas);
+          } catch (error) {
+              console.error("Error creating default mint canvas:", error);
+          }
+        }
+      };
+      img.onerror = () => {
+          console.error("Failed to load default mint image for canvas");
+      };
+      img.src = '/fee.png'; 
+  
+      return () => {
+          isMounted = false; // Cleanup function to set flag false when component unmounts
+      };
+    }, []); // Empty dependency array ensures this runs once on mount
 
   // Effect to load and create the wallet account canvas
   useEffect(() => {
@@ -186,6 +215,15 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return img;
   }, []);
 
+  // Create a default image that will be returned when no cached image is found
+  const feeImage = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null; // Return null during server-side rendering
+    }
+    const img = new window.Image();
+    img.src = '/fee.png'; // Path to your default image
+    return img;
+  }, []);
 
   const preloadImage = useCallback((imageUrl: string, mint: boolean=false) => {
     if (!images.current.has(imageUrl)) {
@@ -545,6 +583,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getImageCanvas,
       walletAccountCanvasState,
       defaultWalletImage,
+      feeCanvas,
+      feeImage,
       
       getProgramInfo,
       getProgramImage,
