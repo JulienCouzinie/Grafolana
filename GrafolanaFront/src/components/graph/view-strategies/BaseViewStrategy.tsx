@@ -537,7 +537,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             };
                     
             return (
-                <div className="filter-options" style={{ marginTop: '16px' }}>
+                <div className="general-options" style={{ marginTop: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                         <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                             <input 
@@ -592,7 +592,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             };
             
             return (
-                <div className="filter-options">
+                <div className="general-options">
                     {/* Swap Routers row */}
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                         <span style={{ flex: 1 }}>Swap Routers</span>
