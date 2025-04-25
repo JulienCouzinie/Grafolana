@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 from typing import Dict, List, Optional, Union, Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,7 +35,7 @@ class TransactionService:
         self.executor = ThreadPoolExecutor(max_workers=max_worker_threads, 
                                           thread_name_prefix="TransactionServiceWorker")
         
-    @timing_decorator
+    # @timing_decorator
     def get_transaction(self, signature: Union[str, Signature]) -> Optional[EncodedConfirmedTransactionWithStatusMeta]:
         """
         Get a transaction by its signature, checking the database first, then RPC if not found.
@@ -84,7 +85,7 @@ class TransactionService:
             logger.error(f"Error fetching transaction {signature_str}: {str(e)}", exc_info=True)
             return None
     
-    @timing_decorator
+    # @timing_decorator
     def get_transactions(
         self, 
         signatures: List[Union[str, Signature]],
@@ -110,23 +111,47 @@ class TransactionService:
         # Dictionary to store results
         results: Dict[str, Optional[EncodedConfirmedTransactionWithStatusMeta]] = {}
         
+        # now = int(time.monotonic() * 1000)
         # First, check which transactions are already in the database
         db_transactions = self.transaction_repository.get_transactions_by_signatures(signature_strs)
-        
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to fetch transactions: {timeittook} ms")
+
+
         # Keep track of signatures that need to be fetched from RPC
         missing_signatures = []
+
         
-        # Process database results and identify missing transactions
+        # now = int(time.monotonic() * 1000)
+        # Create async tasks for processing transactions found in db
+        futures_dict = {}
+        
         for sig in signature_strs:
             if sig in db_transactions:
                 logger.debug(f"Transaction {sig[:10]}... found in database")
-                # Parse the stored JSON back to EncodedConfirmedTransactionWithStatusMeta
-                results[sig] = EncodedConfirmedTransactionWithStatusMeta.from_json(json.dumps(db_transactions[sig]))
+                # Submit JSON transformation task to thread pool
+                future = self.executor.submit(
+                    self._transform_db_transaction_to_encoded, 
+                    sig, 
+                    db_transactions[sig]
+                )
+                futures_dict[future] = sig
             else:
                 logger.debug(f"Transaction {sig[:10]}... not found in database")
                 missing_signatures.append(sig)
         
-        # If all transactions were found in the database, return early
+        # Collect results as they complete
+        for future in futures_dict:
+            sig = futures_dict[future]
+            try:
+                results[sig] = future.result()
+            except Exception as e:
+                logger.error(f"Error transforming transaction {sig}: {str(e)}", exc_info=True)
+                results[sig] = None
+        
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to convert create transaction from JSON: {timeittook} ms")
+        
         if missing_signatures:
             # Convert missing signatures to Signature objects for RPC
             rpc_signatures = [Signature.from_string(sig) for sig in missing_signatures]
@@ -159,6 +184,7 @@ class TransactionService:
             processed_results = {}
             futures = []
             
+            # now = int(time.monotonic() * 1000)
             # Process each transaction with the callback asynchronously
             for sig, tx_data in results.items():
                 if tx_data is not None:
@@ -173,11 +199,36 @@ class TransactionService:
             # Wait for all futures to complete
             for future in futures:
                 future.result()  # This will re-raise any exceptions that occurred
+
+            # timeittook = int(time.monotonic() * 1000) - now
+            # logger.info(f"Time taken to process all transaction: {timeittook} ms")
                 
             return processed_results
             
         # Return the original results if no callback was provided
         return results
+    
+    def _transform_db_transaction_to_encoded(
+        self, 
+        signature: str, 
+        tx_json: dict
+    ) -> Optional[EncodedConfirmedTransactionWithStatusMeta]:
+        """
+        Transform a transaction from database JSON format to EncodedConfirmedTransactionWithStatusMeta.
+        
+        Args:
+            signature: Transaction signature
+            tx_json: Transaction data as JSON object
+            
+        Returns:
+            EncodedConfirmedTransactionWithStatusMeta or None on error
+        """
+        try:
+            # Parse the stored JSON back to EncodedConfirmedTransactionWithStatusMeta
+            return EncodedConfirmedTransactionWithStatusMeta.from_json(json.dumps(tx_json))
+        except Exception as e:
+            logger.error(f"Error transforming transaction {signature}: {str(e)}", exc_info=True)
+            return None
     
     def _process_callback(
         self, 

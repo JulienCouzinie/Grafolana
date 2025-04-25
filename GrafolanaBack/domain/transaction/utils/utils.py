@@ -30,7 +30,7 @@ _session.mount("http://", adapter)
 _session.mount("https://", adapter)
 
 
-@timing_decorator
+# @timing_decorator
 @cache.memoize(name="utils.get_sol_price")
 def get_sol_price(timestamp:int)-> float:
     """

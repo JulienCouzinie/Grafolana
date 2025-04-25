@@ -1,3 +1,4 @@
+import time
 from typing import Dict, List, Optional, Set, Tuple, Any, cast
 
 from solders.signature import Signature
@@ -35,7 +36,7 @@ class TransactionParserService:
         self.graph_service = GraphService()  
         self.transaction_service = TransactionService()
     
-    @timing_decorator
+    # @timing_decorator
     def parse_transaction(self, transaction_signature: str, encoded_transaction: EncodedConfirmedTransactionWithStatusMeta) -> TransactionContext:
         """
         Parse a transaction by its signature, building a graph representation of the transaction.
@@ -161,17 +162,25 @@ class TransactionParserService:
         Returns:
             Dictionary containing the graph data for all transactions
         """
-        
+        # now = int(time.monotonic() * 1000)
         all_transaction_contex = self.transaction_service.get_transactions(transaction_signatures,self.parse_transaction_call_back)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to get_transactions & parse them: {timeittook} ms")
 
         # Strip all_transaction_contex of transaction_context that are None
         all_transaction_contex = {sig: context for sig, context in all_transaction_contex.items() if context is not None}
         if not all_transaction_contex:
             return {"nodes": [], "links": [], "swaps": [], "fees": {"fee": 0, "priority_fee": 0}}
 
+        # now = int(time.monotonic() * 1000)
         graphspace = Graphspace(all_transaction_contex)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to Graphspace: {timeittook} ms")
         
+        # now = int(time.monotonic() * 1000)
         graphdata = self.graph_service.get_graph_data_from_graphspace(graphspace)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to get_graph_data_from_graphspace: {timeittook} ms")
         
         return graphdata
     

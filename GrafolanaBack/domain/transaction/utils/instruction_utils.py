@@ -29,7 +29,7 @@ def get_discriminator(instruction_name: str) -> str:
     """Get the discriminator for an instruction name using the Anchor convention."""
     return sha256(f"global:{instruction_name}".encode()).hexdigest()[:16]
 
-@timing_decorator
+# @timing_decorator
 def get_instruction_call_stack(transaction: EncodedTransactionWithStatusMeta) -> List[Parsed_Instruction]:
     """
     Construct the full instruction call stack for a Solana transaction using stack_height.

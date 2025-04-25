@@ -433,7 +433,7 @@ class SolanaTransactionFetcher:
             except Exception as e:
                 logger.error(f"[Worker {worker_id} ({url[:40]})]: Unhandled task exception for {sig_str[:10]}: {e}")
 
-    @timing_decorator
+    # @timing_decorator
     def getMultipleTransactions(
         self,
         transaction_signatures: List[Signature],

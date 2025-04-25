@@ -53,14 +53,14 @@ class LoggerSingleton:
         
         # Only add handler if not already added to avoid duplicate handlers
         if not logger.handlers:
-            logger.setLevel(logging.WARNING)
+            logger.setLevel(logging.INFO)
             
             # Get logs directory
             log_path = LoggerSingleton._get_logs_directory()
             
             # Create file handler
             fh = logging.FileHandler(log_path / "missing_mint_data.log")
-            fh.setLevel(logging.WARNING)
+            fh.setLevel(logging.INFO)
             
             # Create formatter
             formatter = logging.Formatter('%(asctime)s - %(message)s')
@@ -92,6 +92,10 @@ class LoggerSingleton:
             
             # Add handler to logger
             logger.addHandler(fh)
+
+            # Also log to console.
+            console = logging.StreamHandler()
+            logger.addHandler(console)
         
         return logger
 
