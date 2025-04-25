@@ -36,7 +36,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
 
+    // Filters
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
+    hideFees: React.RefObject<boolean>;
 
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
 
@@ -61,6 +63,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
 
         this.processGraphDataCallBack = useRef(null);
+        this.hideFees = useRef(false);
     }
 
     /**
@@ -109,7 +112,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
-    private CollapseExpandSwapPrograms(data: GraphData): GraphData {
+    private ApplyCollapseExpandSwapPrograms(data: GraphData): void {
 
         // Filter out the links that are not relevant based on the collapse state of swap programs
         data.links = data.links.filter((link) => {
@@ -163,7 +166,24 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return activeVertices.has(node.account_vertex.id);
         });
 
-       
+    }
+
+    private ApplyHideFees(data: GraphData): GraphData {
+        // Filter out the links that have FEE as source or target address
+        data.links = data.links.filter((link) => {
+            if (link.source_account_vertex.address === "FEE" || link.target_account_vertex.address === "FEE") {
+                return !this.hideFees.current;
+            }
+            return true;
+        });
+
+        // Filter out the nodes that have FEE as address
+        data.nodes = data.nodes.filter((node) => {
+            if (node.account_vertex.address === "FEE") {
+                return !this.hideFees.current;
+            }
+            return true;
+        });
 
         return data;
     }
@@ -201,15 +221,34 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
+    protected CollapseAllSwap(router: boolean, collapse: boolean): void {
+        this.SetCollapseAllSwap(router,collapse);
+        this.applyFilters();
+    }
+
+    /**
+     * Hide/Show fees transfers & node in graph
+     * @param hide - true to hide fees, false to show them
+     */
+    protected HideFees(hide: boolean): void {
+        this.hideFees.current = hide;
+        this.applyFilters();
+    }
+
     protected applyFilters() {
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
 
         // Collapse or expand swap programs based on the current state
-        this.CollapseExpandSwapPrograms(data);
+        this.ApplyCollapseExpandSwapPrograms(data);
+
+        // Hide fees if the option is enabled
+        this.ApplyHideFees(data);
+
 
         this.saveCurrentNodePositions()
         this.forceReProcess(data); // Trigger reprocessing with the updated data
+        this.restoreNodePositions(); // Restore node positions after reprocessing
     }
 
     setupGraphData(data: GraphData) {
@@ -485,7 +524,37 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     getGeneralContent(strategyContent:React.ReactNode=null): React.ReactNode {
-        const CheckboxFilters = () => {
+        // FeesOptions component to handle showing/hiding fees
+        const FeesOptions = () => {
+            // Track the state of the checkbox based on the current hideFees value
+            const [hideFeesChecked, setHideFeesChecked] = React.useState<boolean>(this.hideFees.current);
+                    
+            // Handle checkbox change
+            const handleHideFeesChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+                const isChecked = event.target.checked;
+                setHideFeesChecked(isChecked);
+                this.HideFees(isChecked);
+            };
+                    
+            return (
+                <div className="filter-options" style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={hideFeesChecked}
+                                onChange={handleHideFeesChange}
+                                style={{ marginRight: '8px' }}
+                            />
+                            <span>Hide fees</span>
+                        </label>
+                    </div>
+                </div>
+            );
+        }
+
+        // SwapOptions component to handle collapse/expand actions for swap routers and programs
+        const SwapOptions = () => {
             // Track hover states for all buttons
             const [routerCollapseHovered, setRouterCollapseHovered] = React.useState<boolean>(false);
             const [routerExpandHovered, setRouterExpandHovered] = React.useState<boolean>(false);
@@ -494,24 +563,20 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             
             // Handlers for router buttons
             const handleRouterCollapse = (): void => {
-                this.SetCollapseAllSwap(true, true); // true for router, true for collapse
-                this.applyFilters();
+                this.CollapseAllSwap(true, true); // true for router, true for collapse
             };
             
             const handleRouterExpand = (): void => {
-                this.SetCollapseAllSwap(true, false); // true for router, false for expand
-                this.applyFilters();
+                this.CollapseAllSwap(true, false); // true for router, false for expand
             };
             
             // Handlers for program buttons
             const handleProgramCollapse = (): void => {
-                this.SetCollapseAllSwap(false, true); // false for program, true for collapse
-                this.applyFilters();
+                this.CollapseAllSwap(false, true); // false for program, true for collapse
             };
             
             const handleProgramExpand = (): void => {
-                this.SetCollapseAllSwap(false, false); // false for program, false for expand
-                this.applyFilters();
+                this.CollapseAllSwap(false, false); // false for program, false for expand
             };
             
             // Common button style
@@ -615,7 +680,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         
         return (
             <div className="strategy-panel-content">
-                <CheckboxFilters />
+                <SwapOptions />
+                <FeesOptions />
                 {(strategyContent) ? strategyContent : ""}
             </div>
         );
