@@ -143,7 +143,7 @@ class SwapResolverService:
                     ),
                     key = outgoing_key)
         
-        logger.info(f"Resolved swap {router_swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={router_swap.fee}, tx: {transaction_context.transaction_signature}")
+        logger.debug(f"Resolved swap {router_swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={router_swap.fee}, tx: {transaction_context.transaction_signature}")
     
         
 
@@ -301,7 +301,7 @@ class SwapResolverService:
                     ),
                     key = swap_outgoing_transfer_key)
         
-        logger.info(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
+        logger.debug(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
     
     def _calculate_amount_in_from_balance_changes(self, graph: TransactionGraph, swap: Swap) -> int:
         """
