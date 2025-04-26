@@ -302,7 +302,7 @@ class GraphBuilderService:
             target = fee_account.get_vertex(),
             transfer_properties = TransferProperties(
                 transfer_type = TransferType.FEE,
-                program_address = "VALIDATOR",
+                program_address = "FEE",
                 amount_source = transaction_context.fee,
                 amount_destination = transaction_context.fee,
             )
@@ -329,7 +329,7 @@ class GraphBuilderService:
                 target = fee_account.get_vertex(),
                 transfer_properties = TransferProperties(
                     transfer_type = TransferType.PRIORITY_FEE,
-                    program_address = "VALIDATOR",
+                    program_address = "FEE",
                     amount_source = transaction_context.priority_fee,
                     amount_destination = transaction_context.priority_fee,
                 )

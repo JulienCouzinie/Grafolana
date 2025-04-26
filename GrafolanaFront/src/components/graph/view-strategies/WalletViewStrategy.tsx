@@ -303,6 +303,7 @@ class WalletViewStrategy extends BaseViewStrategy {
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
+          c
           const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
             return `<li>${compositeTransferDetailsHTML}</li>`;
         }).join('')}

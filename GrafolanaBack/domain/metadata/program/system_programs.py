@@ -226,5 +226,13 @@ This program is particularly relevant for users and developers interested in acq
 The SNS Registry Program manages the lifecycle of .sol domains through a robust set of instructions. It handles domain registration (linking a name to an owner’s wallet), record updates (mapping the domain to an address or additional metadata), transfers of domain ownership, and renewals to maintain active status (domains typically require annual renewal fees in SOL to cover rent). The program stores domain data in on-chain accounts, using a hierarchical structure where top-level domains (like .sol) and subdomains are governed by specific authorities. It also supports reverse lookups, enabling queries to retrieve the domain name tied to a given address, a feature that enhances wallet and dApp interoperability.
 Built in Rust and optimized for Solana’s high-throughput environment, the Solana Name Service Registry Program works in tandem with the SNS Auction Program (ALTNSZ46uaAUU7XUV6awvdorLGqAsPwa9shm7h4uP2FK) to allocate new domains via bidding while providing the infrastructure to manage them post-auction. Its adoption spans wallets (e.g., Phantom, Solflare), DeFi platforms, and NFT projects, where .sol domains serve as both practical tools and digital branding assets. By offering a decentralized alternative to traditional DNS, this program underscores Solana’s commitment to scalable, user-centric blockchain solutions.
 This program is essential for anyone using or building with .sol domains, making Solana more accessible and personalized.."""
+    },
+    "FEE": {
+        PROGRAM_ADDRESS: "FEE",
+        LABEL: "Fee Collector",
+        ICON: "/fee.png",
+        WEBSITE: "https://solana.com/en",
+        DESCRIPTION: 
+"""Solana transaction fees break down into a small mandatory base fee—paid in lamports per signature and per compute‐unit budget—and an optional priority fee (a “tip”) that users attach via the ComputeBudgetProgram to request more compute units at a specified micro-lamports-per-unit price. The base fee covers the network’s fixed costs (signing, data storage, account locks) and is set so that each signature costs 5,000 lamports; half of that amount is burned forever and half goes to the validator who produces the block . If the network is busy, users can include a priority fee calculated as “compute-unit limit × compute-unit price,” which goes entirely to the validator to incentivize faster inclusion . Following governance changes (SIMD-0096), all priority fees now accrue 100 % to validators rather than being split . Total cost per transaction is therefore the sum of the base fee (5,000 lamports × signatures) and any chosen priority fee (CU_limit × CU_price)."""
     }
 }
