@@ -308,7 +308,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         let usdValue: number | null = null;
         const transactionData = this.originalData.current.transactions[link.transaction_signature];
         if (transactionData && transactionData.mint_usd_price_ratio && mintAddress) {
-            const usdValue = this.usdServices.calculateUSDValue(
+           usdValue = this.usdServices.calculateUSDValue(
                 amount,
                 mintAddress,
                 transactionData.mint_usd_price_ratio
