@@ -25,6 +25,7 @@ interface MetadataContextType {
   getProgramImage: (imageUrl: string) => HTMLImageElement;
   
   updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
+  deleteLabel: (address: string, userId?: string) => Promise<boolean>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
   
   getGraphicByNode: (node: ForceGraphNode) => StaticGraphic;
@@ -401,6 +402,36 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const deleteLabel = useCallback(async (
+    address: string,
+    userId?: string
+  ): Promise<boolean> => {
+    if (!userId) {
+      throw new Error("User ID is required to delete labels");
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/metadata/labels/user', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, user_id: userId }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const cacheKey = getCacheKey(address, userId);
+      // Remove label from cache
+      deleteFromLabels(cacheKey);
+      // Invalidate the computed label cache for this address
+      deleteFromComputedLabels(address);
+    
+      return true;
+    } catch (error) {
+      console.error('Error deleting label:', error);
+      return false;
+    }
+  }, []);
+
   const getLabelComputed = useCallback(
     (address: string, type: AddressType = AddressType.UNKNOWN, shortenedAddress: boolean = false): SimpleLabel => {
       const userId = publicKey?.toBase58();
@@ -466,6 +497,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getLabel,
       getLabelComputed,
       updateLabel,
+      deleteLabel,
 
       getGraphicByNode,
 
