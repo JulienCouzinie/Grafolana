@@ -54,11 +54,13 @@ export default function DashboardFeature() {
         node.account_vertex = new AccountVertex(node.account_vertex.address, node.account_vertex.version, node.account_vertex.transaction_signature);
         return node;
       });
+      
       data.links = data.links.map((link) => {
         link.source_account_vertex = new AccountVertex(link.source_account_vertex.address, link.source_account_vertex.version, link.source_account_vertex.transaction_signature);
         link.target_account_vertex = new AccountVertex(link.target_account_vertex.address, link.target_account_vertex.version, link.target_account_vertex.transaction_signature);
         return link;
       });
+
       // Map program_account_vertex of each swaps of each transactiondata to AccountVertex class
       Object.keys(data.transactions).forEach((key) => {
         const transaction = data.transactions[key];
@@ -67,7 +69,6 @@ export default function DashboardFeature() {
         });
 
       });
-      console.log(data);
 
       return data;
     }, []);
