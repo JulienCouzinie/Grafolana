@@ -95,14 +95,8 @@ class FlowViewStrategy extends BaseViewStrategy {
   nodeTooltip(node: ForceGraphNode): string {
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-    let nodeImage;
-    if (node.type === AccountType.PROGRAM_ACCOUNT) {
-      nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
-    } else if (node.type === AccountType.FEE_ACCOUNT) {
-      nodeImage = this.metadataServices.staticGraphic.fee.image;
-    } else {
-      nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
-    }
+    const nodeImage = this.metadataServices.getGraphicByNode(node).image;
+    
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
       ? `
@@ -234,14 +228,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        let nodeImage;
-        if (node.type === AccountType.PROGRAM_ACCOUNT) {
-          nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
-        } else if (node.type === AccountType.FEE_ACCOUNT) {
-          nodeImage = this.metadataServices.staticGraphic.fee.image;
-        } else {
-          nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
-        }
+        const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
         
         // Create authorities list as a React component

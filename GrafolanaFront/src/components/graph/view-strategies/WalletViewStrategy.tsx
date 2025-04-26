@@ -108,6 +108,10 @@ class WalletViewStrategy extends BaseViewStrategy {
           type = AccountType.PROGRAM_ACCOUNT;
         } else if (node.type==AccountType.FEE_ACCOUNT) {
           type = AccountType.FEE_ACCOUNT;
+        } else if (node.type==AccountType.BURN_ACCOUNT) {
+          type = AccountType.BURN_ACCOUNT;
+        } else if (node.type==AccountType.MINTTO_ACCOUNT) {
+          type = AccountType.MINTTO_ACCOUNT;
         } else {
           type = AccountType.WALLET_ACCOUNT;
         }
@@ -238,15 +242,7 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   nodeTooltip (node: ForceGraphNode): string {
-    let nodeImage;
-    if (node.type === AccountType.PROGRAM_ACCOUNT) {
-      nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
-    } else if (node.type === AccountType.FEE_ACCOUNT) {
-      nodeImage = this.metadataServices.staticGraphic.fee.image;
-    } else {
-      nodeImage = this.metadataServices.staticGraphic.wallet.image;
-    }
-
+    const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -339,16 +335,7 @@ class WalletViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        let nodeImage;
-        if (node.type == AccountType.WALLET_ACCOUNT){
-          nodeImage = this.metadataServices.staticGraphic.wallet.image;
-        } else if (node.type === AccountType.PROGRAM_ACCOUNT) {
-          nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
-        } else if (node.type === AccountType.FEE_ACCOUNT) {
-          nodeImage = this.metadataServices.staticGraphic.fee.image;
-        } else {
-          nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
-        }
+        const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
         // Component to display composite accounts with toggle functionality
         const CompositeAccounts = () => {
@@ -383,7 +370,7 @@ class WalletViewStrategy extends BaseViewStrategy {
                     // Get mint info and image for composite account
                     const compMintAddress = comp.mint_address;
                     const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
-                    const compMintImage = this.metadataServices.getMintImage(compMintInfo?.image);
+                    const compMintImage = this.metadataServices.getGraphicByNode(comp).image;
                     
                     return (
                       <li key={compIndex} style={{ margin: '4px 0' }}>

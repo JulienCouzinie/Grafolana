@@ -8,8 +8,8 @@ import { cp } from "fs";
 import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
-import { AccountType } from "@/types/graph";
-import { StaticGraphicsProvider, useStaticGraphics, StaticGraphicsContextType } from "./static-graphic-provider";
+import { AccountType, ForceGraphNode } from "@/types/graph";
+import { StaticGraphicsProvider, useStaticGraphics, StaticGraphicsContextType, StaticGraphic } from "./static-graphic-provider";
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
@@ -27,8 +27,7 @@ interface MetadataContextType {
   updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
   
-  // Add the staticGraphic property
-  staticGraphic: StaticGraphicsContextType;
+  getGraphicByNode: (node: ForceGraphNode) => StaticGraphic;
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
@@ -425,6 +424,31 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     [computedLabelsState, publicKey]
   );
 
+  const getGraphicByNode = (node: ForceGraphNode): StaticGraphic => {
+    let nodeGraphic: StaticGraphic;
+    const mintAddress = node.mint_address;
+    const mintInfo = mintAddress ? getMintInfo(mintAddress) : null;
+    if (node.type === AccountType.BURN_ACCOUNT) {
+      nodeGraphic = staticGraphic.burn;
+    } else if (node.type === AccountType.MINTTO_ACCOUNT) {
+      nodeGraphic = staticGraphic.mintTo;
+    } else if (node.type === AccountType.PROGRAM_ACCOUNT) {
+      const programImgUrl = getProgramInfo(node.account_vertex.address)?.icon;
+      const programImg = getProgramImage(programImgUrl!);
+      const programCanvas = getImageCanvas(programImgUrl!, node.type);
+      nodeGraphic = {image: programImg, canvas: programCanvas};
+    } else if (node.type === AccountType.FEE_ACCOUNT) {
+      nodeGraphic = staticGraphic.fee;
+    } else if (node.type == AccountType.WALLET_ACCOUNT){
+      nodeGraphic = staticGraphic.wallet;
+    } else {
+      const img = getMintImage(mintInfo!.image);
+      const canvas = getImageCanvas(mintInfo!.image, node.type)
+      nodeGraphic = {image:img, canvas:canvas};
+    }
+    return nodeGraphic;
+  }
+
   return (
     <StaticGraphicsProvider>
     <MetadataContext.Provider value={{
@@ -442,8 +466,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getLabel,
       getLabelComputed,
       updateLabel,
-      // Add the staticGraphics object
-      staticGraphic
+
+      getGraphicByNode,
+
     }}>
       {children}
     </MetadataContext.Provider>

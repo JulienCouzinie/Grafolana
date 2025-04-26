@@ -481,23 +481,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         if (mintInfo) {
             //console.log("mintInfo", mintInfo.mint_address);
-            let mintCanvas;
-            if (node.type == AccountType.BURN_ACCOUNT) {
-                mintCanvas = this.metadataServices.staticGraphic.burn.canvas;
-            } else if (node.type == AccountType.MINTTO_ACCOUNT) {
-                mintCanvas = this.metadataServices.staticGraphic.mintTo.canvas;
-            } else if (node.type == AccountType.WALLET_ACCOUNT){
-                mintCanvas = this.metadataServices.staticGraphic.wallet.canvas;
-            } else if (node.type == AccountType.FEE_ACCOUNT){
-                mintCanvas = this.metadataServices.staticGraphic.fee.canvas;
-            } else if (node.type == AccountType.PROGRAM_ACCOUNT){
-                const progreamImageUrl = this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon;
-                mintCanvas = this.metadataServices.getImageCanvas(progreamImageUrl, AccountType.PROGRAM_ACCOUNT);
-            } else {
-                // Draw mint logo
-                const imageUrl = mintInfo?.image;
-                mintCanvas = this.metadataServices.getImageCanvas(imageUrl);
-            }
+            let mintCanvas = this.metadataServices.getGraphicByNode(node).canvas
             ctx.save();
             ctx.beginPath();
             ctx.arc(node.x!, node.y!, nodeSize - 1, 0, 2 * Math.PI, false);
