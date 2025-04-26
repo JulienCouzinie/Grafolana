@@ -114,6 +114,8 @@ class AccountViewStrategy extends BaseViewStrategy {
         seen.add(key);
         link.source = link.source_account_vertex.address;
         link.target = link.target_account_vertex.address; 
+        link.id = key;
+        
         deduplicatedLinks.push(link);
       } else {
         // If already seen, find the existing link
@@ -370,6 +372,7 @@ export function useAccountViewStrategy(): ViewStrategy {
   });
 
   const selectedNodes = useRef<Set<string>>(new Set<string>());
+  const selectedLinks = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
   return new AccountViewStrategy(
@@ -377,7 +380,8 @@ export function useAccountViewStrategy(): ViewStrategy {
     usdServices,
     processedDataRef,
     originalDataRef,
-    selectedNodes
+    selectedNodes,
+    selectedLinks,
   );
 }
 

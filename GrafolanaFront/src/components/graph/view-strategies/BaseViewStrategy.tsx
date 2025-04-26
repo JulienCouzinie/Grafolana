@@ -33,6 +33,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     protected usdServices: ReturnType<typeof useUSDValue>;
 
     selectedNodes: React.RefObject<Set<string>>;
+    selectedLinks: React.RefObject<Set<string>>;
     hoveredNode: ForceGraphNode | null;
     hoveredLink: ForceGraphLink | null;
 
@@ -55,7 +56,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         usdServices: ReturnType<typeof useUSDValue>,
         processedDataRef: React.RefObject<GraphData>,
         originalDataRef: React.RefObject<GraphData>,
-        selectedNodesRef: React.RefObject<Set<string>>
+        selectedNodesRef: React.RefObject<Set<string>>,
+        selectedLinksRef: React.RefObject<Set<string>>,
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
@@ -66,6 +68,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.hoveredNode = null;
         this.hoveredLink = null;
         this.selectedNodes = selectedNodesRef;
+        this.selectedLinks = selectedLinksRef;
+
         this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
 
         this.processGraphDataCallBack = useRef(null);
@@ -422,9 +426,32 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Common link style implementation - updated to use direct hoveredLink
     getLinkStyle(link: ForceGraphLink) {
         const isHovered = this.hoveredLink && this.hoveredLink === link;
+        const linkId = link.id;
+        const isSelected = this.selectedLinks.current?.has(linkId) || false; // Check if the link is selected
+        if (isSelected) {
+            // If the link is selected, set the color to purple
+            return {
+                width: 4,
+                color: SOLANA_COLORS.purple,
+                curvature: link.curvature || 0,
+                lineDash: [],
+                arrowLength: 8,
+                arrowColor: SOLANA_COLORS.purple
+            };
+        } else if (isHovered) {
+            // If the link is hovered, set the color to blue
+            return {
+                width: 4,
+                color: SOLANA_COLORS.blue,
+                curvature: link.curvature || 0,
+                lineDash: [],
+                arrowLength: 8,
+                arrowColor: SOLANA_COLORS.purple
+            };
+        }
         return {
-            width: isHovered ? 4 : 2, // Make link wider when hovered
-            color: isHovered ? SOLANA_COLORS.blue : SOLANA_COLORS.darkGray,
+            width: 2,
+            color: SOLANA_COLORS.darkGray,
             curvature: link.curvature || 0,
             lineDash: link.type === 'SWAP' ? [1, 1] : [],
             arrowLength: 8,
@@ -1148,7 +1175,21 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             </div>
         );
     }
-    
+    /**
+     * Returns content for the Links Info accordion section
+     * Override in concrete strategies for strategy-specific Nodes information
+     */
+    getLinksInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        return (
+            <div className="strategy-panel-content">
+                {/* Add common contextual information */}
+                <div className="info-section">
+                    <p>Selected links: {this.selectedLinks.current?.size || 0}</p>
+                </div>
+                {(strategyContent) ? strategyContent : ""}
+            </div>
+        );
+    }
     // Abstract methods that must be implemented by derived classes
     abstract initializeGraphData(data: GraphData, setProcessedData: React.Dispatch<React.SetStateAction<GraphData>>): void;
     abstract nodeTooltip(node: GraphNode): string;

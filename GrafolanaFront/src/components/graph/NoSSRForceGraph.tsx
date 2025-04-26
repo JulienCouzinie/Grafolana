@@ -33,6 +33,7 @@ type TypedForceGraphProps = Omit<
   | 'ref'
   | 'onNodeDragEnd'
   | 'onNodeClick'
+  | 'onLinkClick'
 > & {
   nodeCanvasObject: (node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => void;
   nodeLabel: (node: ForceGraphNode) => string;
@@ -49,6 +50,7 @@ type TypedForceGraphProps = Omit<
   onNodeRightClick?: (node: ForceGraphNode, event: MouseEvent) => void;
   onNodeDragEnd?: (node: ForceGraphNode) => void;
   onNodeClick?: (node: ForceGraphNode | null) => void;
+  onLinkClick?: (link: ForceGraphLink | null) => void;
   ref?: ForwardedRef<ForceGraphMethods>;
 };
 

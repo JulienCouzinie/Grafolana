@@ -79,6 +79,12 @@ export interface ViewStrategy {
   selectedNodes: RefObject<Set<string>>;
 
   /**
+   * Reference to the currently selected links set
+   * Uses React.Ref to allow mutations to the current value
+   */
+  selectedLinks: RefObject<Set<string>>;
+
+  /**
    * Returns the content to be displayed in the General accordion section
    * @returns React node with general controls specific to this strategy
    */
@@ -101,4 +107,10 @@ export interface ViewStrategy {
    * @returns React node with Nodes information specific to this strategy
    */
   getNodesInfoContent(): React.ReactNode;
+
+  /**
+   * Returns the content to be displayed in the Links Info accordion section
+   * @returns React node with Links information specific to this strategy
+   */
+  getLinksInfoContent(): React.ReactNode;
 }

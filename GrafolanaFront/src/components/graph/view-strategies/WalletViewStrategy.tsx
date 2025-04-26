@@ -186,9 +186,13 @@ class WalletViewStrategy extends BaseViewStrategy {
       const key = `${source_address}-${target_address}`;
       // Check if the link has already been seen
       if (!seen.has(key)) {
+        const key = `${source_address}-${target_address}`;
+
+        const linkId = key;
 
         // Create new WALLET_TO_WALLET link
         let aggregatedlink: ForceGraphLink = {
+          id: linkId,
           key: 0,
           transaction_signature: '',
           program_address: '',
@@ -467,6 +471,7 @@ export function useWalletViewStrategy(): ViewStrategy {
   });
 
   const selectedNodes = useRef<Set<string>>(new Set<string>());
+  const selectedLinks = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
   return new WalletViewStrategy(
@@ -474,6 +479,7 @@ export function useWalletViewStrategy(): ViewStrategy {
     usdServices,
     processedDataRef,
     originalDataRef,
-    selectedNodes
+    selectedNodes,
+    selectedLinks,
   );
 }

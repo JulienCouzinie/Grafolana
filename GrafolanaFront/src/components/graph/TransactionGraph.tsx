@@ -97,7 +97,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
   const [groupingContent, setGroupingContent] = useState<React.ReactNode | null>(null);
   const [NodesContent, setNodesContent] = useState<React.ReactNode | null>(null);
-
+  const [LinksContent, setLinksContent] = useState<React.ReactNode | null>(null);
   // Select current strategy based on view mode
   const strategy = useMemo(() => {
     return viewMode === 'flow' ? flowStrategy : viewMode === 'wallet' ? walletStrategy : viewMode === 'account' ? accountStrategy: null;
@@ -107,7 +107,10 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   const {
     // Node selection
     nodeSelectionUpdate,
+    linkSelectionUpdate,
+
     handleNodeClick,
+    handleLinkClick,
     
     // Node position fixing
     handleNodeDragEnd,
@@ -151,10 +154,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       } else {
         // Process and cache the data
         if (apiGraphData.nodes.length !== 0) {
-          const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+          strategy.initializeGraphData(apiGraphData, setGraphData);
         }
-        // graphDataCache.current[viewMode] = viewGraphData;
-        // setGraphData(viewGraphData);
       }
     }
   }, [viewMode]);
@@ -163,15 +164,13 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   useEffect(() => {
     if (strategy) {
       if (apiGraphData.nodes.length !== 0) {
-        const viewGraphData = strategy.initializeGraphData(apiGraphData, setGraphData);
+        strategy.initializeGraphData(apiGraphData, setGraphData);
       }
       // Invalidate cache for all view modes
       graphDataCache.current['flow'] = null;
       graphDataCache.current['account'] = null;
       graphDataCache.current['wallet'] = null;
       graphDataCache.current['program'] = null;
-      // Cache the processed data for the current view mode
-      //graphDataCache.current[viewMode] = viewGraphData;
     }
   }, [apiGraphData]);
 
@@ -183,6 +182,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       setFiltersContent(strategy.getFiltersContent());
       setGroupingContent(strategy.getGroupingContent());
       setNodesContent(strategy.getNodesInfoContent());
+      setLinksContent(strategy.getLinksInfoContent());
     }
   }, [viewMode]);
 
@@ -193,6 +193,14 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       setNodesContent(strategy.getNodesInfoContent());
     }
   }, [nodeSelectionUpdate]);
+
+  // Add effect to update Links info when selection changes
+  useEffect(() => {
+    if (strategy) {
+      // Only update links content since it's the one showing selection info
+      setLinksContent(strategy.getLinksInfoContent());
+    }
+  }, [linkSelectionUpdate]);
 
 
   // Render nothing if no strategy is selected
@@ -295,9 +303,14 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                     {groupingContent || <p>No grouping options available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Nodes" defaultOpen={true}>
+                <AccordionItem title="Nodes" defaultOpen={false}>
                   <div className="accordion-content">
                     {NodesContent || <p>No nodes information available for this view</p>}
+                  </div>
+                </AccordionItem>
+                <AccordionItem title="Links" defaultOpen={false}>
+                  <div className="accordion-content">
+                    {LinksContent || <p>No nodes information available for this view</p>}
                   </div>
                 </AccordionItem>
               </Accordion>
@@ -371,6 +384,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                 nodeLabel={(node) => strategy.nodeTooltip(node)}
                 // Add click handler for node selection
                 onNodeClick={handleNodeClick}
+                onLinkClick={handleLinkClick}
                 // Link styling
                 linkWidth={(link) => strategy.getLinkStyle(link).width}
                 linkColor={(link) => strategy.getLinkStyle(link).color}

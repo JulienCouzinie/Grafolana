@@ -1,5 +1,5 @@
 import { useState, useEffect, RefObject, useCallback } from 'react';
-import { ForceGraphNode } from '../../../types/graph';
+import { ForceGraphLink, ForceGraphNode } from '../../../types/graph';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 import { ViewStrategy } from '../view-strategies/ViewStrategy';
 import { useLabelEditDialog } from '@/components/metadata/label-edit-dialog-provider';
@@ -18,7 +18,9 @@ type ContextMenuState = {
 type UseGraphInteractionsReturn = {
   // Node selection
   nodeSelectionUpdate: number;
+  linkSelectionUpdate: number;
   handleNodeClick: (node: ForceGraphNode | null) => void;
+  handleLinkClick: (link: ForceGraphLink | null) => void;
 
   handleNodeDragEnd: (node: ForceGraphNode) => void;
   
@@ -45,6 +47,7 @@ export function useGraphInteractions(
 ): UseGraphInteractionsReturn {
   // ---------- NODE SELECTION ----------
   const [nodeSelectionUpdate, setNodeSelectionUpdate] = useState<number>(0);
+  const [linkSelectionUpdate, setLinkSelectionUpdate] = useState<number>(0);
   const [isCtrlKeyPressed, setIsCtrlKeyPressed] = useState<boolean>(false);
 
   // ---------- NODE POSITION FIXING ----------
@@ -147,6 +150,10 @@ export function useGraphInteractions(
       strategy!.selectedNodes.current = new Set(); // Clear selection
       setNodeSelectionUpdate(prev => prev + 1); // Trigger re-render
     }
+    if (strategy!.selectedLinks.current.size > 0) {
+      strategy!.selectedLinks.current = new Set(); // Clear selection
+      setLinkSelectionUpdate(prev => prev + 1); // Trigger re-render
+    }
   }
   
 
@@ -169,6 +176,38 @@ export function useGraphInteractions(
       }
     }
   };
+
+  // ---------- LINK SELECTION HANDLERS ----------
+
+  // Handler for link click to manage selection
+  const handleLinkClick = (link: ForceGraphLink | null) => {
+    // Get link ID for tracking in the selection set
+    console.log("Link clicked:", link);
+    const linkId = link!.id!.toString();
+    
+    // If CTRL is pressed, toggle the clicked link in the selection
+    if (isCtrlKeyPressed) {
+        // Toggle the link: remove if already selected, add if not
+        if (strategy?.selectedLinks.current.has(linkId)) {
+          strategy?.selectedLinks.current.delete(linkId);
+        } else {
+          strategy?.selectedLinks.current.add(linkId);
+        }
+        
+    } else {
+      // No CTRL pressed: replace selection with just this link
+      // If the link is already the only selected one, deselect it
+      if (strategy?.selectedLinks.current.size === 1 && strategy?.selectedLinks.current.has(linkId)) {
+        strategy!.selectedLinks.current = new Set();
+      } else {
+        strategy!.selectedLinks.current = new Set([linkId]);
+      }
+    }
+
+    console.log("Selected links:", strategy?.selectedLinks.current);
+
+    setLinkSelectionUpdate(prev => prev + 1); // Trigger re-render
+  }
 
   // ---------- CONTEXT MENU HANDLERS ----------
   
@@ -239,7 +278,9 @@ export function useGraphInteractions(
   return {
     // Node selection
     nodeSelectionUpdate,
+    linkSelectionUpdate,
     handleNodeClick,
+    handleLinkClick,
     
     // Node position fixing
     handleNodeDragEnd,

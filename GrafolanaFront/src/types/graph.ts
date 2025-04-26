@@ -76,6 +76,7 @@ export interface GraphNode {
 
 // Interface for a graph link
 export interface GraphLink {
+    id: string;               // Unique identifier for the link
     key: number;
     transaction_signature: string; // Transaction signature for the link
     program_address: string     // Program that executed the transfer

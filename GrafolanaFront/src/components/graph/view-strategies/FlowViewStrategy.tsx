@@ -57,13 +57,28 @@ class FlowViewStrategy extends BaseViewStrategy {
   }
 
   private assignLinksID(links: GraphLink[]): GraphLink[] {
+    // Assign unique IDs to each link based on the source and target node IDs
+    // If there are multiple links between the same nodes, add the number of links to the ID
+    const seen = new Map<string, number>();
+  
     links = links.map((link) => {
       const sourceNodeID = link.source_account_vertex.id;
       const targetNodeID = link.target_account_vertex.id;
       link.source = sourceNodeID;
       link.target = targetNodeID;
+
+      const key = `${sourceNodeID}-${targetNodeID}`;
+      if (!seen.has(key)) {
+        seen.set(key, 0);
+      } else {
+        seen.set(key, seen.get(key)! + 1);
+      }
+      
+      const linkID = `${sourceNodeID}-${targetNodeID}-${seen.get(key)}`;
+      link.id = linkID;
       return link;
     });
+
     return links;
   }
 
@@ -318,6 +333,7 @@ export function useFlowViewStrategy(): ViewStrategy {
   });
   
   const selectedNodes = useRef<Set<string>>(new Set<string>());
+  const selectedLinks = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
   return new FlowViewStrategy(
@@ -326,5 +342,6 @@ export function useFlowViewStrategy(): ViewStrategy {
     processedDataRef,
     originalDataRef,
     selectedNodes, 
+    selectedLinks,
   );
 }
