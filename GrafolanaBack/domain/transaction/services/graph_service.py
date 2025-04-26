@@ -269,6 +269,7 @@ class GraphService:
                 "router": swap.router,
                 "instruction_name" : swap.instruction_name,
                 "user_addresses": swap.user_addresses,
+                "program_account_vertex": swap.program_account_vertex,
                 "fee": swap.fee,
             }
             if not swap.router:

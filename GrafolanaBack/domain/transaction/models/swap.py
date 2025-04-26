@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Any, Union
 
+from GrafolanaBack.domain.transaction.models.account import AccountVertex
+
 class TransferAccountAddresses(NamedTuple):
     source: str
     destination: str
@@ -20,6 +22,7 @@ class Swap:
     user_addresses: TransferAccountAddresses
     pool_addresses: Union[TransferAccountAddresses, Tuple[str, ...], None]
     parent_router_swap_id: Optional[int] = None
+    program_account_vertex: Optional[AccountVertex] = None
     fee: int = 0
         
     def is_child_swap(self) -> bool:

@@ -126,6 +126,7 @@ export interface Swap {
     program_name: string;
     instruction_name : string;
     pool_addresses: string[];
+    program_account_vertex: AccountVertex;
     fee: number;
 }
 

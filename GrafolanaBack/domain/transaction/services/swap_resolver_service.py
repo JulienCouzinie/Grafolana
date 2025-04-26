@@ -100,6 +100,8 @@ class SwapResolverService:
             program_address = router_swap.program_address,
         )
 
+        router_swap.program_account_vertex = swap_program_account.get_vertex()
+
         # # Get all vertices with the relevant addresses
         # user_source_vertices = [v for v in subgraph.nodes() if v.address == router_swap.get_user_source()]
         # user_dest_vertices = [v for v in subgraph.nodes() if v.address == router_swap.get_user_destination()]
@@ -264,6 +266,8 @@ class SwapResolverService:
             transaction_context = transaction_context,
             program_address = swap.program_address,
         )
+
+        swap.program_account_vertex = swap_program_account.get_vertex()
 
         # get lower key of all the swap's edges
         swap_incoming_transfer_key = min([int(key) for _,_,key in subgraph.edges(keys=True)]) if len(subgraph.edges(keys=True)) > 0 else 0

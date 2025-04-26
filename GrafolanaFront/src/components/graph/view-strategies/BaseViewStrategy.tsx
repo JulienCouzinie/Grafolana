@@ -1,5 +1,5 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType, NodePosition } from '@/types/graph';
+import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType, NodePosition, Swap } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useCallback, useRef, useState } from 'react';
 import { useMetadata } from '../../metadata/metadata-provider';
@@ -243,8 +243,36 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
+    /**
+     * Set the map of swap programs to collapse or expand a specific swap
+     * @param swap - The swap to collapse/expand
+     * @param collapse - true to collapse, false to expand it
+     */
+    protected SetExpandSwapProgram(node: ForceGraphNode): void {
+        // Get the swap id from the swap list in the transaction data
+        const swap = this.originalData.current.transactions[node.account_vertex.transaction_signature].swaps.find(swap => swap.program_account_vertex.id === node.account_vertex.id);
+        
+        if (!swap) {
+            console.error("Swap not found for node:", node);
+            return;
+        }
+        // Set the collapse state for a specific swap program in the data
+        this.mapSwapProgramsCollapsed.current.set(swap.id, true);
+    }
+
     protected CollapseAllSwap(router: boolean, collapse: boolean): void {
         this.SetCollapseAllSwap(router,collapse);
+        this.applyFilters();
+    }
+
+    /**
+     * Collapse/Expand a specific swap program
+     * 
+     * @param swap 
+     * @param collapse 
+     */
+    protected ExpandSwapProgram(node: ForceGraphNode): void {
+        this.SetExpandSwapProgram(node);
         this.applyFilters();
     }
 
@@ -585,7 +613,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         const destUSDString = this.getFormattedUSDValueString(destUSD);
         const feeUSDString = this.getFormattedUSDValueString(feeUSD);
         const baseLine = `Swapped ${sourceAmount}${sourceImage} (${sourceUSDString}) for ${destAmount}${destImage} (${destUSDString})`;
-        const feeLine = feeAmount ? `<br/>Explicit Swap fee: ${feeAmount}${destImage} (${feeUSDString})` : '';
+        const feeLine = feeAmount ? `<br/>Implicit Swap fee: ${feeAmount}${destImage} (${feeUSDString})` : '';
         return baseLine + feeLine + '<br/>';
     };
     
