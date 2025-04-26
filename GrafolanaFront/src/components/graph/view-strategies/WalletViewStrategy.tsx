@@ -303,9 +303,12 @@ class WalletViewStrategy extends BaseViewStrategy {
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
-          c
+          const imageUrl = this.metadataServices.getProgramInfo(compLink.program_address)?.icon;
+          const compositeProgramImage = this.metadataServices.getProgramImage(imageUrl!);
+          const imageHTML = compositeProgramImage ? `<img src="${compositeProgramImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; display: inline-block;">` : '';
+
           const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
-            return `<li>${compositeTransferDetailsHTML}</li>`;
+            return `<li>${imageHTML} ${compositeTransferDetailsHTML}</li>`;
         }).join('')}
         </ul>`
     : '';
