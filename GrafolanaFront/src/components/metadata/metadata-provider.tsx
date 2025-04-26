@@ -9,12 +9,12 @@ import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
 import { AccountType } from "@/types/graph";
+import { StaticGraphicsProvider, useStaticGraphics, StaticGraphicsContextType } from "./static-graphic-provider";
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
   FetchProgramInfosAndCache: (programAddresses: string[]) => Promise<void>;
   FetchLabelsInfosAndCache: (addresses: AddressWithType[], userId?: string, shortenAddress?: boolean) => Promise<void>;
-  //FetchLabelComputedAndCache: (address: string, type: string, shortenedAddress: boolean, userId?: string) => void;
 
   getMintInfo: (mintAddress: string) => MintDTO | null;
   getProgramInfo: (programAddress: string) => Program | null;
@@ -23,22 +23,19 @@ interface MetadataContextType {
   getMintImage: (imageUrl: string | undefined) => HTMLImageElement | null;
   getImageCanvas: (imageUrl: string | undefined, type?: AccountType) => HTMLCanvasElement | null;
   getProgramImage: (imageUrl: string) => HTMLImageElement;
-  walletCanvas: HTMLCanvasElement | null;
-  walletImage: HTMLImageElement | null;
-  feeCanvas: HTMLCanvasElement | null;
-  feeImage: HTMLImageElement | null;
-  burnCanvas: HTMLCanvasElement | null;
-  burnImage: HTMLImageElement | null;
-  mintToCanvas: HTMLCanvasElement | null;
-  mintToImage: HTMLImageElement | null;
+  
   updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
+  
+  // Add the staticGraphic property
+  staticGraphic: StaticGraphicsContextType;
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
 
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const { publicKey } = useWallet();
+  const staticGraphic = useStaticGraphics();
 
   // Caches
   const [
@@ -80,226 +77,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   
   // Create a cache key that includes userId if present
   const getCacheKey = (address: string, uid?: string) => uid ? `${address}:${uid}` : address;
-
-  // Create a default image that will be returned when no cached image is found
-  const defaultMintImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/logo/default.png'; // Path to your default image
-    return img;
-  }, []);
-
-  const walletImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/logo/wallet.png'; // Path to your default image
-    return img;
-  }, []);
-
-  // State for default/wallet canvases
-  const [defaultMintCanvas, setDefaultMintCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [feeCanvas, setFeeCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [walletCanvas, setWalletAccountCanvasState] = useState<HTMLCanvasElement | null>(null);
-  const [defaultProgramCanvas, setDefaultProgramCanvasState] = useState<HTMLCanvasElement | null>(null);
-  const [burnCanvas, setBurnCanvasState] = useState<HTMLCanvasElement | null>(null);
-  const [mintToCanvas, setMintToCanvasState] = useState<HTMLCanvasElement | null>(null);
-
-  // Effect to load and create the default mint canvas
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let isMounted = true; // Flag to prevent state update on unmounted component
-    const img = new window.Image();
-    img.onload = () => {
-      if (isMounted) {
-        try {
-            const canvas = getCanvas(img);
-            setDefaultMintCanvas(canvas);
-        } catch (error) {
-            console.error("Error creating default mint canvas:", error);
-        }
-      }
-    };
-    img.onerror = () => {
-        console.error("Failed to load default mint image for canvas");
-    };
-    img.src = '/logo/default.png'; 
-
-    return () => {
-        isMounted = false; // Cleanup function to set flag false when component unmounts
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-
-    // Effect to load and create the fee canvas
-    useEffect(() => {
-      if (typeof window === 'undefined') return;
-  
-      let isMounted = true; // Flag to prevent state update on unmounted component
-      const img = new window.Image();
-      img.onload = () => {
-        if (isMounted) {
-          try {
-              const canvas = getCanvas(img);
-              setFeeCanvas(canvas);
-          } catch (error) {
-              console.error("Error creating default mint canvas:", error);
-          }
-        }
-      };
-      img.onerror = () => {
-          console.error("Failed to load default mint image for canvas");
-      };
-      img.src = '/fee.png'; 
-  
-      return () => {
-          isMounted = false; // Cleanup function to set flag false when component unmounts
-      };
-    }, []); // Empty dependency array ensures this runs once on mount
-
-  // Effect to load and create the wallet account canvas
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let isMounted = true; // Flag to prevent state update on unmounted component
-    const img = new window.Image();
-    img.onload = () => {
-      if (isMounted) {
-         try {
-            const canvas = getCanvas(img);
-            setWalletAccountCanvasState(canvas);
-         } catch (error) {
-            console.error("Error creating wallet account canvas:", error);
-         }
-      }
-    };
-    img.onerror = () => {
-        console.error("Failed to load wallet account image for canvas");
-    };
-    img.src = '/logo/walletblack.png';
-
-    return () => {
-        isMounted = false; // Cleanup function
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-
-  // Effect to load and create the wallet account canvas
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let isMounted = true; // Flag to prevent state update on unmounted component
-    const img = new window.Image();
-    img.onload = () => {
-      if (isMounted) {
-         try {
-            const canvas = getCanvas(img);
-            setDefaultProgramCanvasState(canvas);
-         } catch (error) {
-            console.error("Error creating wallet account canvas:", error);
-         }
-      }
-    };
-    img.onerror = () => {
-        console.error("Failed to load wallet account image for canvas");
-    };
-    img.src = '/program/default.png';
-
-    return () => {
-        isMounted = false; // Cleanup function
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-
-  // Effect to load and create the wallet account canvas
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let isMounted = true; // Flag to prevent state update on unmounted component
-    const img = new window.Image();
-    img.onload = () => {
-      if (isMounted) {
-         try {
-            const canvas = getCanvas(img);
-            setBurnCanvasState(canvas);
-         } catch (error) {
-            console.error("Error creating burn account canvas:", error);
-         }
-      }
-    };
-    img.onerror = () => {
-        console.error("Failed to load burn account image for canvas");
-    };
-    img.src = '/burn.png';
-
-    return () => {
-        isMounted = false; // Cleanup function
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-
-  // Effect to load and create the mintto account canvas
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let isMounted = true; // Flag to prevent state update on unmounted component
-    const img = new window.Image();
-    img.onload = () => {
-      if (isMounted) {
-         try {
-            const canvas = getCanvas(img);
-            setMintToCanvasState(canvas);
-         } catch (error) {
-            console.error("Error creating mintto account canvas:", error);
-         }
-      }
-    };
-    img.onerror = () => {
-        console.error("Failed to load mintto account image for canvas");
-    };
-    img.src = '/mintto.png';
-
-    return () => {
-        isMounted = false; // Cleanup function
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-  
-  // Create a default image that will be returned when no cached image is found
-  const defaultProgramImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/program/default.png'; // Path to your default image
-    return img;
-  }, []);
-
-  const feeImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/fee.png'; // Path to your default image
-    return img;
-  }, []);
-
-  const burnImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/burn.png'; // Path to your default image
-    return img;
-  }, []);
-
-  const mintToImage = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null; // Return null during server-side rendering
-    }
-    const img = new window.Image();
-    img.src = '/mintto.png'; // Path to your default image
-    return img;
-  }, []);
 
   const preloadImage = useCallback((imageUrl: string, mint: boolean=false) => {
     if (!images.current.has(imageUrl)) {
@@ -388,7 +165,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }    
     
     if (imageUrl=== undefined) {
-      return defaultMintImage;
+      return staticGraphic.defaultMint.image;;
     }
 
     // If image is still loading, return null
@@ -402,8 +179,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     // If no image URL was provided or image failed to load, return default
-    return defaultMintImage;
-  }, [images, defaultMintImage]);
+    return staticGraphic.defaultMint.image;
+  }, [images, staticGraphic.defaultMint.image]);
 
   const getImageCanvas = useCallback((imageUrl: string | undefined, type: AccountType = AccountType.UNKNOWN): HTMLCanvasElement | null => {
     if (typeof window === 'undefined') {
@@ -412,9 +189,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
     if (imageUrl=== undefined) {
       if (type === AccountType.PROGRAM_ACCOUNT) {
-        return defaultProgramCanvas;
+        return staticGraphic.defaultProgram.canvas;
       } else {
-        return defaultMintCanvas;
+        return staticGraphic.defaultMint.canvas;
       }
     }
 
@@ -429,15 +206,15 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     // If no image URL was provided or image failed to load, return default
-    return defaultMintCanvas;
-  }, [canvas, defaultMintCanvas]);
+    return staticGraphic.defaultMint.canvas;
+  }, [canvas, staticGraphic.defaultMint.canvas]);
 
   const getProgramImage = useCallback((imageUrl: string): HTMLImageElement => {
     if (typeof window === 'undefined') { // Type assertion for SSR
       return null as unknown as HTMLImageElement;
     }
-    return images.current.get(imageUrl) || defaultProgramImage || new window.Image();
-  }, [images, defaultProgramImage]);
+    return images.current.get(imageUrl) || staticGraphic.defaultProgram.image || new window.Image();
+  }, [images, staticGraphic.defaultProgram.image]);
 
   const FetchLabelsInfosAndCache = useCallback(async (
     addresses: AddressWithType[], 
@@ -649,6 +426,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   );
 
   return (
+    <StaticGraphicsProvider>
     <MetadataContext.Provider value={{
       FetchMintInfosAndCache,
       FetchProgramInfosAndCache,
@@ -657,24 +435,19 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getMintInfo,
       getMintImage,
       getImageCanvas,
-      walletCanvas,
-      walletImage,
-      feeCanvas,
-      feeImage,
-      burnCanvas,
-      burnImage,
-      mintToCanvas,
-      mintToImage,
-      
+
       getProgramInfo,
       getProgramImage,
       
       getLabel,
       getLabelComputed,
       updateLabel,
+      // Add the staticGraphics object
+      staticGraphic
     }}>
       {children}
     </MetadataContext.Provider>
+    </StaticGraphicsProvider>
   );
 }
 

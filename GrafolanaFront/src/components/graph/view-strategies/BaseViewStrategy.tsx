@@ -483,13 +483,13 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             //console.log("mintInfo", mintInfo.mint_address);
             let mintCanvas;
             if (node.type == AccountType.BURN_ACCOUNT) {
-                mintCanvas = this.metadataServices.burnCanvas;
+                mintCanvas = this.metadataServices.staticGraphic.burn.canvas;
             } else if (node.type == AccountType.MINTTO_ACCOUNT) {
-                mintCanvas = this.metadataServices.mintToCanvas;
+                mintCanvas = this.metadataServices.staticGraphic.mintTo.canvas;
             } else if (node.type == AccountType.WALLET_ACCOUNT){
-                mintCanvas = this.metadataServices.walletCanvas;
+                mintCanvas = this.metadataServices.staticGraphic.wallet.canvas;
             } else if (node.type == AccountType.FEE_ACCOUNT){
-                mintCanvas = this.metadataServices.feeCanvas;
+                mintCanvas = this.metadataServices.staticGraphic.fee.canvas;
             } else if (node.type == AccountType.PROGRAM_ACCOUNT){
                 const progreamImageUrl = this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon;
                 mintCanvas = this.metadataServices.getImageCanvas(progreamImageUrl, AccountType.PROGRAM_ACCOUNT);

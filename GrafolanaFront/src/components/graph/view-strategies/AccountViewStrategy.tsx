@@ -173,7 +173,7 @@ class AccountViewStrategy extends BaseViewStrategy {
     if (node.type === AccountType.PROGRAM_ACCOUNT) {
       nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
     } else if (node.type === AccountType.FEE_ACCOUNT) {
-      nodeImage = this.metadataServices.feeImage;
+      nodeImage = this.metadataServices.staticGraphic.fee.image;
     } else {
       nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
     }
@@ -295,7 +295,7 @@ class AccountViewStrategy extends BaseViewStrategy {
         if (node.type === AccountType.PROGRAM_ACCOUNT) {
           nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
         } else if (node.type === AccountType.FEE_ACCOUNT) {
-          nodeImage = this.metadataServices.feeImage;
+          nodeImage = this.metadataServices.staticGraphic.fee.image;  
         } else {
           nodeImage = this.metadataServices.getMintImage(mintInfo!.image);
         }
