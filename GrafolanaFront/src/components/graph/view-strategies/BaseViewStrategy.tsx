@@ -257,7 +257,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return;
         }
         // Set the collapse state for a specific swap program in the data
-        this.mapSwapProgramsCollapsed.current.set(swap.id, true);
+        this.mapSwapProgramsCollapsed.current.set(swap.id, false);
     }
 
     protected CollapseAllSwap(router: boolean, collapse: boolean): void {
@@ -735,7 +735,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         const isFixed = node.fx !== undefined && node.fy !== undefined;
 
         // Default context menu items available for all strategies
-        return [
+        const menuItems = [
             {
                 label: "Copy Address",
                 action: "copy_address"
@@ -753,8 +753,18 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 action: "toggle_fix_position"
             }
         ];
+        
+        // Add "Collapse Swap Program" option only for program accounts
+        if (node.type === AccountType.PROGRAM_ACCOUNT) {
+            menuItems.push({
+                label: "Expand Swap Program",
+                action: "expand_swap_program"
+            });
+        }
+        
+        return menuItems;
     }
-    
+
     // Default implementation for context menu handler
     handleNodeContextMenu(node: ForceGraphNode, action: string): void {
         switch(action) {
@@ -787,6 +797,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                     // Create a new reference to trigger React state updates
                     const updatedNodes = [...this.processedData.current.nodes];
                     this.processedData.current.nodes = updatedNodes;
+                }
+                break;
+            case "expand_swap_program":
+                // Call the ExpandSwapProgram method to collapse the swap program
+                if (node.type === AccountType.PROGRAM_ACCOUNT) {
+                    this.ExpandSwapProgram(node);
                 }
                 break;
             default:

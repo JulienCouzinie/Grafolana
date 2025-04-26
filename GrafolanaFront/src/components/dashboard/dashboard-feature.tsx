@@ -59,6 +59,16 @@ export default function DashboardFeature() {
         link.target_account_vertex = new AccountVertex(link.target_account_vertex.address, link.target_account_vertex.version, link.target_account_vertex.transaction_signature);
         return link;
       });
+      // Map program_account_vertex of each swaps of each transactiondata to AccountVertex class
+      Object.keys(data.transactions).forEach((key) => {
+        const transaction = data.transactions[key];
+        transaction.swaps.forEach((swap) => {
+          swap.program_account_vertex = new AccountVertex(swap.program_account_vertex.address, swap.program_account_vertex.version, swap.program_account_vertex.transaction_signature);
+        });
+
+      });
+      console.log(data);
+
       return data;
     }, []);
 

@@ -269,7 +269,7 @@ class GraphService:
                 "router": swap.router,
                 "instruction_name" : swap.instruction_name,
                 "user_addresses": swap.user_addresses,
-                "program_account_vertex": swap.program_account_vertex,
+                "program_account_vertex": swap.program_account_vertex.to_dict(),
                 "fee": swap.fee,
             }
             if not swap.router:
@@ -301,20 +301,12 @@ class GraphService:
 
         # Then process them with an index counter
         for index, (source, dest, key, data) in enumerate(sorted_edges, start=1):
-            source_account_vertex=dict()
-            source_account_vertex["address"] = source.address
-            source_account_vertex["version"] = source.version
-            source_account_vertex["transaction_signature"] = source.transaction_signature
-            dest_account_vertex=dict()
-            dest_account_vertex["address"] = dest.address
-            dest_account_vertex["version"] = dest.version
-            dest_account_vertex["transaction_signature"] = dest.transaction_signature
 
             edge_data = {
                 "key": index,
                 "program_address": data["program_address"],
-                "source_account_vertex": source_account_vertex,
-                "target_account_vertex": dest_account_vertex,
+                "source_account_vertex": source.to_dict(),
+                "target_account_vertex": dest.to_dict(),
                 "amount_source": data["amount_source"],
                 "amount_destination": data["amount_destination"],
                 "type": data["transfer_type"],

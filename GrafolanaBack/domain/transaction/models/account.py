@@ -104,3 +104,11 @@ class AccountVertex(NamedTuple):
     address: str
     version: int
     transaction_signature: str
+
+    def to_dict(self) -> Dict[str, str]:
+        """Convert the vertex to a dictionary representation"""
+        return {
+            "address": self.address,
+            "version": str(self.version),
+            "transaction_signature": self.transaction_signature
+        }
