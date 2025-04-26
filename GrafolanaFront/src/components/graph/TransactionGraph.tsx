@@ -234,6 +234,82 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     setRedraw(prev => prev + 1);
   }, []);
 
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+  const [graphDimensions, setGraphDimensions] = useState({ width: 800, height: 600 });
+  
+  // Create resize observer to update graph dimensions when container size changes
+  useEffect(() => {
+    if (!graphContainerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (graphContainerRef.current) {
+        const { offsetWidth, offsetHeight } = graphContainerRef.current;
+        setGraphDimensions({
+          width: offsetWidth,
+          height: offsetHeight
+        });
+      }
+    };
+    
+    // Initial update
+    updateDimensions();
+    
+    // Create resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
+    });
+    
+    resizeObserver.observe(graphContainerRef.current);
+    
+    // Also update when panel collapse state changes
+    if (isPanelCollapsed !== undefined) {
+      updateDimensions();
+    }
+    
+    return () => {
+      if (graphContainerRef.current) {
+        resizeObserver.unobserve(graphContainerRef.current);
+      }
+    };
+  }, [isPanelCollapsed]); // Re-run when panel collapse state changes
+
+  // Add state to track fullscreen status
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  
+  // Function to toggle fullscreen mode
+  const toggleFullscreen = useCallback(() => {
+    if (!graphContainerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      // Enter fullscreen
+      graphContainerRef.current.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      // Exit fullscreen
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch(err => {
+        console.error(`Error attempting to exit fullscreen: ${err.message}`);
+      });
+    }
+  }, []);
+  
+  // Listen for fullscreen changes from other sources (like Esc key)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div className="w-full h-full">
       <MetadataPreloader graphData={apiGraphData} />
@@ -371,12 +447,12 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
             </div>
 
             {/* Force Graph Visualization */}
-            <div className="graph-container">
+            <div className="graph-container" ref={graphContainerRef}>
               <NoSSRForceGraph
                 ref={fgRef}
                 graphData={graphData}
-                width={window ? window.innerWidth * 0.8 : 800} // Responsive width
-                height={window ? window.innerHeight - 150 : 600} // Adjusted height to account for control bar
+                width={graphDimensions.width}
+                height={graphDimensions.height}
                 backgroundColor="#000000"
                 nodeRelSize={8}
                 // Node rendering
@@ -418,6 +494,16 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                 onNodeDragEnd={handleNodeDragEnd}     
                 onBackgroundClick={handleBackGroundClick}           
               />
+              
+              {/* Fullscreen Toggle Button */}
+              <button 
+                onClick={toggleFullscreen}
+                className="fullscreen-toggle-button"
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              >
+                {isFullscreen ? "↙" : "↗"}
+              </button>
             </div>
           </div>
         </Panel>
@@ -514,7 +600,33 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
           overflow: hidden;
           position: relative;
         }
-
+        
+        /* Fullscreen Toggle Button */
+        .fullscreen-toggle-button {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          background-color: ${SOLANA_COLORS.darkGray};
+          color: white;
+          border: none;
+          border-radius: 4px;
+          width: 32px;
+          height: 32px;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          opacity: 0.7;
+          transition: opacity 0.2s ease, background-color 0.2s ease;
+        }
+        
+        .fullscreen-toggle-button:hover {
+          opacity: 1;
+          background-color: ${SOLANA_COLORS.purple};
+        }
+        
         /* Context Menu Styles */
         .context-menu {
           background-color: #1a1a1a;
