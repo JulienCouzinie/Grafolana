@@ -8,6 +8,7 @@ export interface NodePosition {
 }
 
 export class AccountVertex {
+    id: string = '';
     address: string = '';
     version: number = 0;
     transaction_signature: string = '';
@@ -15,9 +16,7 @@ export class AccountVertex {
         this.transaction_signature = transaction_signature;
         this.address = address;
         this.version = version;
-    }
-    get id(): string {
-        return this.address + "_v" + this.version + "_t" + this.transaction_signature;
+        this.id = address + "_v" + version + "_t" + transaction_signature;
     }
 }
 

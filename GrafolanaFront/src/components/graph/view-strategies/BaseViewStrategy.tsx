@@ -287,10 +287,10 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         let node: ForceGraphNode | undefined;
         let amount: number | undefined;
         if (nodeType === "source") {
-            node = data.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
+            node = data.nodes.find(n => n.account_vertex.id === link.source_account_vertex.id);
             amount = cloneDeep(link.amount_source);
         } else {
-            node = data.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+            node = data.nodes.find(n => n.account_vertex.id === link.target_account_vertex.id);
             amount = cloneDeep(link.amount_destination);
         }
         mintAddress = node!.mint_address;
@@ -402,7 +402,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     protected getForceGraphNodebyAccountVertex(nodes: ForceGraphNode[], accountVertex: AccountVertex): ForceGraphNode | undefined {
-        return nodes.find((node) => node.account_vertex.address === accountVertex.address && node.account_vertex.version === accountVertex.version);
+        return nodes.find((node) => node.account_vertex.id === accountVertex.id);
     }
 
     // Track the hovered node directly
@@ -428,17 +428,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         const isHovered = this.hoveredLink && this.hoveredLink === link;
         const linkId = link.id;
         const isSelected = this.selectedLinks.current?.has(linkId) || false; // Check if the link is selected
-        if (isSelected) {
-            // If the link is selected, set the color to purple
-            return {
-                width: 4,
-                color: SOLANA_COLORS.purple,
-                curvature: link.curvature || 0,
-                lineDash: [],
-                arrowLength: 8,
-                arrowColor: SOLANA_COLORS.purple
-            };
-        } else if (isHovered) {
+
+
+        if (isHovered) {
             // If the link is hovered, set the color to blue
             return {
                 width: 4,
@@ -448,7 +440,17 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 arrowLength: 8,
                 arrowColor: SOLANA_COLORS.purple
             };
-        }
+        } else if (isSelected) {
+            // If the link is selected, set the color to purple
+            return {
+                width: 4,
+                color: SOLANA_COLORS.purple,
+                curvature: link.curvature || 0,
+                lineDash: [],
+                arrowLength: 8,
+                arrowColor: SOLANA_COLORS.purple
+            };
+        } 
         return {
             width: 2,
             color: SOLANA_COLORS.darkGray,
@@ -630,9 +632,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             destinationNode = link.target as ForceGraphNode;
         } else {
             console.log("Link source or target is not a ForceGraphNode instance. Attempting to find nodes by address.");
-            // Find nodes by address if they're not direct references
-            sourceNode = this.originalData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
-            destinationNode = this.originalData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+            // Find nodes by id
+            sourceNode = this.originalData.current.nodes.find(n => n.account_vertex.id === link.source_account_vertex.id);
+            destinationNode = this.originalData.current.nodes.find(n => n.account_vertex.id === link.target_account_vertex.id);
         }
 
         if (!sourceNode || !destinationNode) {
