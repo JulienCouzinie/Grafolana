@@ -361,12 +361,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 return this.filterTransfer(data, link, "source") && this.filterTransfer(data, link, "destination");
             }
 
-            // const filterTranfser = (link:ForceGraphLink, nodeType: string):boolean => {
-            //     return true;
-
-            // }
-
-            //if ()
             if (link.type === TransferType.SWAP_OUTGOING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
                 return this.filterTransfer(data, link, "destination");
             }
@@ -379,6 +373,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
 
     protected applyFilters() {
+        this.saveCurrentNodePositions()
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
 
@@ -390,7 +385,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         this.applyTransferFilters(data);
 
-        this.saveCurrentNodePositions()
+        
         this.forceReProcess(data); // Trigger reprocessing with the updated data
         this.restoreNodePositions(); // Restore node positions after reprocessing
     }
@@ -487,8 +482,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         if (mintInfo) {
             //console.log("mintInfo", mintInfo.mint_address);
             let mintCanvas;
-            if (node.type == AccountType.WALLET_ACCOUNT){
-                mintCanvas = this.metadataServices.walletAccountCanvasState;
+            if (node.type == AccountType.BURN_ACCOUNT) {
+                mintCanvas = this.metadataServices.burnCanvas;
+            } else if (node.type == AccountType.MINTTO_ACCOUNT) {
+                mintCanvas = this.metadataServices.mintToCanvas;
+            } else if (node.type == AccountType.WALLET_ACCOUNT){
+                mintCanvas = this.metadataServices.walletCanvas;
             } else if (node.type == AccountType.FEE_ACCOUNT){
                 mintCanvas = this.metadataServices.feeCanvas;
             } else if (node.type == AccountType.PROGRAM_ACCOUNT){
@@ -518,13 +517,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         }
 
         // Draw special icons based on node type
-        if (node.type == "BURN_ACCOUNT") {
-            this.drawNodeIcon(ctx, node, nodeSize, '/burn.png');
-        } else if (node.type == "MINTTO_ACCOUNT") {
-            this.drawNodeIcon(ctx, node, nodeSize, '/mintto.png');
-        } else if (node.type == "STAKE_ACCOUNT") {
+        if (node.type == AccountType.STAKE_ACCOUNT) {
             this.drawNodeIcon(ctx, node, nodeSize, '/stake.png');
-        } else if (node.is_pool) {
+        } else if (node.is_pool && node.type !== AccountType.MINTTO_ACCOUNT && node.type !== AccountType.BURN_ACCOUNT) {
             this.drawNodeIcon(ctx, node, nodeSize, '/pool.png');
         }
 
@@ -582,12 +577,13 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     };
     
     protected formatNormalAmount = (
+        link: ForceGraphLink,
         amount: string,
         image: string,
         usd: number | null
     ): string => {
         const usdString = usd !== null ? `$${usd.toFixed(5)}` : 'N/A';
-        return `Amount: ${amount}${image} (${usdString})<br/>`;
+        return `${link.type}: Amount: ${amount}${image} (${usdString})<br/>`;
     };
 
     protected calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
@@ -687,7 +683,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 feeUSD
             );
         })()
-        : this.formatNormalAmount(sourceAmountDetails.amountString, sourceAmountDetails.imageHTML, sourceUSD);
+        : this.formatNormalAmount(link, sourceAmountDetails.amountString, sourceAmountDetails.imageHTML, sourceUSD);
         return TransferDetailsHTML;
     }
 

@@ -23,10 +23,14 @@ interface MetadataContextType {
   getMintImage: (imageUrl: string | undefined) => HTMLImageElement | null;
   getImageCanvas: (imageUrl: string | undefined, type?: AccountType) => HTMLCanvasElement | null;
   getProgramImage: (imageUrl: string) => HTMLImageElement;
-  walletAccountCanvasState: HTMLCanvasElement | null;
-  defaultWalletImage: HTMLImageElement | null;
+  walletCanvas: HTMLCanvasElement | null;
+  walletImage: HTMLImageElement | null;
   feeCanvas: HTMLCanvasElement | null;
   feeImage: HTMLImageElement | null;
+  burnCanvas: HTMLCanvasElement | null;
+  burnImage: HTMLImageElement | null;
+  mintToCanvas: HTMLCanvasElement | null;
+  mintToImage: HTMLImageElement | null;
   updateLabel: (address: string, label: string, description?: string, userId?: string, type?: AddressType) => Promise<Label>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
 }
@@ -63,6 +67,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     deleteFromPrograms, 
     clearPrograms
   ] = useImmediateState<string, Program | null>(new Map());
+  
   const images = useRef(new Map<string, HTMLImageElement>());
   const canvas = useRef(new Map<string, HTMLCanvasElement>());
 
@@ -86,7 +91,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return img;
   }, []);
 
-  const defaultWalletImage = useMemo(() => {
+  const walletImage = useMemo(() => {
     if (typeof window === 'undefined') {
       return null; // Return null during server-side rendering
     }
@@ -98,8 +103,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   // State for default/wallet canvases
   const [defaultMintCanvas, setDefaultMintCanvas] = useState<HTMLCanvasElement | null>(null);
   const [feeCanvas, setFeeCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [walletAccountCanvasState, setWalletAccountCanvasState] = useState<HTMLCanvasElement | null>(null);
-  const [defaultProgramCanvasState, setDefaultProgramCanvasState] = useState<HTMLCanvasElement | null>(null);
+  const [walletCanvas, setWalletAccountCanvasState] = useState<HTMLCanvasElement | null>(null);
+  const [defaultProgramCanvas, setDefaultProgramCanvasState] = useState<HTMLCanvasElement | null>(null);
+  const [burnCanvas, setBurnCanvasState] = useState<HTMLCanvasElement | null>(null);
+  const [mintToCanvas, setMintToCanvasState] = useState<HTMLCanvasElement | null>(null);
 
   // Effect to load and create the default mint canvas
   useEffect(() => {
@@ -205,6 +212,58 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     };
   }, []); // Empty dependency array ensures this runs once on mount
 
+  // Effect to load and create the wallet account canvas
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let isMounted = true; // Flag to prevent state update on unmounted component
+    const img = new window.Image();
+    img.onload = () => {
+      if (isMounted) {
+         try {
+            const canvas = getCanvas(img);
+            setBurnCanvasState(canvas);
+         } catch (error) {
+            console.error("Error creating burn account canvas:", error);
+         }
+      }
+    };
+    img.onerror = () => {
+        console.error("Failed to load burn account image for canvas");
+    };
+    img.src = '/burn.png';
+
+    return () => {
+        isMounted = false; // Cleanup function
+    };
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  // Effect to load and create the mintto account canvas
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let isMounted = true; // Flag to prevent state update on unmounted component
+    const img = new window.Image();
+    img.onload = () => {
+      if (isMounted) {
+         try {
+            const canvas = getCanvas(img);
+            setMintToCanvasState(canvas);
+         } catch (error) {
+            console.error("Error creating mintto account canvas:", error);
+         }
+      }
+    };
+    img.onerror = () => {
+        console.error("Failed to load mintto account image for canvas");
+    };
+    img.src = '/mintto.png';
+
+    return () => {
+        isMounted = false; // Cleanup function
+    };
+  }, []); // Empty dependency array ensures this runs once on mount
+  
   // Create a default image that will be returned when no cached image is found
   const defaultProgramImage = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -215,13 +274,30 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return img;
   }, []);
 
-  // Create a default image that will be returned when no cached image is found
   const feeImage = useMemo(() => {
     if (typeof window === 'undefined') {
       return null; // Return null during server-side rendering
     }
     const img = new window.Image();
     img.src = '/fee.png'; // Path to your default image
+    return img;
+  }, []);
+
+  const burnImage = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null; // Return null during server-side rendering
+    }
+    const img = new window.Image();
+    img.src = '/burn.png'; // Path to your default image
+    return img;
+  }, []);
+
+  const mintToImage = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null; // Return null during server-side rendering
+    }
+    const img = new window.Image();
+    img.src = '/mintto.png'; // Path to your default image
     return img;
   }, []);
 
@@ -336,7 +412,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
     if (imageUrl=== undefined) {
       if (type === AccountType.PROGRAM_ACCOUNT) {
-        return defaultProgramCanvasState;
+        return defaultProgramCanvas;
       } else {
         return defaultMintCanvas;
       }
@@ -581,10 +657,14 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getMintInfo,
       getMintImage,
       getImageCanvas,
-      walletAccountCanvasState,
-      defaultWalletImage,
+      walletCanvas,
+      walletImage,
       feeCanvas,
       feeImage,
+      burnCanvas,
+      burnImage,
+      mintToCanvas,
+      mintToImage,
       
       getProgramInfo,
       getProgramImage,

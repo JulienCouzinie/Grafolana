@@ -244,7 +244,7 @@ class WalletViewStrategy extends BaseViewStrategy {
     } else if (node.type === AccountType.FEE_ACCOUNT) {
       nodeImage = this.metadataServices.feeImage;
     } else {
-      nodeImage = this.metadataServices.defaultWalletImage;
+      nodeImage = this.metadataServices.walletImage;
     }
 
 
@@ -341,7 +341,7 @@ class WalletViewStrategy extends BaseViewStrategy {
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
         let nodeImage;
         if (node.type == AccountType.WALLET_ACCOUNT){
-          nodeImage = this.metadataServices.defaultWalletImage;
+          nodeImage = this.metadataServices.walletImage;
         } else if (node.type === AccountType.PROGRAM_ACCOUNT) {
           nodeImage = this.metadataServices.getProgramImage(this.metadataServices.getProgramInfo(node.account_vertex.address)?.icon!);
         } else if (node.type === AccountType.FEE_ACCOUNT) {
