@@ -502,7 +502,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                 aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                 title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               >
-                {isFullscreen ? "↙" : "↗"}
+                {isFullscreen ? "⛶" : "⛶"}
               </button>
             </div>
           </div>
