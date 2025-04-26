@@ -376,8 +376,7 @@ class GraphService:
                 "fees": {"fee": context.fee, "priority_fee": context.priority_fee},
                 "signers": list(context.signer_wallets),
                 "swaps": GraphService._get_swaps_data(context),
-                "pre_account_version" : context.account_repository.get_pre_state_accounts(),
-                "post_account_version" : context.account_repository.get_post_state_accounts(),
+                "accounts" : context.account_repository.get_all_addresses(),
                 "mint_usd_price_ratio": {}
             }
 

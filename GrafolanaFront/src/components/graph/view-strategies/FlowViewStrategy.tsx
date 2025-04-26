@@ -245,6 +245,53 @@ class FlowViewStrategy extends BaseViewStrategy {
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
         const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
+        // Component to display transactions where this account is involved
+        const AccountTransactions = () => {
+          const [showTransactions, setShowTransactions] = React.useState<boolean>(false);
+          
+          // Find transactions involving this account
+          const transactions = Object.entries(this.originalData.current.transactions)
+            .filter(([_, txData]) => txData.accounts.includes(node.account_vertex.address))
+            .map(([signature, _]) => signature);
+          
+          // Only render if there are transactions
+          if (transactions.length === 0) return null;
+          
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div 
+                onClick={() => setShowTransactions(!showTransactions)}
+                style={{ 
+                  cursor: 'pointer', 
+                  color: '#7B61FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ marginRight: '4px' }}>
+                  {showTransactions ? '▼' : '►'}
+                </span>
+                <span>
+                  {showTransactions ? 'Hide transactions' : 'Show transactions'}
+                </span>
+              </div>
+              
+              {showTransactions && (
+                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                  {transactions.map((signature, txIndex) => (
+                    <li key={txIndex} style={{ margin: '4px 0' }}>
+                      <AddressLabel 
+                        address={signature} 
+                        shortened={true} 
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        };
         
         // Create authorities list as a React component
         const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
@@ -288,9 +335,7 @@ class FlowViewStrategy extends BaseViewStrategy {
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
               <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
               {authoritiesComponent}
-              <b>Token Balance:</b> {node.balance_token}<br/>
-              <b>Lamport Balance:</b> {node.balance_lamport}
-              
+              <AccountTransactions />
             </div>
           </React.Fragment>
         );

@@ -133,6 +133,10 @@ class AccountRepository:
         account.mint_address = mint_address
         return True
     
+    def get_all_addresses(self) -> List[str]:
+        """Get all account addresses in the repository"""
+        return list(self.accounts.keys())
+    
     def get_pre_state_accounts(self) -> List[AccountVersion]:
         """Get all accounts in their initial state (version 0)"""
         pre_state = []

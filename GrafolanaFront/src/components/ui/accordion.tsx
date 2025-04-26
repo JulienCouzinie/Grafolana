@@ -26,7 +26,6 @@ export function AccordionItem({ title, children, defaultOpen = false, className 
       >
         <span className="accordion-title">{title}</span>
         <svg
-          // Modified the transform rotation logic to point down when open, right when closed
           className={`w-5 h-5 transition-transform ${isOpen ? '' : 'transform -rotate-90'} accordion-arrow`}
           fill="none"
           stroke="currentColor"
@@ -37,13 +36,12 @@ export function AccordionItem({ title, children, defaultOpen = false, className 
       </button>
       <div
         ref={contentRef}
-        className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-screen' : 'max-h-0'}`}
+        className={`transition-all duration-200 ${isOpen ? 'max-h-[1000px] overflow-y-auto' : 'max-h-0 overflow-hidden'}`}
         aria-hidden={!isOpen}
       >
         <div className="p-6">{children}</div>
       </div>
       
-      {/* Add styles for the accordion arrow hover state */}
       <style jsx>{`
         .accordion-button:hover .accordion-arrow {
           stroke: #9945FF; /* Solana purple */

@@ -106,6 +106,7 @@ export interface Fees {
 
 export interface TransactionData {
     transaction_signature: string; 
+    accounts: string[];
     fees: Fees;
     signers: string[];
     swaps: Swap[];
