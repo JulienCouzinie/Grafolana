@@ -234,6 +234,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     setRedraw(prev => prev + 1);
   }, []);
 
+  // Update the ref to target the top-level container instead of just the graph area
+  const containerRef = useRef<HTMLDivElement>(null);
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const [graphDimensions, setGraphDimensions] = useState({ width: 800, height: 600 });
   
@@ -276,13 +278,13 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   // Add state to track fullscreen status
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   
-  // Function to toggle fullscreen mode
+  // Function to toggle fullscreen mode - updated to use the top-level container
   const toggleFullscreen = useCallback(() => {
-    if (!graphContainerRef.current) return;
+    if (!containerRef.current) return;
     
     if (!document.fullscreenElement) {
       // Enter fullscreen
-      graphContainerRef.current.requestFullscreen().then(() => {
+      containerRef.current.requestFullscreen().then(() => {
         setIsFullscreen(true);
       }).catch(err => {
         console.error(`Error attempting to enable fullscreen: ${err.message}`);
@@ -311,7 +313,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   }, []);
 
   return (
-    <div className="w-full h-full">
+    // Apply the ref to the top-level container
+    <div className="w-full h-full" ref={containerRef}>
       <MetadataPreloader graphData={apiGraphData} />
       {/* Context Menu */}
       {contextMenu.isOpen && contextMenu.node && (
