@@ -41,6 +41,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Filters
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
     hideFees: React.RefObject<boolean>;
+    hideSwaps: React.RefObject<boolean>;
     minSolAmount: React.RefObject<number>;
     maxSolAmount: React.RefObject<number|null>;
     minTokenAmount: React.RefObject<number>;
@@ -75,6 +76,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         this.processGraphDataCallBack = useRef(null);
         this.hideFees = useRef(false);
+        this.hideSwaps = useRef(false);
 
         this.minSolAmount = useRef(0);
         this.maxSolAmount = useRef(null);
@@ -404,11 +406,38 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
+    /**
+     * Apply filter to hide/show swaps transfers in the graph
+     * filter all transfers that have a swap_parent_id or parent_router_swap_id 
+     */
+    protected ApplyHideSwaps(data: GraphData): void {
+        // Filter out the links that have a swap_parent_id or parent_router_swap_id
+        data.links = data.links.filter((link) => {
+            if (link.swap_parent_id !== undefined || link.parent_router_swap_id !== undefined) {
+                return !this.hideSwaps.current;
+            }
+            return true;
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
+
+    /**
+     * Hide/Show swaps transfers in graph
+     */
+    protected HideSwaps(hide: boolean): void {
+        this.hideSwaps.current = hide;
+        this.applyFilters();
+    }
+
 
     protected applyFilters() {
         this.saveCurrentNodePositions()
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
+
+        // Apply HideSwaps filter
+        this.ApplyHideSwaps(data);
 
         // Collapse or expand swap programs based on the current state
         this.ApplyCollapseExpandSwapPrograms(data);
@@ -416,10 +445,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Hide fees if the option is enabled
         this.ApplyHideFees(data);
 
+
         this.applyTransferFilters(data);
 
-        
-        this.forceReProcess(data); // Trigger reprocessing with the updated data
+        this.forceReProcess(data); // Trigger reprocessing by the view with the updated data
+
         this.restoreNodePositions(); // Restore node positions after reprocessing
     }
 
