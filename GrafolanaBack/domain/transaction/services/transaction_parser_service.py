@@ -1,3 +1,4 @@
+import copy
 import time
 from typing import Dict, List, Optional, Set, Tuple, Any, cast
 
@@ -246,9 +247,14 @@ class TransactionParserService:
             logger.error(f"Error fetching transaction {str(signature)}: {str(error)}", exc_info=True)
             return None    
 
-    def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, parent_swap_id: int = None, parent_router_swap_id: int = None) -> None:
+    def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, _parent_swap_id: int = None, _parent_router_swap_id: int = None) -> None:
         """Process a list of instructions and its inner instructions recursively."""
+        
+
         for instruction in instructions:
+            # Prevent parent_swap_id and parent_router_swap_id from being passed to sibling instructions
+            parent_swap_id = _parent_swap_id
+            parent_router_swap_id = _parent_router_swap_id
             # Try to parse as a transfer
             transfer_parsed = self.instruction_parser_service.parse_transfer(instruction, context, parent_swap_id, parent_router_swap_id)
             
