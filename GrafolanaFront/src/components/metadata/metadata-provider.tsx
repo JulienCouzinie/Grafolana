@@ -463,7 +463,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     let nodeGraphic: StaticGraphic;
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? getMintInfo(mintAddress) : null;
-    if (node.type === AccountType.BURN_ACCOUNT) {
+    if (isSpam(node.account_vertex.address)) {
+      nodeGraphic = staticGraphic.spam;
+    } else if (node.type === AccountType.BURN_ACCOUNT) {
       nodeGraphic = staticGraphic.burn;
     } else if (node.type === AccountType.MINTTO_ACCOUNT) {
       nodeGraphic = staticGraphic.mintTo;
