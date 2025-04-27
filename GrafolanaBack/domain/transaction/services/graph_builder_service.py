@@ -29,7 +29,7 @@ class GraphBuilderService:
         
         This method:
         1. Finds the appropriate account version to use as the source
-        2. Creates a new version with updated balances if needed
+        2. Creates a new version with updated balances if needed to avoid cycles
         3. Updates account metadata like owner, type, etc.
         
         Returns:
