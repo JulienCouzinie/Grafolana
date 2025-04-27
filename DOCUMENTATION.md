@@ -35,3 +35,26 @@ Setup:
 
     cd GrafolanaBack
     python -m alembic upgrade head
+
+## Settinp Up the Frontend
+    1. Open frontend folder
+    cd GrafolanaFront
+
+    2. Install the dependencies
+    pnpm install
+
+    3. Build the artifacts
+    pnpm build
+
+
+## Run the projet:
+
+    1. Run Backend:
+    cd GrafolanaBack
+    flask run --no-reload --no-debug
+
+    2. Run Frontend:
+    cd GrafolanaFront
+    pnpm start
+
+
