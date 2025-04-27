@@ -1,7 +1,7 @@
 """Create spam addresses table
 
-Revision ID: spam_addresses_table
-Revises: sol_prices_table
+Revision ID: 005_initial_spam_addresses_table
+Revises: 004_initial_sol_prices_table
 Create Date: 2025-04-27
 """
 from alembic import op
@@ -9,23 +9,14 @@ import sqlalchemy as sa
 from datetime import datetime
 
 # revision identifiers, used by Alembic.
-revision = 'spam_addresses_table'
-down_revision = 'sol_prices_table'
+revision = '005_initial_spam_addresses_table'
+down_revision = '004_initial_sol_prices_table'
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # Create enum type if it doesn't exist
-    op.execute("""
-        DO $$
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'creator') THEN
-                CREATE TYPE creator AS ENUM ('DEFAULT', 'ADMIN', 'OWNER', 'USER');
-            END IF;
-        END$$;
-    """)
-    
+
     # Create spam table
     op.create_table('spam',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -35,7 +26,7 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(), nullable=False, default=datetime.utcnow),
         sa.Column('updated_at', sa.DateTime(), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('address', 'user_id', name='uix_address_user_id')
+        sa.UniqueConstraint('address', 'user_id', name='uix_spam_address_user_id')
     )
     
     # Create index on address for faster lookups
@@ -44,11 +35,18 @@ def upgrade() -> None:
     # Insert default spam addresses
     op.execute("""
     INSERT INTO spam (address, creator, created_at, updated_at) VALUES
-    ('9WzDXwBbmkg8ZTbNMqUxk32hKYtG2DVR7eD7FeQRqWPD', 'DEFAULT', NOW(), NOW()),
-    ('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', 'DEFAULT', NOW(), NOW()),
-    ('4NLFD2VR6Q3yPi3CdaQ1hYJEKWUyJ8xQUEUL6YQwwkHB', 'DEFAULT', NOW(), NOW()),
-    ('7oPG1sX6ApoCH67XhRCTCDsByQNaiK3sRdsBRbArJAiW', 'ADMIN', NOW(), NOW()),
-    ('6XU36wCxWobLx5Rtsb58kmgAJKVYmMVqy4SHXxENAyHy', 'ADMIN', NOW(), NOW())
+    ('2Tq5W7ydAHFuHbSJ1KTcKAsRaHBAQzoCFiVuNwtagns2', 'DEFAULT', NOW(), NOW()),
+    ('H5ft7mjHYafZJCP9UPRu7yP66enrL9t8Hc9ohwyoC9bL', 'DEFAULT', NOW(), NOW()),
+    ('Hddi6gcFVbpBSTfwbkT1QGf1neY4m7gwtoG7prZvjRHm', 'DEFAULT', NOW(), NOW()),
+    ('SPL8B9sjruc9fA9jEuc8ffhx2ybNENwKUNJdwmdyoXn', 'DEFAULT', NOW(), NOW()),
+    ('7pHgWCptaWUThDohtyAbbzejmjnUZZD5PMtvFLwjAdTW', 'DEFAULT', NOW(), NOW()),
+    ('HLSHeeM2Q141C4PEYMeeKtWeP4uVQeYsk4fmVCMxhi2F', 'DEFAULT', NOW(), NOW()),
+    ('55BRWmA3HV1JvG8U9Uq6R9goEJ6fFzR8txzeE8hr4Fe8', 'DEFAULT', NOW(), NOW()),
+    ('66ez2DrxtKWN2yr5PLTACxKwWHawQDVHJPHevKw3wkZJ', 'DEFAULT', NOW(), NOW()),
+    ('4wWTK5tkUr3WpKV9cZJ8NpJAo8uzQx6Z9VRCjawbDDjG', 'DEFAULT', NOW(), NOW()),
+    ('fLiPgg2yTvmgfhiPkKriAHkDmmXGP6CdeFX9UF5o7Zc', 'DEFAULT', NOW(), NOW()),
+    ('Habp5bncMSsBC3vkChyebepym5dcTNRYeg2LVG464E96', 'DEFAULT', NOW(), NOW()),
+    ('5Hr7wZg7oBpVhH5nngRqzr5W7ZFUfCsfEhbziZJak7fr', 'DEFAULT', NOW(), NOW())
     """)
 
 

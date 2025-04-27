@@ -1,7 +1,7 @@
 """create solana_transactions table
 
-Revision ID: initial_solana_transactions # Replace with actual ID
-Revises:
+Revision ID: 002_initial_solana_transactions # Replace with actual ID
+Revises: 001_initial_labels_table
 Create Date: 2025-04-16
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 # from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'solana_transactions' # Replace with actual ID
-down_revision = 'initial_labels_table'
+revision = '002_initial_solana_transactions' # Replace with actual ID
+down_revision = '001_initial_labels_table'
 branch_labels = None
 depends_on = None
 

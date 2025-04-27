@@ -1,6 +1,6 @@
-"""Initial labels table
+"""001_Initial labels table
 
-Revision ID: initial_labels_table
+Revision ID: 001_initial_labels_table
 Create Date: 2025-03-29
 
 """
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'initial_labels_table'
+revision = '001_initial_labels_table'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,7 +27,7 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('address', 'user_id', name='uix_address_user_id')
+        sa.UniqueConstraint('address', 'user_id', name='uix_label_address_user_id')
     )
     op.create_index(op.f('ix_labels_address'), 'labels', ['address'], unique=False)
 

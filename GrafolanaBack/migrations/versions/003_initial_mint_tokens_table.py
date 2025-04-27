@@ -1,7 +1,7 @@
 """Mint tokens table
 
-Revision ID: mint_tokens_table
-Revises: solana_transactions
+Revision ID: 003_initial_mint_tokens_table
+Revises: 002_initial_solana_transactions
 Create Date: 2025-04-17
 """
 from alembic import op
@@ -9,8 +9,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'mint_tokens_table'
-down_revision = 'solana_transactions'
+revision = '003_initial_mint_tokens_table'
+down_revision = '002_initial_solana_transactions'
 branch_labels = None
 depends_on = None
 

@@ -26,7 +26,7 @@ class Label(Base):
 
     # Ensure we don't have duplicate labels for the same address and user
     __table_args__ = (
-        UniqueConstraint('address', 'user_id', name='uix_address_user_id'),
+        UniqueConstraint('address', 'user_id', name='uix_label_address_user_id'),
     )
 
     def to_dict(self):

@@ -1,15 +1,15 @@
 """Create sol_prices table
 
-Revision ID: sol_prices_table
-Revises: 
+Revision ID: 004_sol_prices_table
+Revises: 003_initial_mint_tokens_table
 Create Date: 2025-04-17
 """
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = 'sol_prices_table'
-down_revision = 'mint_tokens_table'
+revision = '004_initial_sol_prices_table'
+down_revision = '003_initial_mint_tokens_table'
 branch_labels = None
 depends_on = None
 
