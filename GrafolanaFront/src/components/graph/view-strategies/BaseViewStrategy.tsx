@@ -42,6 +42,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
     hideFees: React.RefObject<boolean>;
     hideSwaps: React.RefObject<boolean>;
+    hideCreateAccounts: React.RefObject<boolean>;
     minSolAmount: React.RefObject<number>;
     maxSolAmount: React.RefObject<number|null>;
     minTokenAmount: React.RefObject<number>;
@@ -77,6 +78,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.processGraphDataCallBack = useRef(null);
         this.hideFees = useRef(false);
         this.hideSwaps = useRef(false);
+        this.hideCreateAccounts = useRef(false);
 
         this.minSolAmount = useRef(0);
         this.maxSolAmount = useRef(null);
@@ -424,12 +426,39 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
     /**
      * Hide/Show swaps transfers in graph
+     * * @param hide - true to hide swaps, false to show them
      */
     protected HideSwaps(hide: boolean): void {
         this.hideSwaps.current = hide;
         this.applyFilters();
     }
 
+    /** 
+     * Apply filter to hide/show create accounts transfers in the graph
+     * filter all transfers that have a type of CREATE_ACCOUNT
+     * * @param hide - true to hide create accounts, false to show them
+    */
+    protected HideCreateAccounts(hide: boolean): void {
+        this.hideCreateAccounts.current = hide;
+        this.applyFilters();
+    }
+
+    /**
+     * Apply filter to hide create accounts transfers in the graph
+     * * filter all transfers that have a type of CREATE_ACCOUNT
+     * * @param data - graph data to filter
+     */
+    protected ApplyHideCreateAccounts(data: GraphData): void {
+        // Filter out the links that have a type of CREATE_ACCOUNT
+        data.links = data.links.filter((link) => {
+            if (link.type === TransferType.CREATE_ACCOUNT) {
+                return !this.hideCreateAccounts.current;
+            }
+            return true;
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
 
     protected applyFilters() {
         this.saveCurrentNodePositions()
@@ -445,6 +474,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Hide fees if the option is enabled
         this.ApplyHideFees(data);
 
+        this.ApplyHideCreateAccounts(data); // Hide create accounts if the option is enabled
 
         this.applyTransferFilters(data);
 
@@ -842,6 +872,35 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     getGeneralContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        // CreateAccountsOptions component to handle showing/hiding create accounts
+        const CreateAccountsOptions = () => {
+            // Track the state of the checkbox based on the current hideCreateAccounts value
+            const [hideCreateAccountsChecked, setHideCreateAccountsChecked] = React.useState<boolean>(this.hideCreateAccounts.current);
+                    
+            // Handle checkbox change
+            const handleHideCreateAccountsChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+                const isChecked = event.target.checked;
+                setHideCreateAccountsChecked(isChecked);
+                this.HideCreateAccounts(isChecked);
+            };
+                    
+            return (
+                <div className="general-options" style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={hideCreateAccountsChecked}
+                                onChange={handleHideCreateAccountsChange}
+                                style={{ marginRight: '8px' }}
+                            />
+                            <span>Hide create accounts</span>
+                        </label>
+                    </div>
+                </div>
+            );
+        }
+
         // FeesOptions component to handle showing/hiding fees
         const FeesOptions = () => {
             // Track the state of the checkbox based on the current hideFees value
@@ -1028,6 +1087,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             <div className="strategy-panel-content">
                 <SwapOptions />
                 <FeesOptions />
+                <CreateAccountsOptions />
+                {/* Render the strategy-specific content if provided */}
                 {(strategyContent) ? strategyContent : ""}
             </div>
         );
