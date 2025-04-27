@@ -43,6 +43,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     hideFees: React.RefObject<boolean>;
     hideSwaps: React.RefObject<boolean>;
     hideCreateAccounts: React.RefObject<boolean>;
+    hideCloseAccounts: React.RefObject<boolean>;
+    hideSpam: React.RefObject<boolean>;
+
     minSolAmount: React.RefObject<number>;
     maxSolAmount: React.RefObject<number|null>;
     minTokenAmount: React.RefObject<number>;
@@ -79,6 +82,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.hideFees = useRef(false);
         this.hideSwaps = useRef(false);
         this.hideCreateAccounts = useRef(false);
+        this.hideCloseAccounts = useRef(false);
+        this.hideSpam = useRef(false);
 
         this.minSolAmount = useRef(0);
         this.maxSolAmount = useRef(null);
@@ -460,10 +465,70 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
+    /**
+     * Hide/Show close accounts transfers in graph
+     * * @param hide - true to hide close accounts, false to show them
+     */
+    protected HideCloseAccounts(hide: boolean): void {
+        this.hideCloseAccounts.current = hide;
+        this.applyFilters();
+    }
+
+    /**
+     * Apply filter to hide/show close accounts transfers in the graph
+     * filter all transfers that have a type of CLOSE_ACCOUNT
+     * * @param data - graph data to filter
+     */
+    protected ApplyHideCloseAccounts(data: GraphData): void {
+        // Filter out the links that have a type of CLOSE_ACCOUNT
+        data.links = data.links.filter((link) => {
+            if (link.type === TransferType.CLOSE_ACCOUNT) {
+                return !this.hideCloseAccounts.current;
+            }
+            return true;
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
+
+    /**
+     * Hide/Show spam
+     * Hide/Show transaction that have a signer that is not in the list of known spam addresses
+     * * @param hide - true to hide spam, false to show them
+     */
+    protected HideSpam(hide: boolean): void {
+        this.hideSpam.current = hide;
+        this.applyFilters();
+    }
+
+    /**
+     * Apply filter to hide/show spam transfers in the graph
+     * filter all transfers that have a signer that is not in the list of known spam addresses
+     * * @param data - graph data to filter
+     */
+    protected ApplyHideSpam(data: GraphData): void {
+        // Filter out the links that have a signer that is not in the list of known spam addresses
+        data.links = data.links.filter((link) => {
+            const transactionData = this.originalData.current.transactions[link.transaction_signature];
+            if (transactionData && transactionData.signers) {
+                const isSpam = transactionData.signers.some((signer) => {
+                    return this.metadataServices.isSpam(signer);
+                });
+                return !isSpam || !this.hideSpam.current;
+            }
+            return true;
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
+
     protected applyFilters() {
         this.saveCurrentNodePositions()
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
+
+        // Apply HideSpam filter
+        this.ApplyHideSpam(data);
 
         // Apply HideSwaps filter
         this.ApplyHideSwaps(data);
@@ -475,6 +540,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.ApplyHideFees(data);
 
         this.ApplyHideCreateAccounts(data); // Hide create accounts if the option is enabled
+
+        this.ApplyHideCloseAccounts(data); // Hide close accounts if the option is enabled
 
         this.applyTransferFilters(data);
 
@@ -872,6 +939,35 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     }
 
     getGeneralContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        // SPam options to handle showing/hiding spam
+        const SpamOptions = () => {
+            // Track the state of the checkbox based on the current hideSpam value
+            const [hideSpamChecked, setHideSpamChecked] = React.useState<boolean>(this.hideSpam.current);
+                    
+            // Handle checkbox change
+            const handleHideSpamChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+                const isChecked = event.target.checked;
+                setHideSpamChecked(isChecked);
+                this.HideSpam(isChecked);
+            };
+                    
+            return (
+                <div className="general-options" style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={hideSpamChecked}
+                                onChange={handleHideSpamChange}
+                                style={{ marginRight: '8px' }}
+                            />
+                            <span>Hide spam</span>
+                        </label>
+                    </div>
+                </div>
+            );
+        }
+
         // CreateAccountsOptions component to handle showing/hiding create accounts
         const CreateAccountsOptions = () => {
             // Track the state of the checkbox based on the current hideCreateAccounts value
@@ -895,6 +991,35 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                                 style={{ marginRight: '8px' }}
                             />
                             <span>Hide create accounts</span>
+                        </label>
+                    </div>
+                </div>
+            );
+        }
+
+        // CloseAccountsOptions component to handle showing/hiding close accounts
+        const CloseAccountsOptions = () => {
+            // Track the state of the checkbox based on the current hideCloseAccounts value
+            const [hideCloseAccountsChecked, setHideCloseAccountsChecked] = React.useState<boolean>(this.hideCloseAccounts.current);
+                    
+            // Handle checkbox change
+            const handleHideCloseAccountsChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+                const isChecked = event.target.checked;
+                setHideCloseAccountsChecked(isChecked);
+                this.HideCloseAccounts(isChecked);
+            };
+                    
+            return (
+                <div className="general-options" style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={hideCloseAccountsChecked}
+                                onChange={handleHideCloseAccountsChange}
+                                style={{ marginRight: '8px' }}
+                            />
+                            <span>Hide close accounts</span>
                         </label>
                     </div>
                 </div>
@@ -1085,9 +1210,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         
         return (
             <div className="strategy-panel-content">
+                <SpamOptions />
                 <SwapOptions />
                 <FeesOptions />
                 <CreateAccountsOptions />
+                <CloseAccountsOptions />
                 {/* Render the strategy-specific content if provided */}
                 {(strategyContent) ? strategyContent : ""}
             </div>
