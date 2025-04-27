@@ -172,10 +172,14 @@ class TransactionParserService:
         if not all_transaction_contex:
             return {"nodes": [], "links": [], "swaps": [], "fees": {"fee": 0, "priority_fee": 0}}
 
+        
+
         # now = int(time.monotonic() * 1000)
         graphspace = Graphspace(all_transaction_contex)
         # timeittook = int(time.monotonic() * 1000) - now
         # logger.info(f"Time taken to Graphspace: {timeittook} ms")
+
+        self.graph_service.analyse_isomorphic_transactions(graphspace)
         
         # now = int(time.monotonic() * 1000)
         graphdata = self.graph_service.get_graph_data_from_graphspace(graphspace)

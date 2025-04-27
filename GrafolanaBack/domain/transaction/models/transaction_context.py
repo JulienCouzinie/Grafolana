@@ -25,6 +25,7 @@ class TransactionContext:
     swaps: List[Swap]
     next_swap_id: int
     swap_id_counter: int
+    isomorphic_group: int = None
     
     def __init__(
         self,

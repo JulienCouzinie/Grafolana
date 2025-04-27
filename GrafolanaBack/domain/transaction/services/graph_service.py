@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Set, Tuple, Any
 import networkx as nx
+from networkx import Graph
 
 from GrafolanaBack.domain.prices.sol_price_service import SOLPriceService
 from GrafolanaBack.domain.prices.sol_price_utils import round_timestamp_to_minute
@@ -13,156 +14,97 @@ from GrafolanaBack.domain.transaction.utils.utils import get_sol_price, get_toke
 from GrafolanaBack.domain.logging.logging import logger
 
 class GraphService:
-    """
-    Service for performing operations on transaction graphs.
-    
-    This class provides methods for analyzing and manipulating transaction graphs.
-    """
-    
     @staticmethod
-    def identify_pools(graph: TransactionGraph) -> Set[str]:
+    def analyse_isomorphic_transactions(graphspace: Graphspace) -> None:
         """
-        Identify accounts that appear to be liquidity pools based on transfer patterns.
+        Analyze isomorphic transactions in the graphspace and update the graph accordingly.
+        Compare all transactions together and check if they are isomorphic using the networkx library.
+        When 2 graphs are isomophic we define an isomorphic group for them and assign it to their respective transaction context.
+        Once a transaction context is assigned to a group, it won't be compared to other transactions
         
         Args:
-            graph: The transaction graph to analyze
-        
-        Returns:
-            Set of account addresses identified as pools
+            graphspace: The graphspace containing transaction contexts
         """
-        pools = set()
+
+        # Convert all transaction graphs to cyclic graphs into a new dict
+        cyclic_graphs: Dict[str, Graph] = {}
+        for sig, context in graphspace.transaction_contexts.items():
+            cyclic_graphs[sig] = GraphService.convert_dag_to_cyclicgraph(context.graph.graph)
         
-        # Get all SWAP edges
-        swap_edges = graph.get_edges(transfer_type=TransferType.SWAP)
+        # Create a mapping of isomorphic groups
+        # This will be a dict of {group_id: [transaction_signatures]}
+        isomorphic_groups: Dict[int, List[str]] = {}
+        group_id = 0
         
-        # Find accounts involved in swap operations
-        for source, target, _, _ in swap_edges:
-            pools.add(source.address)
-            pools.add(target.address)
-        
-        # More sophisticated pool detection could be implemented here
-        # such as analyzing transfer patterns, looking for accounts that receive
-        # one token and send another, etc.
-        
-        return pools
-    
-    @staticmethod
-    def analyze_swap_flow(graph: TransactionGraph, swap_id: int) -> Dict[str, Any]:
+        # Iterate through all transaction graphs and check for isomorphism
+        for sig_a, graph_a in cyclic_graphs.items():
+            # Skip if already assigned to a group
+            if any(sig_a in group for group in isomorphic_groups.values()):
+                continue
+            
+            # Initialize a new group for this transaction
+            group_id += 1
+            isomorphic_groups[group_id] = [sig_a]
+
+            # Compare with all other graphs
+            for sig_b, graph_b in cyclic_graphs.items():
+                if sig_a == sig_b or any(sig_b in group for group in isomorphic_groups.values()):
+                    continue
+
+                # Check if the graphs are isomorphic
+                if nx.is_isomorphic(graph_a, graph_b):
+                    # logger.info(f"Transaction {sig_a} and {sig_b} are isomorphic.")
+                    isomorphic_groups[group_id].append(sig_b)
+                    graphspace.transaction_contexts[sig_a].isomorphic_group = group_id
+                    graphspace.transaction_contexts[sig_b].isomorphic_group = group_id
+
+
+
+
+        logger.info(f"Isomorphic groups found: {len(isomorphic_groups)}")
+
+        # for i, (sig_a, graph_a) in enumerate(transaction_graphs.items()):
+        #     if sig_a in isomorphic_groups:
+        #         continue
+        #     for j, (sig_b, graph_b) in enumerate(transaction_graphs.items()):
+        #         if sig_a == sig_b or sig_b in isomorphic_groups:
+        #             continue
+        #         # Check if the graphs are isomorphic
+        #         if nx.could_be_isomorphic(graph_a.graph, graph_b.graph):
+        #             logger.info(f"Transaction {sig_a} and {sig_b} are isomorphic.")
+        #             # If they are isomorphic, assign them to the same group
+        #             isomorphic_group_id = len(isomorphic_groups) + 1
+        #             isomorphic_groups[sig_a] = isomorphic_group_id
+        #             isomorphic_groups[sig_b] = isomorphic_group_id
+        #             transaction_contexts[sig_a].isomorphic_group = isomorphic_group_id
+        #             transaction_contexts[sig_b].isomorphic_group = isomorphic_group_id
+
+
+    def convert_dag_to_cyclicgraph(dag: nx.MultiDiGraph) -> Graph:
         """
-        Analyze the flow of tokens in a swap operation.
-        
+        Convert a directed acyclic graph (DAG) by aggregating all links 
+        that have same source adress and same target address into a single link.
+
+        Returns a dict of cyclic graphs, one for each transaction signature.
         Args:
-            graph: The transaction graph
-            swap_id: ID of the swap to analyze
-        
-        Returns:
-            Dictionary containing swap flow analysis
+            transaction_context: The transaction context containing the graph to be converted
         """
-        # Get subgraph for this swap
-        subgraph = graph.get_subgraph_by_swap_id(swap_id)
+        seenLinks: Dict[str, str] = {}
         
-        # Extract transfer details
-        edges = list(subgraph.edges(data=True))
-        if not edges:
-            return {"error": "No transfers found for this swap"}
-        
-        # Extract source and destination amounts
-        total_sent = sum(data.get("amount_source", 0) for _, _, data in edges)
-        total_received = sum(data.get("amount_destination", 0) for _, _, data in edges)
-        
-        # Calculate fee (if any)
-        fee = total_sent - total_received if total_sent > total_received else 0
-        
-        return {
-            "swap_id": swap_id,
-            "total_sent": total_sent,
-            "total_received": total_received,
-            "fee": fee,
-            "transfer_count": len(edges)
-        }
-    
-    @staticmethod
-    def find_cycles(graph: TransactionGraph) -> List[List[AccountVertex]]:
-        """
-        Find cycles in the transaction graph, which could indicate arbitrage opportunities.
-        
-        Args:
-            graph: The transaction graph to analyze
-        
-        Returns:
-            List of cycles found (each cycle is a list of vertices)
-        """
-        try:
-            cycles = list(nx.simple_cycles(graph.graph))
-            return cycles
-        except nx.NetworkXError:
-            # Handle case where the graph is too complex
-            return []
-    
-    @staticmethod
-    def trace_token_flow(
-        graph: TransactionGraph, 
-        start_address: str, 
-        token_mint: str,
-        max_depth: int = 5
-    ) -> Dict[str, Any]:
-        """
-        Trace the flow of a specific token from a starting address.
-        
-        Args:
-            graph: The transaction graph
-            start_address: Address to start the trace from
-            token_mint: Mint address of the token to trace
-            max_depth: Maximum depth to search
-        
-        Returns:
-            Dictionary containing the token flow trace
-        """
-        # This is a placeholder for a more complex implementation
-        # that would trace token transfers through the graph
-        result = {
-            "start_address": start_address,
-            "token_mint": token_mint,
-            "flows": []
-        }
-        
-        # Implementation would go here
-        
-        return result
-    
-    @staticmethod
-    def identify_common_patterns(graph: TransactionGraph) -> List[Dict[str, Any]]:
-        """
-        Identify common transaction patterns in the graph.
-        
-        Args:
-            graph: The transaction graph to analyze
-        
-        Returns:
-            List of identified patterns
-        """
-        patterns = []
-        
-        # Look for swap patterns
-        swap_edges = graph.get_edges(transfer_type=TransferType.SWAP)
-        if swap_edges:
-            patterns.append({
-                "type": "swap",
-                "count": len(swap_edges)
-            })
-        
-        # Look for fee payments
-        fee_edges = graph.get_edges(transfer_type=TransferType.FEE)
-        if fee_edges:
-            patterns.append({
-                "type": "fee_payment",
-                "count": len(fee_edges)
-            })
-        
-        # More pattern detection would go here
-        
-        return patterns
-    
+        cyclic_graph = Graph()
+        source: AccountVertex
+        target: AccountVertex
+        # Iterate through all edges in the original graph
+        for source, target, data in dag.edges(data=True):
+            key = f"{source.address}_{target.address}"
+            # Check if the edge has already been seen
+            if not key in seenLinks:
+                # If not, add it to the cyclic graph
+                cyclic_graph.add_edge(source.address, target.address, **data)
+                seenLinks[key] = key
+
+        return cyclic_graph
+
     @staticmethod
     def _derive_usd_price_ratio(context: TransactionContext, sol_price: float) -> Dict[str, Any]:
         """
@@ -377,7 +319,8 @@ class GraphService:
                 "signers": list(context.signer_wallets),
                 "swaps": GraphService._get_swaps_data(context),
                 "accounts" : context.account_repository.get_all_addresses(),
-                "mint_usd_price_ratio": {}
+                "mint_usd_price_ratio": {},
+                "isomorphic_group": context.isomorphic_group,
             }
 
         # Process nodes from account_version_mapping & graph
@@ -435,7 +378,6 @@ class GraphService:
         Returns:
             Dictionary containing all graph data for frontend visualization
         """
-        import concurrent.futures
 
         graph_data = GraphService._get_empty_graph_data()
 
