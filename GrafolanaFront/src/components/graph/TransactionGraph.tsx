@@ -386,7 +386,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                 </AccordionItem>
                 <AccordionItem title="Links" defaultOpen={false}>
                   <div className="accordion-content">
-                    {LinksContent || <p>No nodes information available for this view</p>}
+                    {LinksContent || <p>No links information available for this view</p>}
                   </div>
                 </AccordionItem>
               </Accordion>

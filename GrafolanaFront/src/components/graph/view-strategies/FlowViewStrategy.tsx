@@ -217,11 +217,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     
     // Pass the flow content to the base implementation
     const baseContent = super.getFiltersContent(flowContent);
-    return (
-      <div className="strategy-panel-content">
-        {baseContent}
-      </div>
-    );
+    return baseContent;
   }
 
   /**
@@ -270,7 +266,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                 }}
               >
                 <span style={{ marginRight: '4px' }}>
-                  {showTransactions ? '▼' : '►'}
+                  {showTransactions ? '▾' : '▸'}
                 </span>
                 <span>
                   {showTransactions ? 'Hide transactions' : 'Show transactions'}
@@ -350,15 +346,76 @@ class FlowViewStrategy extends BaseViewStrategy {
       
       // Pass the flow content to the base implementation
       const baseContent = super.getNodesInfoContent(flowContent);
-      return (
-        <div className="strategy-panel-content">
-          {baseContent}
-        </div>
-      );
+      return baseContent
     }
     
     // Return default content if no nodes are selected
     return super.getNodesInfoContent();
+  }
+
+  /**
+   * Returns content for the Link Info accordion section with Flow view specific information
+   * Extends the base implementation with flow-specific details
+   */
+  getLinksInfoContent(): React.ReactNode {
+      if(this.selectedLinks.current && this.selectedLinks.current.size > 0) {
+          // Get selected links from the current data
+          const selectedLinks = Array.from(this.selectedLinks.current).map(linkId => {
+              return this.processedData.current.links.find(link => link.id === linkId);
+          }).filter(link => link !== undefined) as ForceGraphLink[];
+
+          // Create React components for selected links
+          const selectedLinksComponents = selectedLinks.map((link, index) => {
+              const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon 
+
+              return (
+                  <React.Fragment key={index}>
+                      {/* Add separator before links (except the first one) */}
+                      {index > 0 && (
+                          <div style={{
+                              height: 1,
+                              backgroundColor: '#444444',
+                              margin: '12px 0',
+                              width: '100%'
+                          }} />
+                      )}
+                      <div style={{ 
+                          background: '#1A1A1A', 
+                          padding: 8, 
+                          borderRadius: 4, 
+                          color: '#FFFFFF'
+                      }}>
+                          <b>Type:</b> {link.type}<br/>
+                          {imageUrl && (
+                              <img 
+                                  src={imageUrl} 
+                                  crossOrigin="anonymous" 
+                                  style={{ maxWidth: 50, maxHeight: 50, marginTop: 4, marginBottom: 4 }} 
+                              />
+                          )}
+                          <br/>
+                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/>
+                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
+                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
+                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} /><br/>
+                          <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
+                      </div>
+                  </React.Fragment>
+              );
+          });
+
+          // Create base content with selected links components
+          const flowContent = (
+              <div className="info-section">
+                  {selectedLinksComponents}
+              </div>
+          );
+
+          // Pass the flow content to the base implementation
+          const baseContent = super.getLinksInfoContent(flowContent);
+          return baseContent
+      }
+      return super.getLinksInfoContent();
   }
 
 }

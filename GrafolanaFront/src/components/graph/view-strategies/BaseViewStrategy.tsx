@@ -615,7 +615,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         const feeUSDString = this.getFormattedUSDValueString(feeUSD);
         const baseLine = `Swapped ${sourceAmount}${sourceImage} (${sourceUSDString}) for ${destAmount}${destImage} (${destUSDString})`;
         const feeLine = feeAmount ? `<br/>Implicit Swap fee: ${feeAmount}${destImage} (${feeUSDString})` : '';
-        return baseLine + feeLine + '<br/>';
+        return baseLine + feeLine
     };
     
     protected formatNormalAmount = (
@@ -625,7 +625,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         usd: number | null
     ): string => {
         const usdString = usd !== null ? `$${usd.toFixed(5)}` : 'N/A';
-        return `${link.type}: Amount: ${amount}${image} (${usdString})<br/>`;
+        return `${link.type}: Amount: ${amount}${image} (${usdString})`;
     };
 
     protected calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
@@ -1227,123 +1227,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Override in concrete strategies for strategy-specific Nodes information
      */
     getLinksInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
-        if(this.selectedLinks.current && this.selectedLinks.current.size > 0) {
-            // Get selected links from the current data
-            const selectedLinks = Array.from(this.selectedLinks.current).map(linkId => {
-                return this.processedData.current.links.find(link => link.id === linkId);
-            }).filter(link => link !== undefined) as ForceGraphLink[];
 
-            // Create React components for selected links
-            const selectedLinksComponents = selectedLinks.map((link, index) => {
-                const imageUrl = link.type !== TransferType.WALLET_TO_WALLET 
-                    ? this.metadataServices.getProgramInfo(link.program_address)?.icon 
-                    : '/logo/wallettowallet.png';
-
-                // Format composite links if they exist
-                const CompositesSection = () => {
-                    const [showComposites, setShowComposites] = React.useState<boolean>(false);
-                    
-                    // Only render if there are composite links
-                    if (!link.composite || link.composite.length === 0) return null;
-                    
-                    return (
-                        <div style={{ marginTop: '8px' }}>
-                            <div 
-                                onClick={() => setShowComposites(!showComposites)}
-                                style={{ 
-                                    cursor: 'pointer', 
-                                    color: '#7B61FF',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    userSelect: 'none'
-                                }}
-                            >
-                                <span style={{ marginRight: '4px' }}>
-                                    {showComposites ? '▼' : '►'}
-                                </span>
-                                <span>
-                                    {showComposites ? 'Hide composites' : 'Show composites'}
-                                </span>
-                            </div>
-                            
-                            {showComposites && (
-                                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                                    {link.composite.map((compLink, compIndex) => {
-                                        // Get the transfer details HTML for each composite link
-                                        const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
-                                        
-                                        return (
-                                            <li key={compIndex} style={{ margin: '4px 0' }}>
-                                                <div dangerouslySetInnerHTML={{ __html: compositeTransferDetailsHTML }} />
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            )}
-                        </div>
-                    );
-                };
-
-                return (
-                    <React.Fragment key={index}>
-                        {/* Add separator before links (except the first one) */}
-                        {index > 0 && (
-                            <div style={{
-                                height: 1,
-                                backgroundColor: '#444444',
-                                margin: '12px 0',
-                                width: '100%'
-                            }} />
-                        )}
-                        <div style={{ 
-                            background: '#1A1A1A', 
-                            padding: 8, 
-                            borderRadius: 4, 
-                            color: '#FFFFFF'
-                        }}>
-                            <b>Type:</b> {link.type}<br/>
-                            {imageUrl && (
-                                <img 
-                                    src={imageUrl} 
-                                    crossOrigin="anonymous" 
-                                    style={{ maxWidth: 50, maxHeight: 50, marginTop: 4, marginBottom: 4 }} 
-                                />
-                            )}
-                            <br/>
-                            {link.type !== TransferType.WALLET_TO_WALLET && (
-                                <><b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/></>
-                            )}
-                            <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
-                            <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
-                            
-                            {/* Only show transfer details for non-WALLET_TO_WALLET links */}
-                            {link.type !== TransferType.WALLET_TO_WALLET && (
-                                <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
-                            )}
-                            
-                            {/* Show composite links if they exist */}
-                            <CompositesSection />
-                        </div>
-                    </React.Fragment>
-                );
-            });
-
-            // Create base content with selected links components
-            const baseContent = (
-                <div className="info-section">
-                    <p>Selected links: {this.selectedLinks.current?.size || 0}</p>
-                    {selectedLinksComponents}
-                </div>
-            );
-            
-            return (
-                <div className="strategy-panel-content">
-                    {baseContent}
-                    {(strategyContent) ? strategyContent : ""}
-                </div>
-            );
-        }
-        
         // Default content when no links are selected
         return (
             <div className="strategy-panel-content">
