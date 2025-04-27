@@ -1,4 +1,5 @@
 import { useMetadata } from './metadata-provider';
+import { useStaticGraphics } from './static-graphic-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType, Label } from '@/types/metadata';
@@ -29,7 +30,7 @@ export function AddressLabel({
   shortened = false, // Default to false
   show_controls = true // Default to showing controls
 }: AddressLabelProps) {
-  const { getLabelComputed } = useMetadata();
+  const { getLabelComputed, isSpam} = useMetadata();
   const { publicKey } = useWallet();
   const [displayLabel, setDisplayLabel] = useState(shortened ? shortenAddress(address) : address);
   const [labelInput, setLabelInput] = useState('');
@@ -193,6 +194,11 @@ export function AddressLabel({
     };
   };
 
+  let spamImg;
+  if (isSpam(address)) {
+    spamImg = useStaticGraphics().spam.image;
+  }
+
   return (
     <div className="relative inline-flex items-center gap-2 word-break-all">
       <span 
@@ -202,6 +208,7 @@ export function AddressLabel({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
+        {spamImg && <img src={spamImg.src} alt="Spam" className="w-4 h-4 inline" />}
         {displayLabel}
       </span>
       
