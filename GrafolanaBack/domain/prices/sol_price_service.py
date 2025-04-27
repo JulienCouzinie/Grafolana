@@ -121,10 +121,10 @@ class SOLPriceService:
                 result[ts] = price
                 self.price_cache[ts] = price
                 
-            # Save new prices to database for future use
-            prices_to_save: List[Tuple[int, float]] = [(ts, price) for ts, price in api_prices.items() if price is not None]
-            if prices_to_save:
-                self._save_prices_to_database_batch(prices_to_save)
+            # # Save new prices to database for future use
+            # prices_to_save: List[Tuple[int, float]] = [(ts, price) for ts, price in api_prices.items() if price is not None]
+            # if prices_to_save:
+            #     self._save_prices_to_database_batch(prices_to_save)
         
         # Map back to original timestamp requests
         return {ts: result.get(round_timestamp_to_minute(ts)) for ts in timestamps}
