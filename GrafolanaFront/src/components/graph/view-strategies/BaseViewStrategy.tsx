@@ -873,11 +873,21 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         // SwapOptions component to handle collapse/expand actions for swap routers and programs
         const SwapOptions = () => {
+            // Add state for hide swaps checkbox
+            const [hideSwapsChecked, setHideSwapsChecked] = React.useState<boolean>(this.hideSwaps.current);
+            
             // Track hover states for all buttons
             const [routerCollapseHovered, setRouterCollapseHovered] = React.useState<boolean>(false);
             const [routerExpandHovered, setRouterExpandHovered] = React.useState<boolean>(false);
             const [programCollapseHovered, setProgramCollapseHovered] = React.useState<boolean>(false);
             const [programExpandHovered, setProgramExpandHovered] = React.useState<boolean>(false);
+            
+            // Add handler for hide swaps checkbox
+            const handleHideSwapsChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+                const isChecked = event.target.checked;
+                setHideSwapsChecked(isChecked);
+                this.HideSwaps(isChecked);
+            };
             
             // Handlers for router buttons
             const handleRouterCollapse = (): void => {
@@ -911,87 +921,105 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             
             return (
                 <div className="general-options">
-                    {/* Swap Routers row */}
+                    {/* Hide All Swaps Operations checkbox */}
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ flex: 1 }}>Swap Routers</span>
-                        <div 
-                            style={buttonStyle}
-                            onClick={handleRouterCollapse}
-                            onMouseEnter={() => setRouterCollapseHovered(true)}
-                            onMouseLeave={() => setRouterCollapseHovered(false)}
-                        >
-                            <img 
-                                src="/collapse.svg" 
-                                alt="Collapse" 
-                                style={{ 
-                                    width: '16px', 
-                                    height: '16px', 
-                                    marginRight: '4px',
-                                    filter: routerCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
-                                }} 
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={hideSwapsChecked}
+                                onChange={handleHideSwapsChange}
+                                style={{ marginRight: '8px' }}
                             />
-                            <span>Collapse All</span>
-                        </div>
-                        <div 
-                            style={buttonStyle}
-                            onClick={handleRouterExpand}
-                            onMouseEnter={() => setRouterExpandHovered(true)}
-                            onMouseLeave={() => setRouterExpandHovered(false)}
-                        >
-                            <img 
-                                src="/expand.svg" 
-                                alt="Expand" 
-                                style={{ 
-                                    width: '16px', 
-                                    height: '16px', 
-                                    marginRight: '4px',
-                                    filter: routerExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
-                                }} 
-                            />
-                            <span>Expand All</span>
-                        </div>
+                            <span>Hide All Swaps Operations</span>
+                        </label>
                     </div>
                     
-                    {/* Swap Programs row */}
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ flex: 1 }}>Swap Programs</span>
-                        <div 
-                            style={buttonStyle}
-                            onClick={handleProgramCollapse}
-                            onMouseEnter={() => setProgramCollapseHovered(true)}
-                            onMouseLeave={() => setProgramCollapseHovered(false)}
-                        >
-                            <img 
-                                src="/collapse.svg" 
-                                alt="Collapse" 
-                                style={{ 
-                                    width: '16px', 
-                                    height: '16px', 
-                                    marginRight: '4px',
-                                    filter: programCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
-                                }} 
-                            />
-                            <span>Collapse All</span>
-                        </div>
-                        <div 
-                            style={buttonStyle}
-                            onClick={handleProgramExpand}
-                            onMouseEnter={() => setProgramExpandHovered(true)}
-                            onMouseLeave={() => setProgramExpandHovered(false)}
-                        >
-                            <img 
-                                src="/expand.svg" 
-                                alt="Expand" 
-                                style={{ 
-                                    width: '16px', 
-                                    height: '16px', 
-                                    marginRight: '4px',
-                                    filter: programExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
-                                }} 
-                            />
-                            <span>Expand All</span>
-                        </div>
-                    </div>
+                    {/* Only show collapse/expand options if swaps are not hidden */}
+                    {!hideSwapsChecked && (
+                        <>
+                            {/* Swap Routers row */}
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ flex: 1 }}>Swap Routers</span>
+                                <div 
+                                    style={buttonStyle}
+                                    onClick={handleRouterCollapse}
+                                    onMouseEnter={() => setRouterCollapseHovered(true)}
+                                    onMouseLeave={() => setRouterCollapseHovered(false)}
+                                >
+                                    <img 
+                                        src="/collapse.svg" 
+                                        alt="Collapse" 
+                                        style={{ 
+                                            width: '16px', 
+                                            height: '16px', 
+                                            marginRight: '4px',
+                                            filter: routerCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                        }} 
+                                    />
+                                    <span>Collapse All</span>
+                                </div>
+                                <div 
+                                    style={buttonStyle}
+                                    onClick={handleRouterExpand}
+                                    onMouseEnter={() => setRouterExpandHovered(true)}
+                                    onMouseLeave={() => setRouterExpandHovered(false)}
+                                >
+                                    <img 
+                                        src="/expand.svg" 
+                                        alt="Expand" 
+                                        style={{ 
+                                            width: '16px', 
+                                            height: '16px', 
+                                            marginRight: '4px',
+                                            filter: routerExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                        }} 
+                                    />
+                                    <span>Expand All</span>
+                                </div>
+                            </div>
+                            
+                            {/* Swap Programs row */}
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span style={{ flex: 1 }}>Swap Programs</span>
+                                <div 
+                                    style={buttonStyle}
+                                    onClick={handleProgramCollapse}
+                                    onMouseEnter={() => setProgramCollapseHovered(true)}
+                                    onMouseLeave={() => setProgramCollapseHovered(false)}
+                                >
+                                    <img 
+                                        src="/collapse.svg" 
+                                        alt="Collapse" 
+                                        style={{ 
+                                            width: '16px', 
+                                            height: '16px', 
+                                            marginRight: '4px',
+                                            filter: programCollapseHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                        }} 
+                                    />
+                                    <span>Collapse All</span>
+                                </div>
+                                <div 
+                                    style={buttonStyle}
+                                    onClick={handleProgramExpand}
+                                    onMouseEnter={() => setProgramExpandHovered(true)}
+                                    onMouseLeave={() => setProgramExpandHovered(false)}
+                                >
+                                    <img 
+                                        src="/expand.svg" 
+                                        alt="Expand" 
+                                        style={{ 
+                                            width: '16px', 
+                                            height: '16px', 
+                                            marginRight: '4px',
+                                            filter: programExpandHovered ? "invert(29%) sepia(94%) saturate(1351%) hue-rotate(254deg) brightness(101%) contrast(111%)" : "brightness(0) invert(1)"
+                                        }} 
+                                    />
+                                    <span>Expand All</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             );
         };
