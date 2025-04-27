@@ -1,4 +1,4 @@
-import { Label, MintDTO, Program } from "@/types/metadata";
+import { Label, MintDTO, Program, Spam } from "@/types/metadata";
 
 export const fetchMissingMintInfos = async (mintAddresses: string[]): Promise<MintDTO[]> => {
     if (mintAddresses.length === 0) return [];
@@ -89,3 +89,22 @@ export const fetchMissingLabels = async (addresses: string[], userId?: string): 
         return {};
     }
 };
+
+
+/**
+ * Fetch all spam addresses for a user
+ * @param userId The user ID to fetch spam for
+ * @returns A list of spam addresses
+ */
+export async function fetchSpamAddresses(userId: string): Promise<Spam[]> {
+    try {
+      const response = await fetch(`http://localhost:5000/api/metadata/spam/user/${userId}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching spam addresses: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching spam addresses:', error);
+      return [];
+    }
+  }

@@ -1,9 +1,9 @@
 'use client'
 
-import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType } from "@/types/metadata";
+import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spam } from "@/types/metadata";
 import { createContext, useContext, useCallback, useState, useMemo, ReactNode, useEffect, useRef } from "react";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos } from "./fetchers";
+import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos, fetchSpamAddresses } from "./fetchers";
 import { cp } from "fs";
 import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
@@ -29,6 +29,10 @@ interface MetadataContextType {
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
   
   getGraphicByNode: (node: ForceGraphNode) => StaticGraphic;
+
+  isSpam: (address: string) => boolean;
+  addToSpam: (address: string) => Promise<Spam>;
+  deleteFromSpam: (spamId: number) => Promise<boolean>;
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
@@ -480,9 +484,120 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return nodeGraphic;
   }
 
+  // Add this state for managing spam addresses
+  const [spamAddresses, setSpamAddresses] = useState<Spam[]>([]);
+  const spamAddressesMap = useRef<Map<string, Spam>>(new Map());
+
+  // Add a function to fetch spam addresses
+  const fetchSpamAddressesAndCache = useCallback(async () => {
+    if (!publicKey) return;
+    
+    const userId = publicKey.toBase58();
+    try {
+      const spamList = await fetchSpamAddresses(userId);
+      setSpamAddresses(spamList);
+      
+      // Update the map for fast lookups
+      const newMap = new Map<string, Spam>();
+      spamList.forEach(spam => {
+        newMap.set(spam.address, spam);
+      });
+      spamAddressesMap.current = newMap;
+    } catch (error) {
+      console.error('Error fetching spam addresses:', error);
+    }
+  }, [publicKey]);
+
+  // Fetch spam addresses when the provider loads or when publicKey changes
+  useEffect(() => {
+    fetchSpamAddressesAndCache();
+  }, [fetchSpamAddressesAndCache, publicKey]);
+
+  // Check if an address is spam
+  const isSpam = useCallback((address: string): boolean => {
+    return spamAddressesMap.current.has(address);
+  }, [spamAddressesMap]);
+
+  // Add an address to spam
+  const addToSpam = useCallback(async (address: string): Promise<Spam> => {
+    if (!publicKey) {
+      throw new Error("User must be connected to add addresses to spam list");
+    }
+    
+    const userId = publicKey.toBase58();
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/metadata/spam', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          user_id: userId
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const newSpam: Spam = await response.json();
+      
+      // Update the local state
+      setSpamAddresses(prevSpams => [...prevSpams, newSpam]);
+      spamAddressesMap.current.set(address, newSpam);
+      
+      return newSpam;
+    } catch (error) {
+      console.error('Error adding address to spam:', error);
+      throw error;
+    }
+  }, [publicKey]);
+
+  // Delete an address from spam
+  const deleteFromSpam = useCallback(async (spamId: number): Promise<boolean> => {
+    if (!publicKey) {
+      throw new Error("User must be connected to delete addresses from spam list");
+    }
+    
+    const userId = publicKey.toBase58();
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/metadata/spam/${spamId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      // Update the local state
+      setSpamAddresses(prevSpams => {
+        const updatedSpams = prevSpams.filter(spam => spam.id !== spamId);
+        
+        // Also update the map
+        const spamToRemove = prevSpams.find(spam => spam.id === spamId);
+        if (spamToRemove) {
+          spamAddressesMap.current.delete(spamToRemove.address);
+        }
+        
+        return updatedSpams;
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error removing address from spam:', error);
+      return false;
+    }
+  }, [publicKey]);
+
+  // Include the new functions in the context value
   return (
     <StaticGraphicsProvider>
     <MetadataContext.Provider value={{
+      isSpam,
+      addToSpam,
+      deleteFromSpam,
+
       FetchMintInfosAndCache,
       FetchProgramInfosAndCache,
       FetchLabelsInfosAndCache,

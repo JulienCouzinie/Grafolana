@@ -21,7 +21,7 @@ def upgrade() -> None:
     op.create_table('spam',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('address', sa.String(), nullable=False),
-        sa.Column('creator', sa.Enum('DEFAULT', 'ADMIN', 'OWNER', 'USER', name='creator'), nullable=False),
+        sa.Column('creator', sa.Enum('DEFAULT', 'ADMIN', 'USER', name='creator'), nullable=False),
         sa.Column('user_id', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, default=datetime.utcnow),
         sa.Column('updated_at', sa.DateTime(), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow),

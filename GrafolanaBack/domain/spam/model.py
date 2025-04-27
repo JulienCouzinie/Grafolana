@@ -8,8 +8,7 @@ Base = declarative_base()
 class Creator(enum.Enum):
     DEFAULT = 0  # Parser-defined labels (lowest priority)
     ADMIN = 1    # Admin defined labels
-    OWNER = 2    # Program/account owner defined labels
-    USER = 3     # User private labels (highest priority)
+    USER = 2     # User private labels (highest priority)
 
 class Spam(Base):
     __tablename__ = 'spam'
@@ -30,7 +29,7 @@ class Spam(Base):
         return {
             'id': self.id,
             'address': self.address,
-            'creator': self.creator,
+            'creator': self.creator.name,
             'user_id': self.user_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

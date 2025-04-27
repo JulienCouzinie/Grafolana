@@ -68,3 +68,13 @@ export interface AddressWithType {
   address: string;
   type: AddressType;
 }
+
+// Add new Spam interface
+export interface Spam {
+  id: number;
+  address: string;
+  creator: 'DEFAULT' | 'ADMIN' | 'OWNER' | 'USER';
+  user_id?: string;
+  created_at: string;
+  updated_at: string;
+}
