@@ -48,6 +48,8 @@ class SwapParserService():
 
                     if param.byte_value is not None:
                         byte,value = param.byte_value
+                        if len(instruction_bytes) < byte:
+                            continue
                         if instruction_bytes.hex()[byte] != value:
                             continue
 
