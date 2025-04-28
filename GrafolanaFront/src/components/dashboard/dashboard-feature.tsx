@@ -7,6 +7,7 @@ import 'react-json-pretty/themes/monikai.css';
 import { TransactionGraph } from '@/components/grafolio/graph/TransactionGraph';
 import { AccountVertex, GraphData, GraphLink } from '../../types/graph';
 import { AddressLabel } from '../metadata/address-label';
+import Grafolio from '../grafolio/grafolio';
 
 
 export default function DashboardFeature() {
@@ -124,7 +125,7 @@ export default function DashboardFeature() {
         </div>
         
         <div className="graph-container">
-          <TransactionGraph apiGraphData={graphData} />
+          <Grafolio apiGraphData={graphData} />
         </div>
       </div>
     );

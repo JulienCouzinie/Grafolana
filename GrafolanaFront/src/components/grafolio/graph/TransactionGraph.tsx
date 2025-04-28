@@ -12,6 +12,7 @@ import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
+import { min } from 'lodash';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -347,9 +348,10 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
           minSizePercentage={15}
           defaultSizePercentage={20}
           collapsible={true}
-          collapsedSizePixels={32} // Width of just the toggle button
+          collapsedSizePercentage={1} // Fix because collapsedSizePixel fucks the whole layout when host component is hidden
           onCollapse={handlePanelCollapse}
           onExpand={handlePanelExpand}
+          className='min-w-[32px]'//// Fix because collapsedSizePixel
         >
           <div className={`controls-panel ${isPanelCollapsed ? 'collapsed' : ''}`}>
             {/* Toggle Panel Button */}
@@ -548,7 +550,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
           cursor: pointer;
           z-index: 10;
         }
-        
+
         .panel-toggle-button:hover {
           background-color: ${SOLANA_COLORS.purple};
         }
