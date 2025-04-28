@@ -182,7 +182,6 @@ export function useGraphInteractions(
   // Handler for link click to manage selection
   const handleLinkClick = (link: ForceGraphLink | null) => {
     // Get link ID for tracking in the selection set
-    console.log("Link clicked:", link);
     const linkId = link!.id!.toString();
     
     // If CTRL is pressed, toggle the clicked link in the selection
@@ -203,8 +202,6 @@ export function useGraphInteractions(
         strategy!.selectedLinks.current = new Set([linkId]);
       }
     }
-
-    console.log("Selected links:", strategy?.selectedLinks.current);
 
     setLinkSelectionUpdate(prev => prev + 1); // Trigger re-render
   }

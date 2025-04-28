@@ -787,7 +787,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             sourceNode = link.source as ForceGraphNode;
             destinationNode = link.target as ForceGraphNode;
         } else {
-            console.log("Link source or target is not a ForceGraphNode instance. Attempting to find nodes by address.");
             // Find nodes by id
             sourceNode = this.originalData.current.nodes.find(n => n.account_vertex.id === link.source_account_vertex.id);
             destinationNode = this.originalData.current.nodes.find(n => n.account_vertex.id === link.target_account_vertex.id);
