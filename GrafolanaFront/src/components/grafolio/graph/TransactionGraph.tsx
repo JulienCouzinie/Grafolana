@@ -3,13 +3,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import * as d3 from 'd3-force';
-import { ForceGraphNode, GraphData, } from '../../types/graph';
+import { ForceGraphNode, GraphData, } from '@/types/graph';
 import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
 import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
-import { Accordion, AccordionItem } from '../ui/accordion';
+import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 

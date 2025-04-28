@@ -1,16 +1,17 @@
 import React, { Ref } from 'react';
-import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, TransactionData, TransferType } from '@/types/graph';
-import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
-import { useMetadata } from '../../metadata/metadata-provider';
-import { useUSDValue } from '../../../hooks/useUSDValue';
+import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, AccountVertex, GraphNode, TransferType} from '@/types/graph';
+import { ViewStrategy } from './ViewStrategy';
+import { useMetadata } from '@/components/metadata/metadata-provider';
+import { useUSDValue } from '@/hooks/useUSDValue';
 import { useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
-import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
+import { AddressType } from '@/types/metadata';
 
-class AccountViewStrategy extends BaseViewStrategy {
+
+class WalletViewStrategy extends BaseViewStrategy {
   
   // Assign curvature to links based on their duplication
   // and directionality (source to target or target to source)
@@ -80,65 +81,142 @@ class AccountViewStrategy extends BaseViewStrategy {
     return links;
   }
 
-  // Aggregate accounts by address and version
-  // Set the id of the node to the address of the account
-  private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
-    const seen = new Set<string>();
-    const deduplicatedNodes: ForceGraphNode[] = [];
+  private getWalletAddress(node: ForceGraphNode): string {
+    let address;
+    
+    if (node.type==AccountType.SOL_ACCOUNT) {
+      address = node.account_vertex.address;
+    } else {
+      address = node.owner || node.account_vertex.address;
+    }
+    return address;
+  }
 
+  // Aggregate accounts by wallet 
+  // SOL accounts are aggregated by their address
+  // Token accounts are aggregated by their wallet owner
+  // if the owner is not present, the address is used
+  private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
+    let seen = new Map<string, ForceGraphNode>();
+    let composite_seen_per_address = new Map<string, string[]>();
+    
     nodes.forEach((node) => {
-      if (!seen.has(node.account_vertex.address)) {
-        seen.add(node.account_vertex.address);
-        node.id = node.account_vertex.address;
-        deduplicatedNodes.push(node);
+      let address = this.getWalletAddress(node);
+      if (!seen.has(address)) {
+        let type;
+        if (node.type==AccountType.PROGRAM_ACCOUNT) {
+          type = AccountType.PROGRAM_ACCOUNT;
+        } else if (node.type==AccountType.FEE_ACCOUNT) {
+          type = AccountType.FEE_ACCOUNT;
+        } else if (node.type==AccountType.BURN_ACCOUNT) {
+          type = AccountType.BURN_ACCOUNT;
+        } else if (node.type==AccountType.MINTTO_ACCOUNT) {
+          type = AccountType.MINTTO_ACCOUNT;
+        } else {
+          type = AccountType.WALLET_ACCOUNT;
+        }
+        // Create new node
+        let aggregatedNode: ForceGraphNode = {
+          id: address,
+          type: type,
+          account_vertex: new AccountVertex(
+            address, 
+            0, 
+            ''
+          ),
+          mint_address: "SOL",
+          is_pool: false,
+          owner: null,
+          authorities: [],
+          balance_token: 0, 
+          balance_lamport:0, 
+          composite: null
+        };
+        composite_seen_per_address.set(address, []);
+        
+        // If the node is not a SOL account, add it to the composite array
+        if (node.type !== AccountType.SOL_ACCOUNT && node.type !== AccountType.FEE_ACCOUNT) {
+          aggregatedNode.composite = [node];
+          composite_seen_per_address.get(address)!.push(node.account_vertex.address);
+        }
+
+        seen.set(address, aggregatedNode);
+      } else {
+        if (address!=="FEE") {
+          if (node.type !== AccountType.SOL_ACCOUNT) {
+            // Check if the node is already in the composite array
+            // If not, add it to the composite array of the existing node
+            if (!composite_seen_per_address.get(address)!.includes(node.account_vertex.address)) {
+              composite_seen_per_address.get(address)!.push(node.account_vertex.address);
+            
+              const existingNode = seen.get(address)!;
+              if (!existingNode.composite) {
+                existingNode.composite = [];
+              }
+              // Add the node to the composite array of the existing node
+              existingNode.composite.push(node);
+            }
+          }
+        }
       }
     });
 
-    return deduplicatedNodes;
+    // Convert map values to array
+    const deduplicatedNodes = Array.from(seen.values());
 
+    return deduplicatedNodes;
   }
+
 
   // Aggregate links that have same target and source accounts
   // Aggregate the amounts of the links
   // Keep original links in composite array
-  private aggregateLinks (links: GraphLink[]): GraphLink[]  {
-    const seen = new Set<string>();
-    const deduplicatedLinks: GraphLink[] = [];
+  private aggregateLinks (clonedData: GraphData): GraphLink[]  {
+    const links = clonedData.links;
+    const nodes = clonedData.nodes;
+    const seen = new Map<string,GraphLink>();
+
 
     links.forEach((link) => {
-      const key = `${link.source_account_vertex.address}-${link.target_account_vertex.address}`;
+      let source_node = this.getForceGraphNodebyAccountVertex(nodes, link.source_account_vertex);
+      let target_node = this.getForceGraphNodebyAccountVertex(nodes, link.target_account_vertex);
+      
+      let source_address = this.getWalletAddress(source_node!);
+      let target_address = this.getWalletAddress(target_node!);
+      const key = `${source_address}-${target_address}`;
       // Check if the link has already been seen
       if (!seen.has(key)) {
-        // If not, add it to the deduplicated list
-        // and mark it as seen
-        seen.add(key);
-        link.source = link.source_account_vertex.address;
-        link.target = link.target_account_vertex.address; 
-        link.id = key;
+        const key = `${source_address}-${target_address}`;
 
-        deduplicatedLinks.push(link);
+        const linkId = key;
+
+        // Create new WALLET_TO_WALLET link
+        let aggregatedlink: ForceGraphLink = {
+          id: linkId,
+          key: 0,
+          transaction_signature: '',
+          program_address: '',
+          source: source_address,
+          target: target_address,
+          source_account_vertex: new AccountVertex(source_address,0, ''),
+          target_account_vertex: new AccountVertex(target_address,0, ''),
+          amount_source: 0,
+          amount_destination: 0,
+          type: TransferType.WALLET_TO_WALLET,
+          composite: [],
+        };
+
+        aggregatedlink.composite = [link];
+
+        seen.set(key, aggregatedlink);
       } else {
-        // If already seen, find the existing link
-        // and aggregate the amounts
-        const existingLink = deduplicatedLinks.find(
-          (l) => l.source_account_vertex.address === link.source_account_vertex.address && l.target_account_vertex.address === link.target_account_vertex.address
-        );
-        // If found, aggregate the amounts
-        if (existingLink) {
-          // Clone the existing link to keep the original
-          // in the composite array
-          if (!existingLink.composite) {
-            existingLink.composite = [];
-            existingLink.composite.push(cloneDeep(existingLink));
-          }
-          // Add the new link to the composite array
-          // and aggregate the amounts
-          existingLink.composite.push(link);
-          existingLink.amount_source += link.amount_source;
-          existingLink.amount_destination += link.amount_destination;
-        }
+        
+        seen.get(key)!.composite!.push(link);
       }
     });
+
+    // Convert map values to array
+    const deduplicatedLinks = Array.from(seen.values());
 
     return deduplicatedLinks;
   }
@@ -148,13 +226,12 @@ class AccountViewStrategy extends BaseViewStrategy {
 
     this.setupGraphData(data);
   }
-  
+
   processGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
-    let links = data.links;
-    links = this.aggregateLinks(links);
+    let nodes = this.aggregateAccounts(data.nodes);
+    let links = this.aggregateLinks(data);
     links = this.assignLinkCurvature(links);
 
-    let nodes = this.aggregateAccounts(data.nodes);
     let transactions = data.transactions;
 
     this.processedData.current.nodes = nodes;
@@ -169,8 +246,6 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 
   nodeTooltip (node: ForceGraphNode): string {
-    const mintAddress = node.mint_address;
-    const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
     const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
     // Create authorities list HTML if authorities exist
@@ -178,7 +253,28 @@ class AccountViewStrategy extends BaseViewStrategy {
       ? `
         <b>Authorities:</b><br/>
         <ul style="margin: 0; padding-left: 20px;">
-          ${node.authorities.map(auth => `<li>${this.metadataServices.getLabelComputed(auth).label}</li>`).join('')}
+          ${node.authorities.map(auth => `<li>${this.metadataServices.getLabelComputed(auth).label}"</li>`).join('')}
+        </ul>
+      `
+      : '';
+
+    // Create composite list HTML if composite exists
+    const compositeHtml = node.composite && node.composite.length > 0
+      ? `
+        <b>Composite:</b><br/>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${node.composite.map(comp => {
+            // Get mint info and image for composite account
+            const compMintAddress = comp.mint_address;
+            const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
+            const compMintImage = this.metadataServices.getMintImage(compMintInfo!.image);
+            
+            return `<li>
+              ${compMintImage ? `<img src="${compMintImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; display: inline-block;">` : ''}
+              ${compMintInfo?.symbol ? `${compMintInfo.symbol}: ` : ''}
+              ${this.metadataServices.getLabelComputed(comp.account_vertex.address).label}
+            </li>`;
+          }).join('')}
         </ul>
       `
       : '';
@@ -186,17 +282,11 @@ class AccountViewStrategy extends BaseViewStrategy {
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Type:</b> ${node.type}<br/>
-        ${nodeImage ? `<img src="${nodeImage.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
+        <img src="${nodeImage?.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
-        ${mintAddress ? `
-          <b>Mint:</b> ${mintAddress}<br/>
-          ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
-          ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
-        ` : '<b>Token:</b> SOL<br/>'}
-        <b>Owner:</b> ${node.owner? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
-        ${authoritiesHtml}
-        <b>Token Balance:</b> ${node.balance_token}<br/>
-        <b>Lamport Balance:</b> ${node.balance_lamport}
+
+        ${compositeHtml}
+
       </div>
     `;
   }
@@ -205,16 +295,20 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 
   linkTooltip(link: ForceGraphLink): string {
-    const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon;
-
-    const transferDetailsHTML = this.getTransferDetailsHTML(link);
+    const sourceNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.source_account_vertex.address);
+    const destinationNode = this.processedData.current.nodes.find(n => n.account_vertex.address === link.target_account_vertex.address);
+    const imageUrl = '/logo/wallettowallet.png';
 
     // Format composite links if they exist
     const compositesHtml = link.composite 
     ? `<br/><b>Composites:</b><ul style="margin: 4px 0; padding-left: 20px;">
         ${link.composite.map(compLink => {
+          const imageUrl = this.metadataServices.getProgramInfo(compLink.program_address)?.icon;
+          const compositeProgramImage = this.metadataServices.getProgramImage(imageUrl!);
+          const imageHTML = compositeProgramImage ? `<img src="${compositeProgramImage.src}" crossorigin="anonymous" style="width: 16px; height: 16px; display: inline-block;">` : '';
+
           const compositeTransferDetailsHTML = this.getTransferDetailsHTML(compLink);
-            return `<li>${compositeTransferDetailsHTML}</li>`;
+            return `<li>${imageHTML} ${compositeTransferDetailsHTML}</li>`;
         }).join('')}
         </ul>`
     : '';
@@ -223,48 +317,11 @@ class AccountViewStrategy extends BaseViewStrategy {
     <div style="display: inline-block; background: #1A1A1A; padding: 14px; border-radius: 4px; color: #FFFFFF; min-width: fit-content">
         <b>Type:</b> ${link.type}<br/>
         ${imageUrl ? `<img src="${imageUrl}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>` : ''}
-        <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM).label}<br/>
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
-        ${transferDetailsHTML}
         ${compositesHtml}
     </div>
     `;
-  }
-
-  // Override to provide account-specific context menu items
-  getNodeContextMenuItems(node: ForceGraphNode): ContextMenuItem[] {
-    const baseItems = super.getNodeContextMenuItems(node);
-    
-    // Add account-specific items
-    return [
-        ...baseItems,
-        {
-            label: "View Transactions",
-            action: "view_transactions"
-        },
-        {
-            label: "Explore Related Accounts",
-            action: "explore_related"
-        }
-    ];
-  }
-  
-  // Override to handle account-specific context menu actions
-  handleNodeContextMenu(node: ForceGraphNode, action: string): void {
-    switch(action) {
-        case "view_transactions":
-            // Handle viewing transactions for this account
-            console.log("View transactions for account:", node.account_vertex.address);
-            break;
-        case "explore_related":
-            // Handle exploring related accounts
-            console.log("Explore related accounts for:", node.account_vertex.address);
-            break;
-        default:
-            // Fall back to base implementation for common actions
-            super.handleNodeContextMenu(node, action);
-    }
   }
 
   /**
@@ -335,18 +392,70 @@ class AccountViewStrategy extends BaseViewStrategy {
             </div>
           );
         };
-        
-        // Create authorities list as a React component
-        const authoritiesComponent = node.authorities && node.authorities.length > 0 ? (
-          <React.Fragment>
-            <b>Authorities:</b><br/>
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
-              {node.authorities.map((auth, i) => (
-                <li key={i}><AddressLabel address={auth} shortened={true} /></li>
-              ))}
-            </ul>
-          </React.Fragment>
-        ) : null;
+
+        // Component to display composite accounts with toggle functionality
+        const CompositeAccounts = () => {
+          const [showComposites, setShowComposites] = React.useState<boolean>(false);
+          
+          // Only render if there are composite accounts
+          if (!node.composite || node.composite.length === 0) return null;
+          
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div 
+                onClick={() => setShowComposites(!showComposites)}
+                style={{ 
+                  cursor: 'pointer', 
+                  color: '#7B61FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ marginRight: '4px' }}>
+                  {showComposites ? '▾' : '▸'}
+                </span>
+                <span>
+                  {showComposites ? 'Hide composite accounts' : 'Show composite accounts'}
+                </span>
+              </div>
+              
+              {showComposites && (
+                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                  {node.composite.map((comp, compIndex) => {
+                    // Get mint info and image for composite account
+                    const compMintAddress = comp.mint_address;
+                    const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
+                    const compMintImage = this.metadataServices.getGraphicByNode(comp).image;
+                    
+                    return (
+                      <li key={compIndex} style={{ margin: '4px 0' }}>
+                        {compMintImage && (
+                          <img 
+                            src={compMintImage.src} 
+                            crossOrigin="anonymous" 
+                            style={{ 
+                              width: 16, 
+                              height: 16, 
+                              verticalAlign: 'middle', 
+                              marginRight: 5, 
+                              display: 'inline-block' 
+                            }} 
+                          />
+                        )}
+                        {compMintInfo?.symbol && `${compMintInfo.symbol}: `}
+                        <AddressLabel 
+                          address={comp.account_vertex.address!} 
+                          shortened={true} 
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          );
+        };
 
         // Create node info component with optional separator
         return (
@@ -369,14 +478,10 @@ class AccountViewStrategy extends BaseViewStrategy {
               <b>Type:</b> {node.type}<br/>
               {/* Display node image if available */}
               {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
-              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
-              {mintAddress ? (
-                <React.Fragment>
-                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
-                </React.Fragment>
-              ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
-              {authoritiesComponent}
+              <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              {/* Display composite accounts info if available */}
+              <CompositeAccounts />
+              {/* Display transactions this account is appearing */}
               <AccountTransactions />
             </div>
           </React.Fragment>
@@ -402,21 +507,23 @@ class AccountViewStrategy extends BaseViewStrategy {
     // Return default content if no nodes are selected
     return super.getNodesInfoContent();
   }
-  
+
   /**
-   * Returns content for the Link Info accordion section with Flow view specific information
-   * Extends the base implementation with flow-specific details
+   * Returns content for the Link Info accordion section with Wallet view specific information
+   * Extends the base implementation with wallet-specific details
    */
   getLinksInfoContent(): React.ReactNode {
       if(this.selectedLinks.current && this.selectedLinks.current.size > 0) {
           // Get selected links from the current data
           const selectedLinks = Array.from(this.selectedLinks.current).map(linkId => {
-            return this.processedData.current.links.find(link => link.id === linkId);
+              return this.processedData.current.links.find(link => link.id === linkId);
           }).filter(link => link !== undefined) as ForceGraphLink[];
 
           // Create React components for selected links
           const selectedLinksComponents = selectedLinks.map((link, index) => {
-              const imageUrl = this.metadataServices.getProgramInfo(link.program_address)?.icon 
+              const imageUrl = link.type !== TransferType.WALLET_TO_WALLET 
+                  ? this.metadataServices.getProgramInfo(link.program_address)?.icon 
+                  : '/logo/wallettowallet.png';
 
               // Format composite links if they exist
               const CompositesSection = () => {
@@ -463,8 +570,6 @@ class AccountViewStrategy extends BaseViewStrategy {
                   );
               };
 
-              const showTransaction = (!link.composite || link.composite.length === 0)
-
               return (
                   <React.Fragment key={index}>
                       {/* Add separator before links (except the first one) */}
@@ -491,13 +596,17 @@ class AccountViewStrategy extends BaseViewStrategy {
                               />
                           )}
                           <br/>
-
-                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/>
+                          {link.type !== TransferType.WALLET_TO_WALLET && (
+                              <><b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/></>
+                          )}
                           <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
                           <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
-                          {showTransaction && (<><b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} /></>)}
-                          <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
-
+                          
+                          {/* Only show transfer details for non-WALLET_TO_WALLET links */}
+                          {link.type !== TransferType.WALLET_TO_WALLET && (
+                              <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
+                          )}
+                          
                           {/* Show composite links if they exist */}
                           <CompositesSection />
                       </div>
@@ -520,7 +629,7 @@ class AccountViewStrategy extends BaseViewStrategy {
   }
 }
 
-export function useAccountViewStrategy(): ViewStrategy {
+export function useWalletViewStrategy(): ViewStrategy {
   const metadataServices = useMetadata();
   const usdServices = useUSDValue();
   const processedDataRef = useRef<GraphData>({
@@ -538,7 +647,7 @@ export function useAccountViewStrategy(): ViewStrategy {
   const selectedLinks = useRef<Set<string>>(new Set<string>());
 
   // Create and return strategy instance
-  return new AccountViewStrategy(
+  return new WalletViewStrategy(
     metadataServices,
     usdServices,
     processedDataRef,
@@ -546,8 +655,4 @@ export function useAccountViewStrategy(): ViewStrategy {
     selectedNodes,
     selectedLinks,
   );
-}
-
-function setGraphData(arg0: (prevData: any) => { nodes: ForceGraphNode[]; links: ForceGraphLink[]; transactions: { [x: string]: TransactionData; }; }) {
-  throw new Error('Function not implemented.');
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, RefObject, useCallback } from 'react';
-import { ForceGraphLink, ForceGraphNode } from '../../../types/graph';
+import { ForceGraphLink, ForceGraphNode } from '@/types/graph';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 import { ViewStrategy } from '../view-strategies/ViewStrategy';
 import { useLabelEditDialog } from '@/components/metadata/label-edit-dialog-provider';

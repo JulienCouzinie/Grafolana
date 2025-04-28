@@ -1,5 +1,4 @@
-import { ForceGraphLink, ForceGraphNode, GraphData, GraphLink, GraphNode } from '@/types/graph';
-import { LinkObject } from 'react-force-graph-2d';
+import { ForceGraphLink, ForceGraphNode, GraphData, GraphNode } from '@/types/graph';
 import { Ref, RefObject } from 'react';
 
 export interface ContextMenuItem {
@@ -63,8 +62,8 @@ export interface ViewStrategy {
     lineDash?: number[];
     arrowLength?: number;
     arrowColor?: string;
-    onNodeHover?: GraphNode;
-    onLinkHover?: GraphNode;
+    onNodeHover?: ForceGraphNode;
+    onLinkHover?: ForceGraphNode;
   };
 
   hoveredNode: ForceGraphNode | null;

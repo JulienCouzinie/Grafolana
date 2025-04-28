@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useMetadata } from '../metadata/metadata-provider';
+import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { GraphData } from '@/types/graph';
 import { AddressType, AddressWithType } from '@/types/metadata';

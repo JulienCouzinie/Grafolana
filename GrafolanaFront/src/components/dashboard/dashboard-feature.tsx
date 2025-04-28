@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import JSONPretty from 'react-json-pretty';
 import 'react-json-pretty/themes/monikai.css';
-import { TransactionGraph } from '../graph/TransactionGraph';
+import { TransactionGraph } from '@/components/grafolio/graph/TransactionGraph';
 import { AccountVertex, GraphData, GraphLink } from '../../types/graph';
 import { AddressLabel } from '../metadata/address-label';
 

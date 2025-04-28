@@ -1,8 +1,8 @@
 import React, { Ref } from 'react';
 import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, TransferType, AccountType } from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
-import { useMetadata } from '../../metadata/metadata-provider';
-import { useUSDValue } from '../../../hooks/useUSDValue';
+import { useMetadata } from '@/components/metadata/metadata-provider';
+import { useUSDValue } from '@/hooks/useUSDValue';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 

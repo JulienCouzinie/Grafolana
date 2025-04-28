@@ -1,5 +1,5 @@
 import ForceGraph2D, { ForceGraphProps, NodeObject, LinkObject, ForceGraphMethods } from 'react-force-graph-2d';
-import { GraphData, GraphNode, GraphLink, ForceGraphNode, ForceGraphLink } from '../../types/graph';
+import { GraphData, GraphNode, GraphLink, ForceGraphNode, ForceGraphLink } from '@/types/graph';
 import { ForwardedRef, forwardRef } from 'react';
 
 /**
