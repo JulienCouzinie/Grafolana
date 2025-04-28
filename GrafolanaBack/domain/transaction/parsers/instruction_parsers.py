@@ -363,6 +363,23 @@ class SyncNativeParser(InstructionParser):
         account_version.balance_token += account_version.balance_lamport - 203928
         
         return True
+    
+class InitializeMintParser(InstructionParser):
+    """Parser for Token Program initializeMint instruction (Initialize a Token Mint Account)."""
+    
+    def can_parse(self, instruction: Parsed_Instruction) -> bool:
+        return (instruction.program_name == "spl-token" and 
+                instruction.parsed is not None and 
+                instruction.parsed.get("type") in ["initializeMint", "initializeMint2"])
+    
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
+        mint_account_address = str(instruction.parsed["info"]["mint"])
+
+        account_version = context.account_repository.account_versions.get(mint_account_address)[-1]
+        account_version.account.mint_address = mint_account_address
+        account_version.account.type = AccountType.TOKEN_MINT_ACCOUNT
+        
+        return True
 
 class SystemAssignParser(InstructionParser):
     """Parser for System Program assign instructions."""

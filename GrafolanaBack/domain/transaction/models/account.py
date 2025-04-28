@@ -9,15 +9,14 @@ from GrafolanaBack.domain.transaction.config.constants import SOL
 class AccountType(str, Enum):
     """Enum representing all possible account types in the system"""
     BURN_ACCOUNT  = "BURN_ACCOUNT"
-    MINTTO_ACCOUNT  = "MINTTO_ACCOUNT"
-    STAKE_ACCOUNT  = "STAKE_ACCOUNT"
+    MINTTO_ACCOUNT = "MINTTO_ACCOUNT"
+    TOKEN_MINT_ACCOUNT = "TOKEN_MINT_ACCOUNT"
+    STAKE_ACCOUNT = "STAKE_ACCOUNT"
     TOKEN_ACCOUNT = "TOKEN_ACCOUNT" 
     SOL_ACCOUNT = "SOL_ACCOUNT"
     FEE_ACCOUNT = "FEE_ACCOUNT"
     PROGRAM_ACCOUNT = "PROGRAM_ACCOUNT"
     UNKNOWN = "UNKNOWN"
-
-
 
 @dataclass
 class Account:
