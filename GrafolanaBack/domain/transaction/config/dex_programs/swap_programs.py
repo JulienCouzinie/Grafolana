@@ -575,20 +575,31 @@ swap_programs_data = {
         ]
     },
     "GUAC_SWAP": {
-        # Transaction : 67pMHLyiSnjLVpUVHC6W1FfXFGiaFoMX47eqUzrM2SQGapS73YZ9z9brionDeR8uUhJN2ZxyoRwqPRUSJMS7KxgZ
         PROGRAM_ADDRESS: "Gswppe6ERWKpUTXvRPfXdzHhiCyJvLadVvXGfdpBqcE1",
         LABEL: "Guac Swap",
         ICON: "https://c6fa2c22534d71a0f4399a2f8faee0d1.cdn.bubble.io/cdn-cgi/image/w=128,h=,f=auto,dpr=1,fit=contain/f1714071782415x613785640997461800/Guacamole_New_Logo.png",
         WEBSITE: "https://guac.gg/",
         ROUTER: False,
         INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 67pMHLyiSnjLVpUVHC6W1FfXFGiaFoMX47eqUzrM2SQGapS73YZ9z9brionDeR8uUhJN2ZxyoRwqPRUSJMS7KxgZ
             {
                 INSTRUCTION_NAME: "swap",
+                TERMINATOR: "0",
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
                 POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
-            }
+            },
+            # Transaction : QDjGy6CXZJSHLCyV1E5UxxoGbSUf8nQSSaWhRWyZToG1heTAhLoN6B6He2BedPtyoCH657hbku6CXzNkmU7bfov
+            {
+                INSTRUCTION_NAME: "swap",
+                TERMINATOR: "1",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            
         ]
     },
     "INVARIANT": {
