@@ -382,12 +382,12 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                     {groupingContent || <p>No grouping options available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Nodes" defaultOpen={false}>
+                <AccordionItem title={`Selected Nodes (${strategy.selectedNodes.current?.size || 0})`} defaultOpen={false}>
                   <div className="accordion-content">
                     {NodesContent || <p>No nodes information available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Links" defaultOpen={false}>
+                <AccordionItem title={`Selected Links (${strategy.selectedLinks.current?.size || 0})`} defaultOpen={false}>
                   <div className="accordion-content">
                     {LinksContent || <p>No links information available for this view</p>}
                   </div>

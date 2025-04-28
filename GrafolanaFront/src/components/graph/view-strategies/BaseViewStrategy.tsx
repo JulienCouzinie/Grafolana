@@ -1461,7 +1461,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             <div className="strategy-panel-content">
                 {/* Add common contextual information */}
                 <div className="info-section">
-                    <p>Selected nodes: {this.selectedNodes.current?.size || 0}</p>
+                    {/*<p>Selected nodes: {this.selectedNodes.current?.size || 0}</p>*/}
                 </div>
                 {(strategyContent) ? strategyContent : ""}
             </div>
@@ -1477,7 +1477,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return (
             <div className="strategy-panel-content">
                 <div className="info-section">
-                    <p>Selected links: {this.selectedLinks.current?.size || 0}</p>
+                    {/*<p>Selected links: {this.selectedLinks.current?.size || 0}</p>*/}
                 </div>
                 {(strategyContent) ? strategyContent : ""}
             </div>
