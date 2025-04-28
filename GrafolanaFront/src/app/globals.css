@@ -5,7 +5,7 @@
 html,
 body {
     background-color: #000;
-    color: #00FFA3;
+    color: white;/*#00FFA3;*/
     height: 100%;
     margin: 0;
     padding: 0;
