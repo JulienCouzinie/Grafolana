@@ -199,9 +199,11 @@ class TransactionParserService:
         Returns:
             Dictionary containing the graph data for the wallet
         """
-        
+        # now = int(time.monotonic() * 1000)
         # Fetch the transaction signatures for the wallet
         transaction_signatures = self.get_wallet_signatures(wallet_signature)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to get_wallet_signatures: {timeittook} ms")
         
         # Get graph data for each transaction
         all_graph_data = self.get_multiple_transactions_graph_data(transaction_signatures)
