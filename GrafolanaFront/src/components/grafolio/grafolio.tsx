@@ -59,7 +59,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
       </div>
       
       {/* Content area - all tabs are rendered but hidden with CSS */}
-      <div className="flex-grow overflow-hidden w-full h-full">
+      <div className="flex-grow overflow-auto w-full h-full">
         {/* Graph Tab */}
         <div className={`w-full h-full ${getTabDisplayClass('graph')}`}>
           <TransactionGraph 
