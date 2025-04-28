@@ -241,6 +241,9 @@ class GraphService:
 
         edges_data = []
 
+        # get list of swaps id
+        swap_ids = [swap.id for swap in context.swaps]
+
         # Then process them with an index counter
         for index, (source, dest, key, data) in enumerate(sorted_edges, start=1):
 
@@ -260,10 +263,13 @@ class GraphService:
 
             # Handle swap-specific data
             if "swap_parent_id" in data and data["swap_parent_id"]:
-                edge_data["swap_parent_id"] = data["swap_parent_id"]
+                if data["swap_parent_id"] in swap_ids:
+                    edge_data["swap_parent_id"] = data["swap_parent_id"]
             
             if "parent_router_swap_id" in data and data["parent_router_swap_id"]:
-                edge_data["parent_router_swap_id"] = data["parent_router_swap_id"]
+                if data["parent_router_swap_id"] in swap_ids:
+                    edge_data["parent_router_swap_id"] = data["parent_router_swap_id"]
+                
 
 
             edges_data.append(edge_data)
