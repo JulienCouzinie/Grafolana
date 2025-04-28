@@ -321,6 +321,7 @@ class GraphService:
                 "accounts" : context.account_repository.get_all_addresses(),
                 "mint_usd_price_ratio": {},
                 "isomorphic_group": context.isomorphic_group,
+                "timestamp": context.blocktime*1000,
             }
 
         # Process nodes from account_version_mapping & graph

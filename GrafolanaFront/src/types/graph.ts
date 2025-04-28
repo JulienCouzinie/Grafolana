@@ -112,6 +112,7 @@ export interface TransactionData {
     signers: string[];
     swaps: Swap[];
     mint_usd_price_ratio: Record<string,PriceReference>
+    timestamp: number;
 }
 
 // Clean up duplicate interface
