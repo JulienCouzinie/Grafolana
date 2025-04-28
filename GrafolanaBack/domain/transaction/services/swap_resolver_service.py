@@ -31,19 +31,29 @@ class SwapResolverService:
             swap: The swap operation to resolve
         """
         """Resolve swap paths in the transaction graph."""
+
+        failed_swaps: List[int] = []
+
         # For each swap, find paths between accounts
         swap: Swap
         # First resolve all swaps that are not router swaps
         for swap in transaction_context.swaps:
             if not swap.router:
-                self.resolve_swap(transaction_context, swap)
-
+                if not self.resolve_swap(transaction_context, swap):
+                    failed_swaps.append(swap.id)
+        
         # Then resolve all router swaps using the path resolved from normal swaps
         for swap in transaction_context.swaps:
             if swap.router:
-                self.resolve_router_swap_paths(transaction_context, swap)
+                if not self.resolve_router_swap_paths(transaction_context, swap):
+                    failed_swaps.append(swap.id)
+        
+        # Remove failed swaps from the transaction context
+        transaction_context.swaps = [swap for swap in transaction_context.swaps if swap.id not in failed_swaps] 
 
-    def resolve_router_swap_paths(self, transaction_context: TransactionContext, router_swap: Swap) -> None:
+        
+
+    def resolve_router_swap_paths(self, transaction_context: TransactionContext, router_swap: Swap) -> bool:
         """
         Resolve paths for a router swap operation in the graph.
         
@@ -58,7 +68,7 @@ class SwapResolverService:
         subgraph = transaction_context.graph.create_subgraph_for_swap(router_swap)
         if subgraph is None:
             logger.error(f"No subgraph found for router swap {router_swap.id}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
 
         # Find first link of type SWAP_INCOMING by selecting min key
         # and then the first link of type SWAP_OUTGOING by selecting max key
@@ -71,14 +81,14 @@ class SwapResolverService:
         
         if not all_edges:
             logger.error(f"No edges found in subgraph for router swap {router_swap.id}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
         
         # Filter for SWAP_INCOMING edges and find the one with minimum key
         incoming_edges = [(u, v, k, data) for u, v, k, data in all_edges 
                          if data.get("transfer_type") == TransferType.SWAP_INCOMING]
         if not incoming_edges:
-            logger.warning(f"No SWAP_INCOMING edges found for router swap {router_swap.id}")
-            return
+            logger.warning(f"No SWAP_INCOMING edges found for router swap {router_swap.id} transaction {transaction_context.transaction_signature}")
+            return False
         
         swap_incoming_edge = min(incoming_edges, key=lambda edge: int(edge[2]))
         incoming_source, incoming_target, incoming_key, incoming_data = swap_incoming_edge
@@ -89,7 +99,7 @@ class SwapResolverService:
                          if data.get("transfer_type") == TransferType.SWAP_OUTGOING]
         if not outgoing_edges:
             logger.warning(f"No SWAP_OUTGOING edges found for router swap {router_swap.id}")
-            return
+            return False
         
         swap_outgoing_edge = max(outgoing_edges, key=lambda edge: int(edge[2]))
         outgoing_source, outgoing_target, outgoing_key, outgoing_data = swap_outgoing_edge
@@ -147,9 +157,10 @@ class SwapResolverService:
         
         logger.debug(f"Resolved swap {router_swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={router_swap.fee}, tx: {transaction_context.transaction_signature}")
     
+        return True
         
 
-    def resolve_swap(self, transaction_context: TransactionContext, swap: Swap) -> None:
+    def resolve_swap(self, transaction_context: TransactionContext, swap: Swap) -> bool:
         """
         Resolve a swap operation in the transaction graph.
         """
@@ -167,7 +178,7 @@ class SwapResolverService:
         user_dest_vertex: AccountVertex = max(user_dest_vertices, key=lambda v: v.version) if user_dest_vertices else None
         if (user_source_vertex is None) or (user_dest_vertex is None):
             logger.error(f"user vertices not found for swap {swap.id}, source: {user_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
 
         swap_pools : List[AccountVertex]= []
         # If pools are stored as source/destination
@@ -196,7 +207,7 @@ class SwapResolverService:
         pool_source_vertex: AccountVertex = min(pool_source_vertices, key=lambda v: v.version) if pool_source_vertices else None
         if (pool_dest_vertex is None) or (pool_source_vertex is None):
             logger.error(f"pool vertices not found for swap {swap.id}, source: {user_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
 
         logger.debug(f"finding paths for: user_source_vertex: {user_source_vertex.address}, pool_dest_vertex: {pool_dest_vertex.address}")
         # Find path from user_source to pool_destination
@@ -204,7 +215,7 @@ class SwapResolverService:
             path_a = nx.shortest_path(subgraph, user_source_vertex, pool_dest_vertex)
             if len(path_a) < 2:
                 logger.error(f"path user -> pool too short for swap {swap.id}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-                return
+                return False
             _ , _ , data = transaction_context.graph.get_last_transfer(path_a, subgraph)
             amount_in = sum(edge_data["amount_destination"] for edge_data in data.values())
             
@@ -215,7 +226,7 @@ class SwapResolverService:
         except nx.NetworkXNoPath:
             # Handle case where path doesn't exist
             logger.error(f"path doesn't exist for swap {swap.id}, source: {user_source_vertex.address}, destination: {pool_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
 
         logger.debug(f"finding paths for: pool_source_vertex: {pool_source_vertex.address}, user_dest_vertex: {user_dest_vertex.address}")
         # Find path from pool_source to user_destination
@@ -223,7 +234,7 @@ class SwapResolverService:
             path_b = nx.shortest_path(subgraph, pool_source_vertex, user_dest_vertex)
             if len(path_b) < 2:
                 logger.error(f"path pool -> user too short for swap {swap.id}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-                return
+                return False
             _ , _ , data = transaction_context.graph.get_first_transfer(path_b, subgraph)
             real_swap_amount_out = sum(edge_data["amount_source"] for edge_data in data.values())
 
@@ -243,7 +254,7 @@ class SwapResolverService:
         except nx.NetworkXNoPath:
             # Handle case where path doesn't exist
             logger.error(f"path doesn't exist for swap {swap.id}, source: {pool_source_vertex.address}, destination: {user_dest_vertex.address}, tx: {transaction_context.transaction_signature}")
-            return
+            return False
         
         swap.fee = real_swap_amount_out - amount_out
 
@@ -306,7 +317,9 @@ class SwapResolverService:
                     key = swap_outgoing_transfer_key)
         
         logger.debug(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
-    
+
+        return True
+
     def _calculate_amount_in_from_balance_changes(self, graph: TransactionGraph, swap: Swap) -> int:
         """
         Calculate amount sent to a swap by analyzing balance changes in accounts.
