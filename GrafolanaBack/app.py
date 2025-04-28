@@ -7,6 +7,8 @@ from GrafolanaBack.domain.prices.sol_price_utils import start_price_updater
 from GrafolanaBack.domain.transaction.services.transaction_parser_service import TransactionParserService
 from GrafolanaBack.domain.spam.service import SpamService
 from GrafolanaBack.domain.spam.model import Creator
+from solders.signature import Signature
+from solders.pubkey import Pubkey
 
 
 app = Flask(__name__)
@@ -21,14 +23,24 @@ spam_service = SpamService()
 
 @app.route('/api/get_transaction_from_signature', methods=['POST'])
 def get_transaction_from_signature():
-    return transaction_parser_service.getJSONTransaction(request.json.get('tx_signature'))
+    tx_signature = request.json.get('tx_signature')
+
+    if Signature.verify(tx_signature) is None:
+        return jsonify({"error": "Invalid transaction signature"}), 400
+
+    return transaction_parser_service.getJSONTransaction(tx_signature)
 
 
 @app.route('/api/get_transaction_graph_data', methods=['POST'])
 def get_transaction_graph_data_from_signature():
     tx_signature = request.json.get('tx_signature')
     user_wallet = request.json.get('user_wallet', "EQyYgCnwwZxuh3SfnrFBEiFqDUUSfpqiDorf66eqdEcz")
-        
+    
+    try:
+        Signature.from_string(tx_signature)
+    except ValueError:
+        return jsonify({"error": "Invalid transaction signature"}), 400
+
     # Get the graph data
     graph_data = transaction_parser_service.get_transaction_graph_data(tx_signature)
     
@@ -37,6 +49,11 @@ def get_transaction_graph_data_from_signature():
 @app.route('/api/get_wallet_graph_data', methods=['POST'])
 def get_wallet_graph_data_from_address():
     wallet_signature = request.json.get('wallet_signature')
+
+    try:
+        Pubkey.from_string(wallet_signature)
+    except ValueError:
+        return jsonify({"error": "Invalid wallet address"}), 400
 
     # Get the graph data
     graph_data = transaction_parser_service.get_wallet_graph_data(wallet_signature)
