@@ -176,19 +176,29 @@ swap_programs_data = {
         ]
     },
     "ALDRIN_AMM_V2": {
-        # Transaction: 4f92pMpvWjiobvh4uF1xkJPZ44THiDXNaSd1Mt2j2RXV5jZaUJfJMiPNPbvsmythHhG6fEZKhYapkCpWc9MEXeZF
         PROGRAM_ADDRESS: "CURVGoZn8zycx6FXwwevgBTB2gVvdbGTEpvMJDbgs2t4",
         LABEL: "Aldrin AMM V2",
         ICON: "https://s2.coinmarketcap.com/static/img/coins/200x200/10935.png",
         WEBSITE: "https://x.com/aldrin_labs",
         ROUTER: False,
         INSTRUCTION_PARSE_PARAM: [
+            # Transaction: 4f92pMpvWjiobvh4uF1xkJPZ44THiDXNaSd1Mt2j2RXV5jZaUJfJMiPNPbvsmythHhG6fEZKhYapkCpWc9MEXeZF
             {
                 INSTRUCTION_NAME: "swap",
+                TERMINATOR : "0",
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 8,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 7,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
                 POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            # Transaction: 2VGayDmBw4ry9NwBhco4X6L9KC1L21TPLg3RJVXN3oAA42Bu1E3VqnApPvrKn99SWdaSsw9YYqPcerhG8ywghDny
+            {
+                INSTRUCTION_NAME: "swap",
+                TERMINATOR : "1",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 8,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 3
             }
         ]
     },
@@ -463,6 +473,40 @@ swap_programs_data = {
             }
         ]
     },
+    "DFLOW_AGGREGATOR": {
+        PROGRAM_ADDRESS: "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+        LABEL: "Dflow Aggregator",
+        ICON: "https://dflow.net/assets/primary_accent-DbeIT2u3.svg",
+        WEBSITE: "https://dflow.net",
+        ROUTER: True,
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 3kLqGpDazcFfncCGvSLUbNPfB71rDwH8STQyYL4VJMKqK4jbuXSqwA6jckGH9V9yjKmFTeMWs95jSWfjQimnq7CU
+            {
+                DISCRIMINATOR: "414b3f4ceb5b5b88",
+                LABEL: "Unknown",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            },
+            # Transaction : 4Pk6rDRocJcsg8GtXSRbLYDUzAY27A2dYLvgEt6SKDFckSqt8Ft4e2yHeSm1sHNpofbnMVCXXcLVcPXE5ViSzEAB
+            {
+                INSTRUCTION_NAME: "swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            },
+            # Transaction : ??
+            {
+                INSTRUCTION_NAME: "swap2",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            },
+        ]
+    },
     "FADO": { # Router
         PROGRAM_ADDRESS: "FAdo9NCw1ssek6Z6yeWzWjhLVsr8uiCwcWNUnKgzTnHe",
         LABEL: "Fado",
@@ -502,6 +546,31 @@ swap_programs_data = {
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
                 POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            }
+        ]
+    },
+    "GOOSEFX_GAMMA": {
+        PROGRAM_ADDRESS: "GAMMA7meSFWaBXF25oSUgmGRwaW6sCMFLmBNiMSdbHVT",
+        LABEL: "GooseFX: GAMMA",
+        ICON: "https://cdn.prod.website-files.com/65298be98463cc3a8a0d7d4a/65655aab4d4e15973640ae89_Favicon.png",
+        WEBSITE: "https://www.goosefx.io/gamma",
+        ROUTER: False,
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : dphDHVjM3SVSwgeRXx6UjrXPvTZenjnDxbpxMaxUrYnbokGPzcq4BgeV8tJno5J5qPG8gS7aV7ynAdmPPSudFzm
+            {
+                INSTRUCTION_NAME: "swap_base_input",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 6
+            },
+            # Transaction : ?
+            {
+                INSTRUCTION_NAME: "swap_base_output",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 6
             }
         ]
     },
@@ -709,10 +778,28 @@ swap_programs_data = {
         ICON: "https://www.meteora.ag/icons/logo.svg",
         WEBSITE: "https://www.meteora.ag/",
         INSTRUCTION_PARSE_PARAM: [
+            # Transaction: 3r1rZUpjzPMhTQqj5SzpK75MFQkSmtbKgHSXawgS1bwBHYVkDsZZqCDZfSiJZeHPnVPbchaZiEGi6BmMia2HcL3B
+            {
+                INSTRUCTION_NAME: "swap", 
+                ACCOUNTS_LENGTH: 19,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 2
+            },
             # Transaction: 3yvoXDaddNXXXqVMEepqnFNQ8JWkKnKXUHwwc4JTHcdp6AdULx5462QiVzXS5L8xmhbvEaWf8VsyCSHscvptbios
             {
                 INSTRUCTION_NAME: "swap", 
                 ACCOUNTS_LENGTH: 18,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 3
+            },
+            # Transaction: mfoGHtCTWdcJXb7P8L2Jjz4Nqto3ntXFqH1tVyiE2eu1CMAiAp6VH3PdbYjJ2w2dKahSciLZgNk646s3wvA2yNC
+            {
+                INSTRUCTION_NAME: "swap", 
+                ACCOUNTS_LENGTH: 17,
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
@@ -1459,6 +1546,24 @@ swap_programs_data = {
             # Transaction : 2VuyRoidvgfmHuLu3hM2NdFvtpsejVXQBp5zwTRx3FJAHDMTrVdfW1hpP9CEMocWRSPsDaAa5J7xSKv36Nh51Ak5
             {
                 DISCRIMINATOR: "09", 
+                LABEL: "swap",
+                ACCOUNTS_LENGTH: 18,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 15,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 16,
+                POOLS: [5, 6] # Pools source & destination order depending if WSOL -> COIN or COIN -> WSOL
+            },
+            # Transaction : 5YiE3j35cPrKBeFTetpupBrn6VNkjrcgdyVGMnBC3dMc7rPHaPTksEYAqCM1UGcmALztPuuLeFk3A2zhP2VUBeSe
+            {
+                DISCRIMINATOR: "0b", 
+                LABEL: "swap",
+                ACCOUNTS_LENGTH: 17,
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 14,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 15,
+                POOLS: [4, 5] # Pools source & destination order depending if WSOL -> COIN or COIN -> WSOL
+            },
+            # Transaction : 2VuyRoidvgfmHuLu3hM2NdFvtpsejVXQBp5zwTRx3FJAHDMTrVdfW1hpP9CEMocWRSPsDaAa5J7xSKv36Nh51Ak5
+            {
+                DISCRIMINATOR: "0b", 
                 LABEL: "swap",
                 ACCOUNTS_LENGTH: 18,
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 15,
