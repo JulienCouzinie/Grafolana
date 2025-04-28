@@ -61,3 +61,12 @@ body {
     display: flex;
     min-height: 0; /* Important for Firefox */
 }
+
+ input[type="text"]  {
+    width: 100%;
+    padding: 6px;
+    background-color: #2A2A2A;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 4px;
+}

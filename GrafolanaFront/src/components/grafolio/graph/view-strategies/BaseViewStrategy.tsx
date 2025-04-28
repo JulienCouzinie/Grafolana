@@ -1284,14 +1284,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 fontSize: '14px'
             };
 
-            const inputStyle = {
-                width: '100%',
-                padding: '6px',
-                backgroundColor: '#2A2A2A',
-                color: 'white',
-                border: '1px solid #444',
-                borderRadius: '4px'
-            };
+            
 
             const errorStyle = {
                 color: 'red',
@@ -1321,7 +1314,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={minSolAmount}
                             onChange={(e) => setMinSolAmount(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(minSolAmount) ? '#444' : 'red'
                             }}
                         />
@@ -1337,7 +1330,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={maxSolAmount}
                             onChange={(e) => setMaxSolAmount(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(maxSolAmount) ? '#444' : 'red'
                             }}
                         />
@@ -1354,7 +1347,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={minTokenAmount}
                             onChange={(e) => setMinTokenAmount(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(minTokenAmount) ? '#444' : 'red'
                             }}
                         />
@@ -1370,7 +1363,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={maxTokenAmount}
                             onChange={(e) => setMaxTokenAmount(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(maxTokenAmount) ? '#444' : 'red'
                             }}
                         />
@@ -1387,7 +1380,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={minValueUSD}
                             onChange={(e) => setMinValueUSD(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(minValueUSD) ? '#444' : 'red'
                             }}
                         />
@@ -1403,7 +1396,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             value={maxValueUSD}
                             onChange={(e) => setMaxValueUSD(e.target.value)}
                             style={{
-                                ...inputStyle,
+                                
                                 borderColor: isValidNumber(maxValueUSD) ? '#444' : 'red'
                             }}
                         />
