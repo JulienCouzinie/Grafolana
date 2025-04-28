@@ -507,6 +507,46 @@ class SolanaTransactionFetcher:
         
         return local_results
 
+    def getTransaction(
+        self,
+        transaction_signature: Signature,
+        result_callback: Optional[Callable[[Signature, Optional[Any], Optional[Exception], Optional[Any]], Any]] = None,
+        callback_params: Optional[Any] = None,
+    ) -> Any:
+        """
+        Fetches a single Solana transaction.
+
+        Args:
+            transaction_signature: The transaction signature to fetch
+            result_callback: An optional function to be called for the result.
+                            It receives: Signature, Result (or None), Exception (or None), and callback_params.
+                            If the callback returns a value other than None for a successful
+                            RPC call, that value is stored instead of the original result.
+            callback_params: Optional parameters to pass to the result_callback function.
+
+        Returns:
+            The fetched/processed result for the transaction or raises an Exception if an error occurred.
+        """
+        # Call getMultipleTransactions with a single-item list
+        result_dict = self.getMultipleTransactions(
+            transaction_signatures=[transaction_signature],
+            result_callback=result_callback,
+            callback_params=callback_params
+        )
+        
+        # Extract the single result
+        sig_str = str(transaction_signature)
+        if sig_str not in result_dict:
+            raise ValueError(f"No result was returned for transaction {sig_str}")
+        
+        result = result_dict[sig_str]
+        
+        # If the result is an exception, raise it
+        if isinstance(result, Exception):
+            raise result
+            
+        return result
+
 # Create a singleton instance for easy import
 fetcher: SolanaTransactionFetcher
 fetcher = SolanaTransactionFetcher()

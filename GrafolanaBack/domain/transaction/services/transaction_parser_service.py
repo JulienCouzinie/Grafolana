@@ -127,7 +127,7 @@ class TransactionParserService:
         """
 
         # Fetch the transaction
-        encoded_transaction = self._get_transaction(Signature.from_string(transaction_signature))
+        encoded_transaction = self.transaction_service.get_transaction(Signature.from_string(transaction_signature))
         if not encoded_transaction:
             logger.error(f"Transaction {transaction_signature} not found")
             return None
@@ -232,21 +232,6 @@ class TransactionParserService:
 
         return signatures
 
-    def _get_transaction(self, signature: Signature) -> Optional[EncodedConfirmedTransactionWithStatusMeta]:
-        """Get transaction data from the blockchain."""
-        try:
-            response = client.get_transaction(
-                signature, 
-                encoding="jsonParsed", 
-                max_supported_transaction_version=0
-            )
-            if response.value is None or response.value.transaction is None:
-                return None
-            return response.value
-        except Exception as error:
-            logger.error(f"Error fetching transaction {str(signature)}: {str(error)}", exc_info=True)
-            return None    
-
     def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, _parent_swap_id: int = None, _parent_router_swap_id: int = None) -> None:
         """Process a list of instructions and its inner instructions recursively."""
         
@@ -275,6 +260,6 @@ class TransactionParserService:
                 self._process_instructions(instruction.inner_instructions, context, inner_parent_swap_id, parent_router_swap_id)
 
     def getJSONTransaction(self, tx_sig: str):
-        tx = self._get_transaction(Signature.from_string(tx_sig))
+        tx = self.transaction_service.get_transaction(Signature.from_string(tx_sig))
 
         return tx.to_json()

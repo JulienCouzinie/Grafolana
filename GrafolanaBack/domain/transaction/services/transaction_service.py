@@ -49,9 +49,13 @@ class TransactionService:
         """
         # Convert signature to string if it's a Signature object
         signature_str = str(signature)
-        
+
+        now = int(time.monotonic() * 1000)
         # First, try to get from database
         db_transaction = self.transaction_repository.get_transaction(signature_str)
+        timeittook = int(time.monotonic() * 1000) - now
+        logger.info(f"Time taken to fetch transactions: {timeittook} ms")
+
         if db_transaction:
             logger.debug(f"Transaction {signature_str[:10]}... found in database")
             # Parse the stored JSON back to EncodedConfirmedTransactionWithStatusMeta
@@ -63,23 +67,18 @@ class TransactionService:
             # Convert to Signature object if it's a string
             sig_obj = signature if isinstance(signature, Signature) else Signature.from_string(signature_str)
             
-            # Fetch from RPC
-            response = client.get_transaction(
-                sig_obj, 
-                encoding="jsonParsed",
-                max_supported_transaction_version=0
-            )
+            transaction = fetcher.getTransaction(sig_obj)
             
-            if response.value is None:
+            if transaction is None:
                 logger.warning(f"Transaction {signature_str} not found on RPC")
                 return None
                 
             # Store the transaction in the database asynchronously
-            tx_json_str = response.value.to_json()
+            tx_json_str = transaction.to_json()
             tx_json = json.loads(tx_json_str)
             self._async_store_transaction(signature_str, tx_json)
             
-            return response.value
+            return transaction
             
         except Exception as e:
             logger.error(f"Error fetching transaction {signature_str}: {str(e)}", exc_info=True)
@@ -111,11 +110,11 @@ class TransactionService:
         # Dictionary to store results
         results: Dict[str, Optional[EncodedConfirmedTransactionWithStatusMeta]] = {}
         
-        # now = int(time.monotonic() * 1000)
+        now = int(time.monotonic() * 1000)
         # First, check which transactions are already in the database
         db_transactions = self.transaction_repository.get_transactions_by_signatures(signature_strs)
-        # timeittook = int(time.monotonic() * 1000) - now
-        # logger.info(f"Time taken to fetch transactions: {timeittook} ms")
+        timeittook = int(time.monotonic() * 1000) - now
+        logger.info(f"Time taken to fetch transactions: {timeittook} ms")
 
 
         # Keep track of signatures that need to be fetched from RPC
