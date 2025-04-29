@@ -185,7 +185,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         <b>Program:</b> ${this.metadataServices.getLabelComputed(link.program_address, AddressType.PROGRAM, true).label}<br/>
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
-        ${transferDetailsHTML}
+        ${transferDetailsHTML}<br/>
         <b>Transaction:</b> ${this.metadataServices.getLabelComputed(link.transaction_signature).label}<br/>
     </div>
     `;
