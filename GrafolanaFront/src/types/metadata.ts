@@ -61,6 +61,7 @@ export interface Program {
 export enum AddressType {
   PROGRAM = "program",
   TOKEN = "token",
+  TRANSACTION = "transaction",
   UNKNOWN = "unknown",
 }
 

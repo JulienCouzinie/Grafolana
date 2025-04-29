@@ -6,6 +6,7 @@ import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
 import { useLabelEditDialog } from './label-edit-dialog-provider';
 import { shortenAddress } from '@/utils/addressUtils';
+import { GraphData } from '@/types/graph';
 
 interface AddressLabelProps {
   address: string;
@@ -13,6 +14,7 @@ interface AddressLabelProps {
   className?: string;
   shortened?: boolean;
   show_controls?: boolean;
+  data: GraphData; 
 }
 
 interface TooltipPosition {
@@ -28,7 +30,8 @@ export function AddressLabel({
   type = AddressType.UNKNOWN, 
   className,
   shortened = false, // Default to false
-  show_controls = true // Default to showing controls
+  show_controls = true, // Default to showing controls
+  data 
 }: AddressLabelProps) {
   const { getLabelComputed, isSpam} = useMetadata();
   const { publicKey } = useWallet();
@@ -41,9 +44,24 @@ export function AddressLabel({
   const labelRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
+  const isTransactionSpan = useRef(false); // Track if the label is a transaction span
   
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
+
+  useEffect(() => {
+    // Check if the transaction is spam by checking if one of its signers is a known spam address
+    const isItSpam = (signature: string): boolean => {
+      const txData = data.transactions[signature];
+      if (!txData || !txData.signers || txData.signers.length === 0) {
+          return false;
+      }
+      
+      // Check if any signer is in the spam list
+      return txData.signers.some(signer => isSpam(signer));
+    }
+    isTransactionSpan.current = isItSpam(address);
+  }, [data]);
 
   useEffect(() => {
     function fetchLabel() {
@@ -196,6 +214,10 @@ export function AddressLabel({
 
   let spamImg;
   if (isSpam(address)) {
+    spamImg = useStaticGraphics().spam.image;
+  }
+
+  if (isTransactionSpan.current) {
     spamImg = useStaticGraphics().spam.image;
   }
 

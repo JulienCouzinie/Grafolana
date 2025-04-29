@@ -385,6 +385,7 @@ class WalletViewStrategy extends BaseViewStrategy {
                       <AddressLabel 
                         address={signature} 
                         shortened={true} 
+                        data={this.originalData.current} 
                       />
                     </li>
                   ))}
@@ -448,6 +449,7 @@ class WalletViewStrategy extends BaseViewStrategy {
                         <AddressLabel 
                           address={comp.account_vertex.address!} 
                           shortened={true} 
+                          data={this.originalData.current} 
                         />
                       </li>
                     );
@@ -479,7 +481,7 @@ class WalletViewStrategy extends BaseViewStrategy {
               <b>Type:</b> {node.type}<br/>
               {/* Display node image if available */}
               {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
-              <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               {/* Display composite accounts info if available */}
               <CompositeAccounts />
               {/* Display transactions this account is appearing */}
@@ -561,7 +563,7 @@ class WalletViewStrategy extends BaseViewStrategy {
                                       
                                       return (
                                           <li key={compIndex} style={{ margin: '4px 0' }}>
-                                              <span dangerouslySetInnerHTML={{ __html: compositeTransferDetailsHTML }} /> - <b>Transaction:</b> <AddressLabel address={compLink.transaction_signature} shortened={true} /><br/>
+                                              <span dangerouslySetInnerHTML={{ __html: compositeTransferDetailsHTML }} /> - <b>Transaction:</b> <AddressLabel address={compLink.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
                                           </li>
                                       );
                                   })}
@@ -598,10 +600,10 @@ class WalletViewStrategy extends BaseViewStrategy {
                           )}
                           <br/>
                           {link.type !== TransferType.WALLET_TO_WALLET && (
-                              <><b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/></>
+                              <><b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} data={this.originalData.current} /><br/></>
                           )}
-                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
-                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
+                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
+                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
                           
                           {/* Only show transfer details for non-WALLET_TO_WALLET links */}
                           {link.type !== TransferType.WALLET_TO_WALLET && (

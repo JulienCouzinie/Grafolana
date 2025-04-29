@@ -16,18 +16,6 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     const metadataServices = useMetadata();
     const usdServices = useUSDValue();
 
-    // Check if the transaction is spam by checking if one of its signers is a known spam address
-    const isSpam = (signature: string): boolean => {
-        const txData = apiGraphData.transactions[signature];
-        if (!txData || !txData.signers || txData.signers.length === 0) {
-            return false;
-        }
-        
-        // Check if any signer is in the spam list
-        return txData.signers.some(signer => metadataServices.isSpam(signer));
-    };
-
-    const spamImg = useStaticGraphics().spam.image;
     const SOLMintInfo = metadataServices.getMintInfo("SOL");
     const SOLImage = SOLMintInfo ? <img src={SOLMintInfo.image} alt="Destination Mint" className="inline w-4 h-4" /> : null;
 
@@ -79,8 +67,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                         <div className="grid grid-cols-[minmax(100px,300px)_1fr] gap-2">
                             <div className="font-bold">Signature:</div>
                             <div>
-                                {isSpam(signature) && <img src={spamImg?.src} alt="SPAM" title="SPAM" className="w-6 h-6 inline mr-1" />}
-                                <AddressLabel address={signature} />
+                                <AddressLabel address={signature} data={apiGraphData} />
                             </div>
                             
                             <div className="font-bold">Transfers:</div>
@@ -96,7 +83,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             <div>
                                 {txData.signers.map((signer, index) => (
                                     <span key={index}>
-                                        <AddressLabel address={signer} />
+                                        <AddressLabel address={signer} data={apiGraphData} />
                                         {index < txData.signers.length - 1 ? ', ' : ''}
                                     </span>
                                 ))}

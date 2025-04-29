@@ -136,8 +136,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         ` : '<b>Token:</b> SOL<br/>'}
         <b>Owner:</b> ${node.owner ? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
         ${authoritiesHtml}
-        <b>Token Balance:</b> ${node.balance_token}<br/>
-        <b>Lamport Balance:</b> ${node.balance_lamport}
+        <b>Transaction:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.transaction_signature).label}<br/>
       </div>
     `;
   }
@@ -187,6 +186,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         <b>From:</b> ${this.metadataServices.getLabelComputed(link.source_account_vertex.address).label}<br/>
         <b>To:</b> ${this.metadataServices.getLabelComputed(link.target_account_vertex.address).label}<br/>
         ${transferDetailsHTML}
+        <b>Transaction:</b> ${this.metadataServices.getLabelComputed(link.transaction_signature).label}<br/>
     </div>
     `;
   }
@@ -280,6 +280,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                       <AddressLabel 
                         address={signature} 
                         shortened={true} 
+                        data={this.originalData.current} 
                       />
                     </li>
                   ))}
@@ -295,7 +296,7 @@ class FlowViewStrategy extends BaseViewStrategy {
             <b>Authorities:</b><br/>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               {node.authorities.map((auth, i) => (
-                <li key={i}><AddressLabel address={auth} shortened={true} /></li>
+                <li key={i}><AddressLabel address={auth} shortened={true} data={this.originalData.current} /></li>
               ))}
             </ul>
           </React.Fragment>
@@ -321,15 +322,15 @@ class FlowViewStrategy extends BaseViewStrategy {
             }}>
               <b>Type:</b> {node.type}<br/>
               {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
-              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
-              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} /><br/>
+              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
               {mintAddress ? (
                 <React.Fragment>
-                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
+                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} data={this.originalData.current} /><br/>
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
+              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} data={this.originalData.current} />) : 'Unknown'}<br/>
               {authoritiesComponent}
               <AccountTransactions />
             </div>
@@ -394,10 +395,10 @@ class FlowViewStrategy extends BaseViewStrategy {
                               />
                           )}
                           <br/>
-                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/>
-                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
-                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
-                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} /><br/>
+                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true}data={this.originalData.current}  /><br/>
+                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
+                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
+                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
                           <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
                       </div>
                   </React.Fragment>

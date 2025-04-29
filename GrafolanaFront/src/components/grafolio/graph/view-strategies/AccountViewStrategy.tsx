@@ -326,6 +326,7 @@ class AccountViewStrategy extends BaseViewStrategy {
                       <AddressLabel 
                         address={signature} 
                         shortened={true} 
+                        data={this.originalData.current} 
                       />
                     </li>
                   ))}
@@ -341,7 +342,7 @@ class AccountViewStrategy extends BaseViewStrategy {
             <b>Authorities:</b><br/>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               {node.authorities.map((auth, i) => (
-                <li key={i}><AddressLabel address={auth} shortened={true} /></li>
+                <li key={i}><AddressLabel address={auth} shortened={true} data={this.originalData.current} /></li>
               ))}
             </ul>
           </React.Fragment>
@@ -368,10 +369,10 @@ class AccountViewStrategy extends BaseViewStrategy {
               <b>Type:</b> {node.type}<br/>
               {/* Display node image if available */}
               {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
-              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} /><br/>
+              <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               {mintAddress ? (
                 <React.Fragment>
-                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
+                  <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} data={this.originalData.current} /><br/>
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
               {authoritiesComponent}
@@ -451,7 +452,7 @@ class AccountViewStrategy extends BaseViewStrategy {
                                       
                                       return (
                                           <li key={compIndex} style={{ margin: '4px 0' }}>
-                                              <span dangerouslySetInnerHTML={{ __html: compositeTransferDetailsHTML }} /> - <b>Transaction:</b> <AddressLabel address={compLink.transaction_signature} shortened={true} /><br/>
+                                              <span dangerouslySetInnerHTML={{ __html: compositeTransferDetailsHTML }} /> - <b>Transaction:</b> <AddressLabel address={compLink.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
                                           </li>
                                       );
                                   })}
@@ -490,10 +491,10 @@ class AccountViewStrategy extends BaseViewStrategy {
                           )}
                           <br/>
 
-                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} /><br/>
-                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} /><br/>
-                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} /><br/>
-                          {showTransaction && (<><b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} /></>)}
+                          <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true} data={this.originalData.current} /><br/>
+                          <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
+                          <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
+                          {showTransaction && (<><b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} data={this.originalData.current} /></>)}
                           <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
 
                           {/* Show composite links if they exist */}
