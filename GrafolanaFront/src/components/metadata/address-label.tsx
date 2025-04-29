@@ -258,7 +258,7 @@ export function AddressLabel({
       {show_controls && (
         <button
           onClick={handleCopy}
-          className="p-1 hover:text-blue-500 relative"
+          className="hover:text-blue-500 relative"
           title="Copy address"
         >
           {/* Copy icon */}
