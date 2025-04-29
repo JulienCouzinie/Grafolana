@@ -193,7 +193,6 @@ class AccountViewStrategy extends BaseViewStrategy {
           ${mintInfo?.name ? `<b>Token:</b> ${mintInfo.name}<br/>` : ''}
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
         ` : '<b>Token:</b> SOL<br/>'}
-        <b>Owner:</b> ${node.owner? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
         ${authoritiesHtml}
         <b>Token Balance:</b> ${node.balance_token}<br/>
         <b>Lamport Balance:</b> ${node.balance_lamport}
@@ -375,7 +374,6 @@ class AccountViewStrategy extends BaseViewStrategy {
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} /><br/>
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} />) : 'Unknown'}<br/>
               {authoritiesComponent}
               <AccountTransactions />
             </div>
