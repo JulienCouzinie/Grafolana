@@ -7,6 +7,7 @@ import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useStaticGraphics } from '@/components/metadata/static-graphic-provider';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { useUSDValue } from '@/hooks/useUSDValue';
+import { AddressType } from '@/types/metadata';
 
 interface TransactionsProps {
   apiGraphData: GraphData;
@@ -67,7 +68,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                         <div className="grid grid-cols-[minmax(100px,300px)_1fr] gap-2">
                             <div className="font-bold">Signature:</div>
                             <div>
-                                <AddressLabel address={signature} data={apiGraphData} />
+                                <AddressLabel type={AddressType.TRANSACTION} address={signature} data={apiGraphData} />
                             </div>
                             
                             <div className="font-bold">Transfers:</div>

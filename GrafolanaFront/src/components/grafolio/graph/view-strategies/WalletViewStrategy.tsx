@@ -9,6 +9,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
+import { NodeImage } from '@/components/metadata/node-image';
 
 
 class WalletViewStrategy extends BaseViewStrategy {
@@ -344,7 +345,6 @@ class WalletViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
         // Component to display transactions where this account is involved
         const AccountTransactions = () => {
@@ -428,23 +428,20 @@ class WalletViewStrategy extends BaseViewStrategy {
                     // Get mint info and image for composite account
                     const compMintAddress = comp.mint_address;
                     const compMintInfo = compMintAddress ? this.metadataServices.getMintInfo(compMintAddress) : null;
-                    const compMintImage = this.metadataServices.getGraphicByNode(comp).image;
+
                     
                     return (
                       <li key={compIndex} style={{ margin: '4px 0' }}>
-                        {compMintImage && (
-                          <img 
-                            src={compMintImage.src} 
-                            crossOrigin="anonymous" 
-                            style={{ 
-                              width: 16, 
-                              height: 16, 
-                              verticalAlign: 'middle', 
-                              marginRight: 5, 
-                              display: 'inline-block' 
-                            }} 
-                          />
-                        )}
+                        <NodeImage node={comp} maxWidth={16} maxHeight={16} 
+                        style={{ 
+                          width: 16, 
+                          height: 16, 
+                          verticalAlign: 'middle', 
+                          marginRight: 5, 
+                          display: 'inline-block' 
+                        }} 
+                        />
+
                         {compMintInfo?.symbol && `${compMintInfo.symbol}: `}
                         <AddressLabel 
                           address={comp.account_vertex.address!} 
@@ -480,7 +477,7 @@ class WalletViewStrategy extends BaseViewStrategy {
             }}>
               <b>Type:</b> {node.type}<br/>
               {/* Display node image if available */}
-              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              <NodeImage node={node} maxWidth={50} maxHeight={50} />
               <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               {/* Display composite accounts info if available */}
               <CompositeAccounts />

@@ -52,19 +52,16 @@ export function AddressLabel({
   useEffect(() => {
     // Check if the transaction is spam by checking if one of its signers is a known spam address
     const isItSpam = (signature: string): boolean => {
+      
       const txData = data.transactions[signature];
       if (!txData || !txData.signers || txData.signers.length === 0) {
           return false;
       }
-      
       // Check if any signer is in the spam list
       return txData.signers.some(signer => isSpam(signer));
     }
-    if (type === AddressType.TRANSACTION) {
-      isTransactionSpan.current = isItSpam(address);
-    } else {
-      isTransactionSpan.current = false;
-    }
+    
+    isTransactionSpan.current = isItSpam(address);
   }, [data]);
 
   useEffect(() => {

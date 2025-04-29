@@ -9,6 +9,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
+import { NodeImage } from '@/components/metadata/node-image';
 
 class AccountViewStrategy extends BaseViewStrategy {
   
@@ -285,7 +286,6 @@ class AccountViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
         // Component to display transactions where this account is involved
         const AccountTransactions = () => {
@@ -368,7 +368,7 @@ class AccountViewStrategy extends BaseViewStrategy {
             }}>
               <b>Type:</b> {node.type}<br/>
               {/* Display node image if available */}
-              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              <NodeImage node={node} maxWidth={50} maxHeight={50} />
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               {mintAddress ? (
                 <React.Fragment>

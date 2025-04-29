@@ -9,6 +9,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
+import { NodeImage } from '@/components/metadata/node-image';
 
 
 class FlowViewStrategy extends BaseViewStrategy {
@@ -239,7 +240,6 @@ class FlowViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
-        const nodeImage = this.metadataServices.getGraphicByNode(node).image;
 
         // Component to display transactions where this account is involved
         const AccountTransactions = () => {
@@ -279,6 +279,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                     <li key={txIndex} style={{ margin: '4px 0' }}>
                       <AddressLabel 
                         address={signature} 
+                        type={AddressType.TRANSACTION}
                         shortened={true} 
                         data={this.originalData.current} 
                       />
@@ -321,10 +322,10 @@ class FlowViewStrategy extends BaseViewStrategy {
               color: '#FFFFFF'
             }}>
               <b>Type:</b> {node.type}<br/>
-              {nodeImage && <img src={nodeImage.src} crossOrigin="anonymous" style={{ maxWidth: 50, maxHeight: 50 }} />}
+              <NodeImage node={node} maxWidth={50} maxHeight={50} />
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
-              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
+              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} type={AddressType.TRANSACTION} shortened={true} data={this.originalData.current} /><br/>
               {mintAddress ? (
                 <React.Fragment>
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} data={this.originalData.current} /><br/>
@@ -398,7 +399,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                           <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true}data={this.originalData.current}  /><br/>
                           <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
                           <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
-                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
+                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} type={AddressType.TRANSACTION} shortened={true} data={this.originalData.current} /><br/>
                           <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
                       </div>
                   </React.Fragment>
