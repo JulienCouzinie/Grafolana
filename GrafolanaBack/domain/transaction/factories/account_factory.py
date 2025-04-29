@@ -60,12 +60,15 @@ class AccountFactory:
             account_addresses: List of account addresses in the transaction
             signer_wallets: Set of signer wallet addresses
         """
+        mints: Set[str] = set()
+
         # Process pre_token_balances
         for pre_token_balance in pre_token_balances:
             account_index = pre_token_balance.account_index
             if account_index < len(account_addresses):
                 address = account_addresses[account_index]
                 mint = str(pre_token_balance.mint)
+                mints.add(mint)
                 owner = str(pre_token_balance.owner) if hasattr(pre_token_balance, 'owner') and pre_token_balance.owner else None
                 amount = pre_token_balance.ui_token_amount.amount
                 
@@ -94,6 +97,9 @@ class AccountFactory:
                 # For SOL accounts, use SOL as the mint address
                 mint_address = SOL if address != WRAPPED_SOL_ADDRESS else WRAPPED_SOL_ADDRESS
                 
+                if mint_address == WRAPPED_SOL_ADDRESS:
+                    mints.add(WRAPPED_SOL_ADDRESS)
+
                 repo.create_account(
                     transaction_signature=transaction_signature,
                     address=address,
@@ -103,3 +109,8 @@ class AccountFactory:
                     balance_token=0,
                     balance_lamport=lamport_balance
                 )
+
+        for mint in mints:
+            if mint_account := repo.get_account(mint):
+                mint_account.type = AccountType.TOKEN_MINT_ACCOUNT
+        
