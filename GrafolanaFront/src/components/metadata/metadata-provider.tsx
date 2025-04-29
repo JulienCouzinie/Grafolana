@@ -1,6 +1,6 @@
 'use client'
 
-import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spam } from "@/types/metadata";
+import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spam, SpamType } from "@/types/metadata";
 import { createContext, useContext, useCallback, useState, useMemo, ReactNode, useEffect, useRef } from "react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos, fetchSpamAddresses } from "./fetchers";
@@ -31,6 +31,8 @@ interface MetadataContextType {
   getGraphicByNode: (node: ForceGraphNode) => StaticGraphic;
 
   isSpam: (address: string) => boolean;
+  getSpam: (address: string) => Spam | null;
+  canUnMarkSpam: (address: string) => boolean;
   addToSpam: (address: string) => Promise<Spam>;
   deleteFromSpam: (spamId: number) => Promise<boolean>;
 }
@@ -78,6 +80,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   const labelComputedSLoadingStates = useRef(new Map<string, boolean>());
   const mintLoadingStates = useRef(new Map<string, boolean>());
   const programLoadingStates = useRef(new Map<string, boolean>());
+
+  // Add this state for managing spam addresses
+  const [spamAddresses, setSpamAddresses] = useState<Spam[]>([]);
+  const spamAddressesMap = useRef<Map<string, Spam>>(new Map());
   
   // Create a cache key that includes userId if present
   const getCacheKey = (address: string, uid?: string) => uid ? `${address}:${uid}` : address;
@@ -459,7 +465,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     [computedLabelsState, publicKey]
   );
 
-  const getGraphicByNode = (node: ForceGraphNode): StaticGraphic => {
+  const getGraphicByNode = useCallback((node: ForceGraphNode): StaticGraphic => {
     let nodeGraphic: StaticGraphic;
     const mintAddress = node.mint_address;
     const mintInfo = mintAddress ? getMintInfo(mintAddress) : null;
@@ -484,11 +490,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       nodeGraphic = {image:img, canvas:canvas};
     }
     return nodeGraphic;
-  }
-
-  // Add this state for managing spam addresses
-  const [spamAddresses, setSpamAddresses] = useState<Spam[]>([]);
-  const spamAddressesMap = useRef<Map<string, Spam>>(new Map());
+  }, [spamAddresses, getMintImage, getImageCanvas, getProgramImage, getMintInfo, staticGraphic]);
 
   // Add a function to fetch spam addresses
   const fetchSpamAddressesAndCache = useCallback(async () => {
@@ -518,7 +520,21 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   // Check if an address is spam
   const isSpam = useCallback((address: string): boolean => {
     return spamAddressesMap.current.has(address);
-  }, [spamAddressesMap]);
+  }, [spamAddresses, spamAddressesMap]);
+
+  // Get the spam object by address
+  const getSpam = useCallback((address: string): Spam | null => {
+    return spamAddressesMap.current.get(address) || null;
+  }, [spamAddresses, spamAddressesMap]);
+
+  const canUnMarkSpam = useCallback((address: string): boolean => {
+    const spam = spamAddressesMap.current.get(address);
+    if (spam) {
+      return spam.user_id === publicKey?.toBase58() || spam.creator === SpamType.USER;
+    }
+    return false;
+
+  }, [spamAddresses, spamAddressesMap, publicKey]);
 
   // Add an address to spam
   const addToSpam = useCallback(async (address: string): Promise<Spam> => {
@@ -597,6 +613,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     <StaticGraphicsProvider>
     <MetadataContext.Provider value={{
       isSpam,
+      getSpam,
+      canUnMarkSpam,
       addToSpam,
       deleteFromSpam,
 

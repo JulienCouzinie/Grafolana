@@ -71,10 +71,17 @@ export interface AddressWithType {
 }
 
 // Add new Spam interface
+
+export enum SpamType {
+  DEFAULT = 'DEFAULT',
+  ADMIN = 'ADMIN',
+  USER = 'USER'
+}
+
 export interface Spam {
   id: number;
   address: string;
-  creator: 'DEFAULT' | 'ADMIN' | 'OWNER' | 'USER';
+  creator: 'DEFAULT' | 'ADMIN' | 'USER';
   user_id?: string;
   created_at: string;
   updated_at: string;

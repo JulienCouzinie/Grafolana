@@ -45,7 +45,7 @@ export function AddressLabel({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
   const isTransactionSpan = useRef(false); // Track if the label is a transaction span
-  
+  const spamImg = useStaticGraphics().spam.image;
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
 
@@ -216,15 +216,6 @@ export function AddressLabel({
     };
   };
 
-  let spamImg;
-  if (isSpam(address)) {
-    spamImg = useStaticGraphics().spam.image;
-  }
-
-  if (isTransactionSpan.current) {
-    spamImg = useStaticGraphics().spam.image;
-  }
-
   return (
     <div className="relative inline-flex items-center gap-2 word-break-all">
       <span 
@@ -234,7 +225,7 @@ export function AddressLabel({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        {spamImg && <img src={spamImg.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
+        {(isTransactionSpan.current || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
         {displayLabel}
       </span>
       

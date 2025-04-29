@@ -869,10 +869,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 action: "rename_account"
             },
             {
-                label: "Show Details",
-                action: "show_details"
-            },
-            {
                 label: isFixed ? "Unfix Position" : "Fix Position",
                 action: "toggle_fix_position"
             }
@@ -884,6 +880,28 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 label: "Expand Swap Program",
                 action: "expand_swap_program"
             });
+        }
+        
+        // Add spam-related options only for accounts with addresses on the curve
+        if (node.isOnCurve) {
+            // Check if address is already marked as spam
+            const isSpam = this.metadataServices.isSpam(node.account_vertex.address);
+            
+            if (isSpam) {
+                // Only allow unmarking spam if user has permission
+                if (this.metadataServices.canUnMarkSpam(node.account_vertex.address)) {
+                    menuItems.push({
+                        label: "Unmark as Spam",
+                        action: "unmark_spam"
+                    });
+                }
+            } else {
+                // Allow marking as spam for non-spam addresses
+                menuItems.push({
+                    label: "Mark as Spam",
+                    action: "mark_spam"
+                });
+            }
         }
         
         return menuItems;
@@ -900,10 +918,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 // The strategy class itself doesn't have access to hooks directly
                 // We'll need to implement this in a component that uses the strategy
                 // See the implementation in useGraphInteractions below
-                break;
-            case "show_details":
-                // Show detailed view can be implemented by specific strategies
-                console.log("Show details for:", node);
                 break;
             case "toggle_fix_position":
                 // Toggle fixing the node position
@@ -928,6 +942,15 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 if (node.type === AccountType.PROGRAM_ACCOUNT) {
                     this.ExpandSwapProgram(node);
                 }
+                break;
+            case "mark_spam":
+                // Mark this address as spam
+                this.metadataServices.addToSpam(node.account_vertex.address);
+                break;
+            case "unmark_spam":
+                // Unmark this address from spam
+                const spam = this.metadataServices.getSpam(node.account_vertex.address);
+                this.metadataServices.deleteFromSpam(spam!.id);
                 break;
             default:
                 console.log(`Unhandled action: ${action} for node:`, node);
