@@ -26,6 +26,7 @@ class TransactionContext:
     next_swap_id: int
     swap_id_counter: int
     isomorphic_group: int = None
+    err: str = None
     
     def __init__(
         self,
@@ -37,7 +38,8 @@ class TransactionContext:
         blocktime: int,
         fee: int,
         fee_payer: str,
-        compute_units_consumed: int
+        compute_units_consumed: int,
+        err: str = None,
     ):
         self.slot = slot
         self.transaction_signature = transaction_signature
@@ -52,6 +54,7 @@ class TransactionContext:
         self.swaps = []
         self.next_swap_id = 1
         self.swap_id_counter = 0
+        self.err = err
         
     def compute_priority_fee(self, micro_lamport: int) -> None:
         """

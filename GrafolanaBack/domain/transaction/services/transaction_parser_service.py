@@ -48,10 +48,6 @@ class TransactionParserService:
         Returns:
             A TransactionContext object containing the graph and all related transaction data
         """
-        
-        if encoded_transaction.transaction.meta.err:
-            logger.info(f"Transaction {transaction_signature} has an error: {encoded_transaction.transaction.meta.err.to_json()}")
-            return None
 
         # Create an empty graph and repositories
         graph = TransactionGraph()
@@ -85,9 +81,6 @@ class TransactionParserService:
             transaction_signature
         )
         
-        # Parse instructions
-        instructions = get_instruction_call_stack(transaction)
-        
         # Parse transaction context
         transaction_context = TransactionContext(
             slot=encoded_transaction.slot,
@@ -98,8 +91,16 @@ class TransactionParserService:
             blocktime=blocktime,
             fee=transaction.meta.fee,
             fee_payer=fee_payer,
-            compute_units_consumed=transaction.meta.compute_units_consumed
+            compute_units_consumed=transaction.meta.compute_units_consumed,
+            err=encoded_transaction.transaction.meta.err.to_json()
         )
+
+        if encoded_transaction.transaction.meta.err:
+            logger.info(f"Transaction {transaction_signature} has an error: {encoded_transaction.transaction.meta.err.to_json()}")
+            return transaction_context
+
+        # Parse instructions
+        instructions = get_instruction_call_stack(transaction)
         
         # Process instructions to build the graph
         self._process_instructions(instructions, transaction_context)
