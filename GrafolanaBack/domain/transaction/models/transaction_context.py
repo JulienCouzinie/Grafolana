@@ -4,6 +4,7 @@ from GrafolanaBack.domain.transaction.models.graph import TransactionGraph
 from GrafolanaBack.domain.transaction.models.swap import Swap, TransferAccountAddresses
 from GrafolanaBack.domain.transaction.repositories.account_repository import AccountRepository
 from GrafolanaBack.domain.logging.logging import logger
+from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction
 
 class TransactionContext:
     """
@@ -25,6 +26,7 @@ class TransactionContext:
     swaps: List[Swap]
     next_swap_id: int
     swap_id_counter: int
+    instructions: List[Parsed_Instruction]
     isomorphic_group: int = None
     err: str = None
     
@@ -39,6 +41,7 @@ class TransactionContext:
         fee: int,
         fee_payer: str,
         compute_units_consumed: int,
+        instructions: List[Parsed_Instruction],
         err: str = None,
     ):
         self.slot = slot
@@ -55,6 +58,7 @@ class TransactionContext:
         self.next_swap_id = 1
         self.swap_id_counter = 0
         self.err = err
+        self.instructions = instructions
         
     def compute_priority_fee(self, micro_lamport: int) -> None:
         """

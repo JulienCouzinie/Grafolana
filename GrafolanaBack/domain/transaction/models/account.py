@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple
 from enum import Enum, auto
+from solders.pubkey import Pubkey
 
 from GrafolanaBack.domain.transaction.config.constants import SOL
 
@@ -110,4 +111,22 @@ class AccountVertex(NamedTuple):
             "address": self.address,
             "version": str(self.version),
             "transaction_signature": self.transaction_signature
+        }
+    
+
+class AccountTransaction(NamedTuple):
+    address: str; 
+    mint_address: str; 
+    type: AccountType; 
+
+    def to_dict(self) -> Dict[str, str]:
+        """Convert the vertex to a dictionary representation"""
+        isOnCurve = False
+        if (self.type not in [AccountType.BURN_ACCOUNT, AccountType.FEE_ACCOUNT, AccountType.MINTTO_ACCOUNT, AccountType.UNKNOWN]):
+            isOnCurve = Pubkey.from_string(self.address).is_on_curve()
+        return {
+            "address": self.address,
+            "mint_address": self.mint_address,
+            "type": self.type,
+            "isOnCurve": isOnCurve,
         }

@@ -1,6 +1,6 @@
 import copy
 from typing import Dict, List, Optional, Set
-from GrafolanaBack.domain.transaction.models.account import Account, AccountType, AccountVersion, AccountVertex
+from GrafolanaBack.domain.transaction.models.account import Account, AccountTransaction, AccountType, AccountVersion, AccountVertex
 
 class AccountRepository:
     """
@@ -136,6 +136,18 @@ class AccountRepository:
     def get_all_addresses(self) -> List[str]:
         """Get all account addresses in the repository"""
         return list(self.accounts.keys())
+    
+    def get_all_accountTransactions(self) -> List[AccountTransaction]:
+        """Get all account transactions in the repository"""
+        account_transactions = []
+        account: Account
+        for address, account in self.accounts.items():
+            account_transactions.append(AccountTransaction(
+                address=address,
+                mint_address=account.mint_address,
+                type=account.type
+            ).to_dict())
+        return account_transactions
     
     def get_pre_state_accounts(self) -> List[AccountVersion]:
         """Get all accounts in their initial state (version 0)"""

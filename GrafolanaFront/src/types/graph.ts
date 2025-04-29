@@ -71,6 +71,7 @@ export interface GraphNode {
     balance_lamport: number;
     type: AccountType;
     is_pool: boolean;
+    isOnCurve: boolean;
     composite: GraphNode[] | null; // Composite nodes (when multiple nodes are aggregated into one)
 }
 
@@ -105,9 +106,16 @@ export interface Fees {
     priority_fee: number; 
 }
 
+export interface AccountTransaction {
+    address: string; // Address of the account
+    mint_address: string; // Mint address of the token
+    type: AccountType; // Type of the account
+    isOnCurve: boolean;
+}
+
 export interface TransactionData {
     transaction_signature: string; 
-    accounts: string[];
+    accounts: AccountTransaction[];
     fees: Fees;
     signers: string[];
     swaps: Swap[];

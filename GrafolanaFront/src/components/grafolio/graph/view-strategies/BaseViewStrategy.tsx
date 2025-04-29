@@ -1284,8 +1284,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 fontSize: '14px'
             };
 
-            
-
             const errorStyle = {
                 color: 'red',
                 fontSize: '12px',

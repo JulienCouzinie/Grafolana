@@ -6,6 +6,7 @@ from solders.signature import Signature
 from solders.pubkey import Pubkey
 from solders.transaction_status import  EncodedConfirmedTransactionWithStatusMeta
 
+from GrafolanaBack.domain.transaction.models.account import AccountType
 from GrafolanaBack.domain.transaction.models.graph import TransactionGraph
 from GrafolanaBack.domain.transaction.factories.account_factory import AccountFactory
 from GrafolanaBack.domain.transaction.services.instruction_parser_service import InstructionParserService
@@ -80,6 +81,11 @@ class TransactionParserService:
             signer_wallets,
             transaction_signature
         )
+
+        err = encoded_transaction.transaction.meta.err.to_json() if encoded_transaction.transaction.meta.err else None
+
+        # Parse instructions
+        instructions = get_instruction_call_stack(transaction)
         
         # Parse transaction context
         transaction_context = TransactionContext(
@@ -92,15 +98,13 @@ class TransactionParserService:
             fee=transaction.meta.fee,
             fee_payer=fee_payer,
             compute_units_consumed=transaction.meta.compute_units_consumed,
-            err=encoded_transaction.transaction.meta.err.to_json()
+            err=err,
+            instructions=instructions,
         )
 
-        if encoded_transaction.transaction.meta.err:
-            logger.info(f"Transaction {transaction_signature} has an error: {encoded_transaction.transaction.meta.err.to_json()}")
+        if err:
+            logger.info(f"Transaction {transaction_signature} has an error: {err}")
             return transaction_context
-
-        # Parse instructions
-        instructions = get_instruction_call_stack(transaction)
         
         # Process instructions to build the graph
         self._process_instructions(instructions, transaction_context)
@@ -237,9 +241,10 @@ class TransactionParserService:
 
     def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, _parent_swap_id: int = None, _parent_router_swap_id: int = None) -> None:
         """Process a list of instructions and its inner instructions recursively."""
-        
 
         for instruction in instructions:
+            context.account_repository.get_account(instruction.program_address).type = AccountType.PROGRAM_ACCOUNT
+
             # Prevent parent_swap_id and parent_router_swap_id from being passed to sibling instructions
             parent_swap_id = _parent_swap_id
             parent_router_swap_id = _parent_router_swap_id

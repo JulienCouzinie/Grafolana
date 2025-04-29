@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Set, Tuple, Any
 import networkx as nx
 from networkx import Graph
+from solders.pubkey import Pubkey
 
 from GrafolanaBack.domain.prices.sol_price_service import SOLPriceService
 from GrafolanaBack.domain.prices.sol_price_utils import round_timestamp_to_minute
@@ -296,6 +297,11 @@ class GraphService:
                     account_vertex_data["address"] = address
                     account_vertex_data["version"] = version.version
                     account_vertex_data["transaction_signature"] = account_vertex.transaction_signature
+
+                    isOnCurve = False
+                    if (version.type not in [AccountType.BURN_ACCOUNT, AccountType.FEE_ACCOUNT, AccountType.MINTTO_ACCOUNT, AccountType.UNKNOWN]):
+                        isOnCurve = Pubkey.from_string(address).is_on_curve()
+                        
                     node_data = {
                         "account_vertex": account_vertex_data,
                         "mint_address": version.account.mint_address,
@@ -305,6 +311,7 @@ class GraphService:
                         "balance_lamport": version.balance_lamport,
                         "type": version.account.type,
                         "is_pool": version.account.is_pool,
+                        "isOnCurve": isOnCurve,
                     }
                     nodes_data.append(node_data)
         return nodes_data
@@ -324,7 +331,7 @@ class GraphService:
                 "fees": {"fee": context.fee, "priority_fee": context.priority_fee},
                 "signers": list(context.signer_wallets),
                 "swaps": GraphService._get_swaps_data(context),
-                "accounts" : context.account_repository.get_all_addresses(),
+                "accounts" : context.account_repository.get_all_accountTransactions(),
                 "mint_usd_price_ratio": {},
                 "isomorphic_group": context.isomorphic_group,
                 "timestamp": context.blocktime*1000,

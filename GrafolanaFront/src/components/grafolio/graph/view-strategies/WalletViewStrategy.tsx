@@ -130,7 +130,8 @@ class WalletViewStrategy extends BaseViewStrategy {
           authorities: [],
           balance_token: 0, 
           balance_lamport:0, 
-          composite: null
+          composite: null,
+          isOnCurve: true,
         };
         composite_seen_per_address.set(address, []);
         
@@ -351,7 +352,7 @@ class WalletViewStrategy extends BaseViewStrategy {
           
           // Find transactions involving this account
           const transactions = Object.entries(this.originalData.current.transactions)
-            .filter(([_, txData]) => txData.accounts.includes(node.account_vertex.address))
+            .filter(([_, txData]) => txData.accounts.some(account => account.address === node.account_vertex.address))
             .map(([signature, _]) => signature);
           
           // Only render if there are transactions

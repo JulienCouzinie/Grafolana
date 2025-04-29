@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
 import { GraphData } from '@/types/graph';
+import { GraphNode } from '@/types/graph';
 
 interface GrafolioProps {
   apiGraphData: GraphData;
@@ -26,6 +27,10 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
     setActiveTab(tab);
   };
 
+  // Aggregate account counts from transactions
+  const accountNumber: number = Object.values(apiGraphData.transactions).reduce((total, txData) => 
+  total + txData.accounts.length, 0);
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Tabs */}
@@ -41,19 +46,19 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
             onClick={() => handleTabChange('transactions')} 
             className={`px-4 py-2 rounded-md transition-colors ${isActive('transactions') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
-            Transactions
+            Transactions ({Object.keys(apiGraphData.transactions).length})
           </button>
           <button 
             onClick={() => handleTabChange('accounts')} 
             className={`px-4 py-2 rounded-md transition-colors ${isActive('accounts') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
-            Accounts
+            Accounts ({accountNumber})
           </button>
           <button 
             onClick={() => handleTabChange('transfers')} 
             className={`px-4 py-2 rounded-md transition-colors ${isActive('transfers') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
-            Transfers
+            Transfers ({Object.keys(apiGraphData.links).length})
           </button>
         </div>
       </div>
