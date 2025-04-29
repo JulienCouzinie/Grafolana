@@ -4,7 +4,6 @@ import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spa
 import { createContext, useContext, useCallback, useState, useMemo, ReactNode, useEffect, useRef } from "react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos, fetchSpamAddresses } from "./fetchers";
-import { cp } from "fs";
 import { useImmediateState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
@@ -28,6 +27,7 @@ interface MetadataContextType {
   deleteLabel: (address: string, userId?: string) => Promise<boolean>;
   getLabelComputed: (address: string, type?: AddressType, shortened_address?: boolean) => SimpleLabel;
   
+  getGraphic: (address: string, mint_address: string, type: AccountType) => StaticGraphic;
   getGraphicByNode: (node: ForceGraphNode) => StaticGraphic;
 
   isSpam: (address: string) => boolean;
@@ -465,32 +465,36 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     [computedLabelsState, publicKey]
   );
 
-  const getGraphicByNode = useCallback((node: ForceGraphNode): StaticGraphic => {
+  const getGraphic = useCallback((address: string, mint_address: string, type: AccountType): StaticGraphic => {
     let nodeGraphic: StaticGraphic;
-    const mintAddress = node.mint_address;
+    const mintAddress = mint_address;
     const mintInfo = mintAddress ? getMintInfo(mintAddress) : null;
-    if (isSpam(node.account_vertex.address)) {
+    if (isSpam(address)) {
       nodeGraphic = staticGraphic.spam;
-    } else if (node.type === AccountType.BURN_ACCOUNT) {
+    } else if (type === AccountType.BURN_ACCOUNT) {
       nodeGraphic = staticGraphic.burn;
-    } else if (node.type === AccountType.MINTTO_ACCOUNT) {
+    } else if (type === AccountType.MINTTO_ACCOUNT) {
       nodeGraphic = staticGraphic.mintTo;
-    } else if (node.type === AccountType.PROGRAM_ACCOUNT) {
-      const programImgUrl = getProgramInfo(node.account_vertex.address)?.icon;
+    } else if (type === AccountType.PROGRAM_ACCOUNT) {
+      const programImgUrl = getProgramInfo(address)?.icon;
       const programImg = getProgramImage(programImgUrl!);
-      const programCanvas = getImageCanvas(programImgUrl!, node.type);
+      const programCanvas = getImageCanvas(programImgUrl!, type);
       nodeGraphic = {image: programImg, canvas: programCanvas};
-    } else if (node.type === AccountType.FEE_ACCOUNT) {
+    } else if (type === AccountType.FEE_ACCOUNT) {
       nodeGraphic = staticGraphic.fee;
-    } else if (node.type == AccountType.WALLET_ACCOUNT){
+    } else if (type == AccountType.WALLET_ACCOUNT){
       nodeGraphic = staticGraphic.wallet;
     } else {
-      const img = getMintImage(mintInfo!.image);
-      const canvas = getImageCanvas(mintInfo!.image, node.type)
+      const img = getMintImage(mintInfo?.image);
+      const canvas = getImageCanvas(mintInfo?.image, type)
       nodeGraphic = {image:img, canvas:canvas};
     }
     return nodeGraphic;
   }, [spamAddresses, getMintImage, getImageCanvas, getProgramImage, getMintInfo, staticGraphic]);
+
+  const getGraphicByNode = useCallback((node: ForceGraphNode): StaticGraphic => {
+    return getGraphic(node.account_vertex.address, node.mint_address, node.type);
+  }, [getGraphic]);
 
   // Add a function to fetch spam addresses
   const fetchSpamAddressesAndCache = useCallback(async () => {
@@ -634,6 +638,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       updateLabel,
       deleteLabel,
 
+      getGraphic,
       getGraphicByNode,
 
     }}>
