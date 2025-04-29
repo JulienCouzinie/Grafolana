@@ -60,7 +60,11 @@ export function AddressLabel({
       // Check if any signer is in the spam list
       return txData.signers.some(signer => isSpam(signer));
     }
-    isTransactionSpan.current = isItSpam(address);
+    if (type === AddressType.TRANSACTION) {
+      isTransactionSpan.current = isItSpam(address);
+    } else {
+      isTransactionSpan.current = false;
+    }
   }, [data]);
 
   useEffect(() => {
