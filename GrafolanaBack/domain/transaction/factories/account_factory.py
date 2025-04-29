@@ -113,4 +113,5 @@ class AccountFactory:
         for mint in mints:
             if mint_account := repo.get_account(mint):
                 mint_account.type = AccountType.TOKEN_MINT_ACCOUNT
+                mint_account.mint_address = mint
         
