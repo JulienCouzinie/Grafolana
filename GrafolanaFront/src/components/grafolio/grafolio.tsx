@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
 import { GraphData } from '@/types/graph';
 import { GraphNode } from '@/types/graph';
+import Transactions from './transactions/transactions';
 
 interface GrafolioProps {
   apiGraphData: GraphData;
@@ -74,22 +75,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
         
         {/* Transactions Tab */}
         <div className={getTabDisplayClass('transactions')}>
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Transactions</h2>
-            {Object.keys(apiGraphData.transactions).length > 0 ? (
-              <div className="space-y-4">
-                {Object.entries(apiGraphData.transactions).map(([signature, txData]) => (
-                  <div key={signature} className="bg-gray-800 p-4 rounded-md">
-                    <h3 className="text-lg font-semibold">{signature.substring(0, 12)}...{signature.substring(signature.length - 12)}</h3>
-                    <div className="mt-2">Accounts: {txData.accounts.length}</div>
-                    <div>Swaps: {txData.swaps.length}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-400">No transaction data available</div>
-            )}
-          </div>
+          <Transactions apiGraphData={apiGraphData} />
         </div>
         
         {/* Accounts Tab */}

@@ -208,7 +208,7 @@ export function AddressLabel({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        {spamImg && <img src={spamImg.src} alt="Spam" className="w-4 h-4 inline" />}
+        {spamImg && <img src={spamImg.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
         {displayLabel}
       </span>
       

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { GraphData } from '@/types/graph';
+import { AccountType, GraphData } from '@/types/graph';
 import { AddressType, AddressWithType } from '@/types/metadata';
 
 interface MetadataPreloaderProps {
@@ -62,13 +62,27 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
       graphData.nodes.forEach(node => {
         addressesWithTypes.push({ address: node.account_vertex.address, type: AddressType.UNKNOWN });
         if (node.owner) addressesWithTypes.push({ address: node.owner, type: AddressType.UNKNOWN });
-        if (node.mint_address) addressesWithTypes.push({ address: node.mint_address, type: AddressType.TOKEN });
         node.authorities?.forEach(auth => 
           addressesWithTypes.push({ address: auth, type: AddressType.UNKNOWN }));
       });
-      
-      graphData.links.forEach(link => 
-        addressesWithTypes.push({ address: link.program_address, type: AddressType.PROGRAM }));
+
+
+      // Get Program addresses & Mint from transactions accounts
+      Object.values(graphData.transactions).forEach(txData => 
+        txData.accounts.forEach(account => {
+          if (account.type === AccountType.PROGRAM_ACCOUNT) {
+            addressesWithTypes.push({ address: account.address, type: AddressType.PROGRAM });
+          }
+          if (account.type === AccountType.TOKEN_MINT_ACCOUNT) {
+            addressesWithTypes.push({ address: account.address, type: AddressType.TOKEN });
+          }
+        })
+      );
+
+      // Get transaction signatures
+      Object.keys(graphData.transactions).forEach(signature => {
+        addressesWithTypes.push({ address: signature, type: AddressType.UNKNOWN });
+      });
 
       await FetchLabelsInfosAndCache(addressesWithTypes, publicKey?.toBase58());
     };

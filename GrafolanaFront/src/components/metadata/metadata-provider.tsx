@@ -14,7 +14,7 @@ import { StaticGraphicsProvider, useStaticGraphics, StaticGraphicsContextType, S
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
   FetchProgramInfosAndCache: (programAddresses: string[]) => Promise<void>;
-  FetchLabelsInfosAndCache: (addresses: AddressWithType[], userId?: string, shortenAddress?: boolean) => Promise<void>;
+  FetchLabelsInfosAndCache: (addresses: AddressWithType[], userId?: string) => Promise<void>;
 
   getMintInfo: (mintAddress: string) => MintDTO | null;
   getProgramInfo: (programAddress: string) => Program | null;

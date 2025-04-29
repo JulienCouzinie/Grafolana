@@ -7,6 +7,7 @@ import { useUSDValue } from '@/hooks/useUSDValue';
 import { AddressType, MintDTO } from '@/types/metadata';
 import { cloneDeep, min } from 'lodash';
 import { AddressLabel } from '@/components/metadata/address-label';
+import { calculateTokenAmount } from '@/utils/tokenUtils';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -344,7 +345,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                     
         
         // Calculate actual token amount based on decimals
-        const amountReal = this.calculateTokenAmount(amount, mintInfo);
+        const amountReal = calculateTokenAmount(amount, mintInfo);
         
         // Try to get USD value if available
         let usdValue: number | null = null;
@@ -755,16 +756,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return `${link.type}: Amount: ${amount}${image} (${usdString})`;
     };
 
-    protected calculateTokenAmount(amount: number, mintInfo: MintDTO | null): number {
-        return amount / Math.pow(10, mintInfo?.decimals || 0);
-    }
-    
     protected getAmountDetails = (
         link: ForceGraphLink,
         mintInfo: MintDTO | null,
         isDestination: boolean = false
     ): { amountString: string, imageHTML: string } => {
-        const amount = this.calculateTokenAmount(
+        const amount = calculateTokenAmount(
             isDestination ? link.amount_destination : link.amount_source,
             mintInfo
         );
@@ -831,7 +828,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             
             if (swapDetails?.fee) {
                 // Format fee using destination mint decimals
-                const formattedFee = this.calculateTokenAmount(swapDetails.fee, mintDestination);
+                const formattedFee = calculateTokenAmount(swapDetails.fee, mintDestination);
                 feeAmount = formattedFee + " " + mintDestination?.symbol;
                 feeUSD = this.usdServices.calculateUSDValue(
                     swapDetails.fee,
