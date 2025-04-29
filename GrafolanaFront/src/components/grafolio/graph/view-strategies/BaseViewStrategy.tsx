@@ -80,11 +80,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
 
         this.processGraphDataCallBack = useRef(null);
-        this.hideFees = useRef(false);
+        this.hideFees = useRef(true);
         this.hideSwaps = useRef(false);
         this.hideCreateAccounts = useRef(false);
         this.hideCloseAccounts = useRef(false);
-        this.hideSpam = useRef(false);
+        this.hideSpam = useRef(true);
 
         this.minSolAmount = useRef(0);
         this.maxSolAmount = useRef(null);
