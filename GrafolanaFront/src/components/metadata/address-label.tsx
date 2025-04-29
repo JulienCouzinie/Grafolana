@@ -1,6 +1,6 @@
 import { useMetadata } from './metadata-provider';
 import { useStaticGraphics } from './static-graphic-provider';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
@@ -25,6 +25,19 @@ interface TooltipPosition {
   arrowLeftOffset?: number; // Add property to track arrow offset
 }
 
+// Add context menu position interface
+interface ContextMenuPosition {
+  x: number;
+  y: number;
+  isOpen: boolean;
+}
+
+// Add interface for context menu items
+interface ContextMenuItem {
+  label: string;
+  action: string;
+}
+
 export function AddressLabel({ 
   address, 
   type = AddressType.UNKNOWN, 
@@ -33,7 +46,7 @@ export function AddressLabel({
   show_controls = true, // Default to showing controls
   data 
 }: AddressLabelProps) {
-  const { getLabelComputed, isSpam} = useMetadata();
+  const { getLabelComputed, isSpam, addToSpam, canUnMarkSpam, deleteFromSpam, getSpam} = useMetadata();
   const { publicKey } = useWallet();
   const [displayLabel, setDisplayLabel] = useState(shortened ? shortenAddress(address) : address);
   const [labelInput, setLabelInput] = useState('');
@@ -44,25 +57,31 @@ export function AddressLabel({
   const labelRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
-  const isTransactionSpan = useRef(false); // Track if the label is a transaction span
+  const [isTransactionSpan, setisTransactionSpan] = useState(false); // Track if the label is a transaction span
   const spamImg = useStaticGraphics().spam.image;
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
+  
+  // Add state for context menu positioning and visibility
+  const [contextMenu, setContextMenu] = useState<ContextMenuPosition>({
+    x: 0,
+    y: 0,
+    isOpen: false
+  });
+
+  // Check if the transaction is spam by checking if one of its signers is a known spam address
+  const isTransactionSpam =  useCallback((signature: string): boolean => { 
+    const txData = data.transactions[signature];
+    if (!txData || !txData.signers || txData.signers.length === 0) {
+        return false;
+    }
+    // Check if any signer is in the spam list
+    return txData.signers.some(signer => isSpam(signer));
+  }, [data, isSpam]);
 
   useEffect(() => {
-    // Check if the transaction is spam by checking if one of its signers is a known spam address
-    const isItSpam = (signature: string): boolean => {
-      
-      const txData = data.transactions[signature];
-      if (!txData || !txData.signers || txData.signers.length === 0) {
-          return false;
-      }
-      // Check if any signer is in the spam list
-      return txData.signers.some(signer => isSpam(signer));
-    }
-    
-    isTransactionSpan.current = isItSpam(address);
-  }, [data]);
+    setisTransactionSpan(isTransactionSpam(address));
+  }, [data, isSpam]);
 
   useEffect(() => {
     function fetchLabel() {
@@ -173,6 +192,136 @@ export function AddressLabel({
     setDescriptionInput(description);
   };
 
+  // Add function to handle menu button click
+  const handleMenuClick = (e: React.MouseEvent): void => {
+    e.stopPropagation(); // Prevent event bubbling
+    
+    // Get the click position for the menu
+    const menuPosition = {
+      x: e.clientX,
+      y: e.clientY,
+      isOpen: !contextMenu.isOpen // Toggle menu
+    };
+    
+    setContextMenu(menuPosition);
+  };
+  
+  // Add function to close the context menu
+  const closeContextMenu = (): void => {
+    setContextMenu(prev => ({ ...prev, isOpen: false }));
+  };
+  
+  // Add effect to close menu when clicking outside
+  useEffect(() => {
+    if (contextMenu.isOpen) {
+      const handleOutsideClick = () => {
+        closeContextMenu();
+      };
+      
+      window.addEventListener('click', handleOutsideClick);
+      
+      return () => {
+        window.removeEventListener('click', handleOutsideClick);
+      };
+    }
+  }, [contextMenu.isOpen]);
+
+  // Function to dynamically generate menu items based on current address and state
+  const getContextMenuItems = (): ContextMenuItem[] => {
+    console.log("address type", type);
+    const menuItems: ContextMenuItem[] = [
+      {
+        label: "Copy Address",
+        action: "copy"
+      },
+      {
+        label: "Edit Label",
+        action: "edit"
+      }      
+    ];
+
+    // Check if address is already marked as spam
+    const isItSpam = isSpam(address);
+          
+    if (type !== AddressType.TRANSACTION) {
+      if (isItSpam) {
+          // Only allow unmarking spam if user has permission
+          if (canUnMarkSpam(address)) {
+              menuItems.push({
+                  label: "Unmark as Spam",
+                  action: "unmarkSpam"
+              });
+          }
+      } else {
+          // Allow marking as spam for non-spam addresses
+          menuItems.push({
+              label: "Mark as Spam",
+              action: "markSpam"
+          });
+      }
+    }
+
+    // Add transaction-specific options
+    if (data.transactions[address]) {
+      menuItems.push({
+        label: "View Transaction Details",
+        action: "viewTransaction"
+      });
+    } else {
+      menuItems.push({
+        label: "View in Explorer",
+        action: "viewExplorer"
+      });
+    }
+
+    return menuItems;
+  };
+
+  // Handle context menu actions
+  const handleContextMenuAction = (action: string): void => {
+    closeContextMenu();
+    
+    // Handle different menu actions
+    switch(action) {
+      case 'copy':
+        handleCopy();
+        break;
+      case 'edit':
+        openLabelEditor({
+          address,
+          initialLabel: labelInput,
+          initialDescription: descriptionInput,
+          type,
+          onSaveSuccess: handleSaveSuccess
+        });
+        break;
+      case 'viewExplorer':
+        window.open(`https://solscan.io/account/${address}`, '_blank');
+        break;
+      case 'markSpam':
+        // Add to spam list logic
+        if (publicKey) {
+          addToSpam(address);
+        }
+        break;
+      case 'unmarkSpam':
+        // Remove from spam list logic
+        if (publicKey) {
+          const spam = getSpam(address);
+          if (spam) {
+            deleteFromSpam(spam.id);
+          }
+        }
+        break;
+      case 'viewTransaction':
+        // Add transaction viewing logic
+        window.open(`https://solscan.io/tx/${address}`, '_blank');
+        break;
+      default:
+        break;
+    }
+  };
+
   // Determine transform style based on tooltip position
   const getTooltipTransform = (): string => {
     if (tooltipPosition.transformOffset) {
@@ -222,7 +371,7 @@ export function AddressLabel({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        {(isTransactionSpan.current || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
+        {(isTransactionSpan || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
         {displayLabel}
       </span>
       
@@ -317,6 +466,96 @@ export function AddressLabel({
           </svg>
         </button>
       )}
+
+      {/* Add 3-dots menu button */}
+      {show_controls && (
+        <button
+          onClick={handleMenuClick}
+          className="p-1 hover:text-blue-500"
+          title="More options"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+      )}
+      
+      {/* Context Menu Portal with dynamically generated items */}
+      {contextMenu.isOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="context-menu"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+            backgroundColor: '#1a1a1a',
+            border: '1px solid #333',
+            borderRadius: '4px',
+            padding: '4px 0',
+            minWidth: '150px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+            zIndex: 99999,
+          }}
+        >
+          {/* Dynamically render menu items */}
+          {getContextMenuItems().map((item) => (
+            <button 
+              key={item.action}
+              className="context-menu-item"
+              onClick={() => handleContextMenuAction(item.action)}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '8px 16px',
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+
+      <style jsx>{`
+        /* Context Menu Styles */
+        .context-menu {
+          background-color: #1a1a1a;
+          border: 1px solid #333;
+          border-radius: 4px;
+          padding: 4px 0;
+          min-width: 150px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .context-menu-item {
+          display: block;
+          width: 100%;
+          padding: 8px 16px;
+          text-align: left;
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .context-menu-item:hover {
+          background-color: #2A2A2A;
+        }
+        
+        .context-menu-item:active {
+          background-color: #9945FF;
+        }
+      `}</style>
     </div>
   );
 }
