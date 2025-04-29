@@ -6,6 +6,7 @@ import { GraphData } from '@/types/graph';
 import { GraphNode } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
+import { Transfers } from './transfers/transfers';
 
 interface GrafolioProps {
   apiGraphData: GraphData;
@@ -86,31 +87,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
         
         {/* Transfers Tab */}
         <div className={getTabDisplayClass('transfers')}>
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Transfers</h2>
-            {apiGraphData.links.length > 0 ? (
-              <div className="space-y-2">
-                {apiGraphData.links.map((link, index) => (
-                  <div key={index} className="bg-gray-800 p-3 rounded-md">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="truncate">
-                        {link.source_account_vertex.address.substring(0, 6)}...
-                      </div>
-                      <div className="text-center">→</div>
-                      <div className="truncate">
-                        {link.target_account_vertex.address.substring(0, 6)}...
-                      </div>
-                    </div>
-                    <div className="mt-1 text-sm">
-                      {link.amount_source && `Amount: ${link.amount_source}`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-400">No transfer data available</div>
-            )}
-          </div>
+          <Transfers apiGraphData={apiGraphData} />
         </div>
       </div>
     </div>
