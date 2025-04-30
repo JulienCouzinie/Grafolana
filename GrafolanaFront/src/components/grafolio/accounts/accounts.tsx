@@ -172,10 +172,6 @@ export function Accounts({ apiGraphData }: AccountsProps) {
             <option value={AccountType.TOKEN_ACCOUNT}>Token</option>
             <option value={AccountType.TOKEN_MINT_ACCOUNT}>Mint</option>
             <option value={AccountType.PROGRAM_ACCOUNT}>Program</option>
-            <option value={AccountType.WALLET_ACCOUNT}>Wallet</option>
-            <option value={AccountType.BURN_ACCOUNT}>Burn</option>
-            <option value={AccountType.MINTTO_ACCOUNT}>Mint To</option>
-            <option value={AccountType.FEE_ACCOUNT}>Fee</option>
             <option value={AccountType.STAKE_ACCOUNT}>Stake</option>
           </select>
         </div>
