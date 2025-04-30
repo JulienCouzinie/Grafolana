@@ -1452,10 +1452,10 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Returns content for the Grouping accordion section
      * Override in concrete strategies for strategy-specific grouping options
      */
-    getGroupingContent(strategyContent:React.ReactNode=null): React.ReactNode {
+    getTransactionClusterContent(strategyContent:React.ReactNode=null): React.ReactNode {
         return (
             <div className="strategy-panel-content">
-                <p>Base grouping options</p>
+                <p>Transactions Clusters options</p>
                 {/* No common grouping controls in base strategy */}
                 {(strategyContent) ? strategyContent : ""}
             </div>

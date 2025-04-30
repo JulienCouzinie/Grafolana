@@ -99,7 +99,7 @@ export interface ViewStrategy {
    * Returns the content to be displayed in the Grouping accordion section
    * @returns React node with grouping controls specific to this strategy
    */
-  getGroupingContent(): React.ReactNode;
+  getTransactionClusterContent(): React.ReactNode;
 
   /**
    * Returns the content to be displayed in the Nodes Info accordion section

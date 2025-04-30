@@ -94,7 +94,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   // Add state to store accordion content
   const [generalContent, setGeneralContent] = useState<React.ReactNode | null>(null);
   const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
-  const [groupingContent, setGroupingContent] = useState<React.ReactNode | null>(null);
+  const [transactionClusterContent, setTransactionClusterContent] = useState<React.ReactNode | null>(null);
   const [NodesContent, setNodesContent] = useState<React.ReactNode | null>(null);
   const [LinksContent, setLinksContent] = useState<React.ReactNode | null>(null);
   // Select current strategy based on view mode
@@ -179,7 +179,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       // Update all accordion content from strategy
       setGeneralContent(strategy.getGeneralContent());
       setFiltersContent(strategy.getFiltersContent());
-      setGroupingContent(strategy.getGroupingContent());
+      setTransactionClusterContent(strategy.getTransactionClusterContent());
       setNodesContent(strategy.getNodesInfoContent());
       setLinksContent(strategy.getLinksInfoContent());
     }
@@ -376,9 +376,9 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                     {filtersContent || <p>No filters available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Grouping" defaultOpen={false}>
+                <AccordionItem title="Transactions Clusters" defaultOpen={false}>
                   <div className="accordion-content">
-                    {groupingContent || <p>No grouping options available for this view</p>}
+                    {transactionClusterContent || <p>No Transactions Clusters options available for this view</p>}
                   </div>
                 </AccordionItem>
                 <AccordionItem title={`Selected Nodes (${strategy.selectedNodes.current?.size || 0})`} defaultOpen={false}>
