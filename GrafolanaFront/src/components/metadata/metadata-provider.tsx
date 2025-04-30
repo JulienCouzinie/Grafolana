@@ -123,7 +123,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     // Remove duplicates from input array
     let uniqueAddresses = [...new Set(mintAddresses)];
     // Filter out null or undefined addresses
-    uniqueAddresses = uniqueAddresses.filter((addr): addr is string => (addr !== undefined || addr !== null) && addr.length > 0);
+    uniqueAddresses = uniqueAddresses.filter((addr): addr is string => addr != null && addr.length > 0);
 
     if (uniqueAddresses.length === 0) return;
 

@@ -17,7 +17,7 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
     const fetchMintMetadata = async () => {
       const mintAddresses = graphData.nodes
         .map(node => node.mint_address)
-        .filter((addr): addr is string => (addr !== undefined || addr !== null) && addr.length > 0);
+        .filter((addr): addr is string => (addr !== null) && addr.length > 0);
 
       try {
         await FetchMintInfosAndCache(mintAddresses);
