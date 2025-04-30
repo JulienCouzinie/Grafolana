@@ -35,17 +35,20 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
     AccountType.MINTTO_ACCOUNT,
     AccountType.FEE_ACCOUNT
   ];
-  
-  // Aggregate account counts from transactions
-  const accountNumber: number = Object.values(apiGraphData.transactions).reduce((total, txData) => {
-    // Filter out excluded account types
-    const filteredAccount = txData.accounts.filter(
-      account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type)
-    );
-    return total + filteredAccount.length;
-  }
-  
-  , 0);
+
+  // Count unique accounts across all transactions (excluding specified types)
+  const uniqueAccountsSet: Set<string> = new Set();
+
+  // Iterate through all transactions
+  Object.values(apiGraphData.transactions).forEach(txData => {
+    // Filter out excluded account types and add to set
+    txData.accounts
+      .filter(account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type))
+      .forEach(account => uniqueAccountsSet.add(account.address));
+  });
+
+  // Get the final count of unique accounts
+  const accountNumber: number = uniqueAccountsSet.size;
 
   const EXCLUDED_TRANSFER_TYPES = [
     TransferType.SWAP,
