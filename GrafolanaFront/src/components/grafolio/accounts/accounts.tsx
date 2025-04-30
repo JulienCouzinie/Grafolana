@@ -6,7 +6,6 @@ import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
 import { AccountTransaction, AccountType, GraphData } from '@/types/graph';
 import { shortenAddress } from '@/utils/addressUtils';
-import Image from 'next/image';
 
 interface AccountsProps {
     apiGraphData: GraphData;
