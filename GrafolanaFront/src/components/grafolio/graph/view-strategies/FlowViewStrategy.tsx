@@ -9,6 +9,7 @@ import { BaseViewStrategy } from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { NodeImage } from '@/components/metadata/node-image';
+import { calculateTokenAmount } from '@/utils/tokenUtils';
 
 
 class FlowViewStrategy extends BaseViewStrategy {
@@ -122,6 +123,27 @@ class FlowViewStrategy extends BaseViewStrategy {
       `
       : '';
 
+    let ownerInfo = '';
+    if (node.type !== AccountType.SOL_ACCOUNT 
+      && node.type !== AccountType.PROGRAM_ACCOUNT
+      && node.type !== AccountType.FEE_ACCOUNT
+      && node.type !== AccountType.BURN_ACCOUNT
+      && node.type !== AccountType.MINTTO_ACCOUNT) {
+      ownerInfo = `<b>Owner:</b> ${node.owner ? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>`;
+    }
+
+    let totalFees = '';
+    if  (node.type === AccountType.FEE_ACCOUNT) {
+      const feeAmount = calculateTokenAmount(node.balance_lamport, mintInfo).toFixed(7);
+      const img = this.metadataServices.getMintImage(mintInfo?.image);
+      const feeUSD = this.usdServices.calculateUSDValue(
+          node.balance_lamport, 
+          node.mint_address, 
+          this.processedData.current.transactions[node.account_vertex.transaction_signature].mint_usd_price_ratio
+      )?.toFixed(7);
+
+      totalFees = `<b>Total fees:</b> ${feeAmount} SOL<img src="${img?.src}" style="width: 16px; height: 16px; display: inline-block;" /> ($${feeUSD})<br/>`;
+    }
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Type:</b> ${node.type}<br/>
@@ -134,7 +156,8 @@ class FlowViewStrategy extends BaseViewStrategy {
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
           
         ` : '<b>Token:</b> SOL<br/>'}
-        <b>Owner:</b> ${node.owner ? this.metadataServices.getLabelComputed(node.owner).label : 'Unknown'}<br/>
+        ${ownerInfo}
+        ${totalFees}
         ${authoritiesHtml}
         <b>Transaction:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.transaction_signature).label}<br/>
       </div>
@@ -240,6 +263,34 @@ class FlowViewStrategy extends BaseViewStrategy {
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
 
+        const TotalFees = () => {
+          if  (node.type === AccountType.FEE_ACCOUNT) {
+            const feeAmount = calculateTokenAmount(node.balance_lamport, mintInfo).toFixed(5);
+            const img = this.metadataServices.getMintImage(mintInfo?.image);
+
+            return (<><b>Total fees:</b> {feeAmount} SOL{img && <img src={img.src} style={{width: "16px", height: "16px", display: "inline-block"}} />}</>);
+          }
+        }
+
+        const OwnerInfo = () => {
+          // Only render owner info for specific account types
+          if (node.type === AccountType.SOL_ACCOUNT 
+            || node.type === AccountType.PROGRAM_ACCOUNT
+            || node.type === AccountType.FEE_ACCOUNT
+            || node.type === AccountType.BURN_ACCOUNT
+            || node.type === AccountType.MINTTO_ACCOUNT) {
+            return null;
+          }
+          
+          return (
+            <>
+              <b>Owner:</b> {node.owner ? 
+                <AddressLabel address={node.owner} shortened={true} data={this.originalData.current} /> 
+                : 'Unknown'}<br/>
+            </>
+          );
+        };
+
         // Component to display transactions where this account is involved
         const AccountTransactions = () => {
           const [showTransactions, setShowTransactions] = React.useState<boolean>(false);
@@ -330,7 +381,8 @@ class FlowViewStrategy extends BaseViewStrategy {
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} data={this.originalData.current} /><br/>
                 </React.Fragment>
               ) : <React.Fragment><b>Token:</b> SOL<br/></React.Fragment>}
-              <b>Owner:</b> {node.owner ? (<AddressLabel address={node.owner} shortened={true} data={this.originalData.current} />) : 'Unknown'}<br/>
+              <OwnerInfo />
+              <TotalFees />
               {authoritiesComponent}
               <AccountTransactions />
             </div>

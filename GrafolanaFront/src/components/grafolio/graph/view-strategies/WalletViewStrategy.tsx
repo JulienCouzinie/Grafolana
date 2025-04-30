@@ -9,6 +9,7 @@ import { BaseViewStrategy } from './BaseViewStrategy';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
 import { NodeImage } from '@/components/metadata/node-image';
+import { calculateTokenAmount } from '@/utils/tokenUtils';
 
 
 class WalletViewStrategy extends BaseViewStrategy {
@@ -115,6 +116,12 @@ class WalletViewStrategy extends BaseViewStrategy {
         } else {
           type = AccountType.WALLET_ACCOUNT;
         }
+
+        let balance = 0;
+        if (node.type==AccountType.FEE_ACCOUNT) {
+          balance = node.balance_lamport;
+        }
+
         // Create new node
         let aggregatedNode: ForceGraphNode = {
           id: address,
@@ -129,7 +136,7 @@ class WalletViewStrategy extends BaseViewStrategy {
           owner: null,
           authorities: [],
           balance_token: 0, 
-          balance_lamport:0, 
+          balance_lamport:balance, 
           composite: null,
           isOnCurve: true,
         };
@@ -143,7 +150,7 @@ class WalletViewStrategy extends BaseViewStrategy {
 
         seen.set(address, aggregatedNode);
       } else {
-        if (address!=="FEE") {
+        if (node.type!==AccountType.FEE_ACCOUNT) {
           if (node.type !== AccountType.SOL_ACCOUNT) {
             // Check if the node is already in the composite array
             // If not, add it to the composite array of the existing node
@@ -158,6 +165,10 @@ class WalletViewStrategy extends BaseViewStrategy {
               existingNode.composite.push(node);
             }
           }
+        } else {
+          // Aggregate the balance of the fee account
+          const existingNode = seen.get(address)!;
+          existingNode.balance_lamport += node.balance_lamport;
         }
       }
     });
@@ -248,6 +259,15 @@ class WalletViewStrategy extends BaseViewStrategy {
 
   nodeTooltip (node: ForceGraphNode): string {
     const nodeImage = this.metadataServices.getGraphicByNode(node).image;
+    const mintInfo = node.mint_address ? this.metadataServices.getMintInfo(node.mint_address) : null;
+
+    let totalFees = '';
+    if  (node.type === AccountType.FEE_ACCOUNT) {
+      const feeAmount = calculateTokenAmount(node.balance_lamport, mintInfo).toFixed(5);
+      const img = this.metadataServices.getMintImage(mintInfo?.image);
+
+      totalFees = `<b>Total fees:</b> ${feeAmount} SOL<img src="${img?.src}" style="width: 16px; height: 16px; display: inline-block;" />`;
+    }
 
     // Create authorities list HTML if authorities exist
     const authoritiesHtml = node.authorities && node.authorities.length > 0
@@ -285,7 +305,7 @@ class WalletViewStrategy extends BaseViewStrategy {
         <b>Type:</b> ${node.type}<br/>
         <img src="${nodeImage?.src}" crossorigin="anonymous" style="max-width: 50px; max-height: 50px;"><br/>
         <b>Account:</b> ${this.metadataServices.getLabelComputed(node.account_vertex.address).label}<br/>
-
+        ${totalFees}
         ${compositeHtml}
 
       </div>
@@ -344,6 +364,15 @@ class WalletViewStrategy extends BaseViewStrategy {
         if (!node) return null;
         const mintAddress = node?.mint_address;
         const mintInfo = mintAddress ? this.metadataServices.getMintInfo(mintAddress) : null;
+        
+        const TotalFees = () => {
+          if  (node.type === AccountType.FEE_ACCOUNT) {
+            const feeAmount = calculateTokenAmount(node.balance_lamport, mintInfo).toFixed(5);
+            const img = this.metadataServices.getMintImage(mintInfo?.image);
+
+            return (<><b>Total fees:</b> {feeAmount} SOL{img && <img src={img.src} style={{width: "16px", height: "16px", display: "inline-block"}} />}</>);
+          }
+        }
 
         // Component to display transactions where this account is involved
         const AccountTransactions = () => {
@@ -478,6 +507,7 @@ class WalletViewStrategy extends BaseViewStrategy {
               {/* Display node image if available */}
               <NodeImage node={node} maxWidth={50} maxHeight={50} />
               <b>Wallet:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
+              <TotalFees />
               {/* Display composite accounts info if available */}
               <CompositeAccounts />
               {/* Display transactions this account is appearing */}

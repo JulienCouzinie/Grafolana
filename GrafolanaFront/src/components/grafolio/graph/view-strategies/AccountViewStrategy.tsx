@@ -10,6 +10,7 @@ import { BaseViewStrategy} from './BaseViewStrategy';
 import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { NodeImage } from '@/components/metadata/node-image';
+import { calculateTokenAmount } from '@/utils/tokenUtils';
 
 class AccountViewStrategy extends BaseViewStrategy {
   
@@ -92,6 +93,17 @@ class AccountViewStrategy extends BaseViewStrategy {
         seen.add(node.account_vertex.address);
         node.id = node.account_vertex.address;
         deduplicatedNodes.push(node);
+      } else {
+        if (node.type === AccountType.FEE_ACCOUNT) {
+          // If the node is a fee account, aggregate the balance
+          const existingNode = deduplicatedNodes.find(
+            (n) => n.account_vertex.address === node.account_vertex.address
+          );
+          if (existingNode) {
+            existingNode.balance_lamport += node.balance_lamport;
+            existingNode.balance_token += node.balance_token;
+          }
+        }
       }
     });
 
@@ -184,6 +196,14 @@ class AccountViewStrategy extends BaseViewStrategy {
       `
       : '';
 
+      let totalFees = '';
+      if  (node.type === AccountType.FEE_ACCOUNT) {
+        const feeAmount = calculateTokenAmount(node.balance_lamport, mintInfo).toFixed(5);
+        const img = this.metadataServices.getMintImage(mintInfo?.image);
+
+        totalFees = `<b>Total fees:</b> ${feeAmount} SOL<img src="${img?.src}" style="width: 16px; height: 16px; display: inline-block;" />`;
+      }
+
     return `
       <div style="background: #1A1A1A; padding: 8px; border-radius: 4px; color: #FFFFFF;">
         <b>Type:</b> ${node.type}<br/>
@@ -195,8 +215,7 @@ class AccountViewStrategy extends BaseViewStrategy {
           ${mintInfo?.symbol ? `<b>Symbol:</b> ${mintInfo.symbol}<br/>` : ''}
         ` : '<b>Token:</b> SOL<br/>'}
         ${authoritiesHtml}
-        <b>Token Balance:</b> ${node.balance_token}<br/>
-        <b>Lamport Balance:</b> ${node.balance_lamport}
+        ${totalFees}
       </div>
     `;
   }
