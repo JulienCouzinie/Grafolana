@@ -201,6 +201,13 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     }
   }, [linkSelectionUpdate]);
 
+  // Add an effect to update the transaction cluster content when data changes
+  useEffect(() => {
+    if (strategy) {
+      setTransactionClusterContent(strategy.getTransactionClusterContent());
+    }
+  }, [graphData]); // Re-run when redraw state changes
+
 
   // Render nothing if no strategy is selected
   if (!strategy) return null;
@@ -376,7 +383,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                     {filtersContent || <p>No filters available for this view</p>}
                   </div>
                 </AccordionItem>
-                <AccordionItem title="Transactions Clusters" defaultOpen={false}>
+                <AccordionItem title={`Transactions Clusters (${strategy.transactionsClusterGroups.current?.length || 0})`} defaultOpen={false}>
                   <div className="accordion-content">
                     {transactionClusterContent || <p>No Transactions Clusters options available for this view</p>}
                   </div>

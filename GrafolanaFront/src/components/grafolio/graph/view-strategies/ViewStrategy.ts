@@ -70,6 +70,7 @@ export interface ViewStrategy {
   hoveredLink: ForceGraphLink | null;
 
   mapSwapProgramsCollapsed: React.RefObject<Map<number, boolean>>;
+  transactionsClusterGroups: React.RefObject<number[]>;
 
   /**
    * Reference to the currently selected nodes set

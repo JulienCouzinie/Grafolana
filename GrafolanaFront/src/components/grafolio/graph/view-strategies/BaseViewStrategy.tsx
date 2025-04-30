@@ -4,9 +4,10 @@ import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
 import { useRef } from 'react';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useUSDValue } from '@/hooks/useUSDValue';
-import { MintDTO } from '@/types/metadata';
+import { AddressType, MintDTO } from '@/types/metadata';
 import { cloneDeep } from 'lodash';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
+import { AddressLabel } from '@/components/metadata/address-label';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -33,6 +34,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
 
+    
+
     selectedNodes: React.RefObject<Set<string>>;
     selectedLinks: React.RefObject<Set<string>>;
     hoveredNode: ForceGraphNode | null;
@@ -45,6 +48,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     hideCreateAccounts: React.RefObject<boolean>;
     hideCloseAccounts: React.RefObject<boolean>;
     hideSpam: React.RefObject<boolean>;
+
+    transactionsClusterGroups: React.RefObject<number[]>;
+    selectedTransactionClusterGroup: React.RefObject<number[]>;
 
     minSolAmount: React.RefObject<number>;
     maxSolAmount: React.RefObject<number|null>;
@@ -69,6 +75,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.usdServices = usdServices;
         this.processedData = processedDataRef;
         this.originalData = originalDataRef;
+
+        
         
         // Initialize hover states
         this.hoveredNode = null;
@@ -79,11 +87,15 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.mapSwapProgramsCollapsed = useRef(new Map<number, boolean>());
 
         this.processGraphDataCallBack = useRef(null);
+
         this.hideFees = useRef(true);
         this.hideSwaps = useRef(false);
         this.hideCreateAccounts = useRef(false);
         this.hideCloseAccounts = useRef(false);
         this.hideSpam = useRef(true);
+
+        this.transactionsClusterGroups = useRef<number[]>([]);
+        this.selectedTransactionClusterGroup = useRef<number[]>([]);
 
         this.minSolAmount = useRef(0);
         this.maxSolAmount = useRef(null);
@@ -550,10 +562,36 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
+    /**
+     * Apply filter to only show transactions that are in the selected transaction cluster groups
+     */
+    protected ApplyTransactionClusterGroup(data: GraphData): void {
+        // If no transaction cluster groups are selected, show all transactions
+        if (this.selectedTransactionClusterGroup.current.length === 0) {
+            return;
+        }
+        // Filter out the transactions that are not in the selected transaction cluster groups
+        data.links = data.links.filter((link) => {
+            const transactionData = this.originalData.current.transactions[link.transaction_signature];
+            if (transactionData.isomorphic_group == null) {
+                return false;
+            }
+            if (transactionData && transactionData.isomorphic_group !== null) {
+                return this.selectedTransactionClusterGroup.current.includes(transactionData.isomorphic_group);
+            }
+            return true;
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
+
     protected applyFilters() {
         this.saveCurrentNodePositions()
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
+
+        // Apply TransactionClusterGroup filter
+        this.ApplyTransactionClusterGroup(data);
 
         // Apply HideSpam filter
         this.ApplyHideSpam(data);
@@ -578,8 +616,31 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.restoreNodePositions(); // Restore node positions after reprocessing
     }
 
+    /**
+     * Retrieve and set the transactionsClusterGroups
+     * Transaction clusters are transactions which graphs are isomorphic to each other
+     * Retrieve the list of transactions clusters by looking at isomorphic_group from TransactionDTO
+     * by looking at 
+     * @param data 
+     */
+    protected getTransactionsClusterGroups(data: GraphData): number[] {
+        const transactions = Object.values(data.transactions);
+        const clusters = new Set<number>();
+        
+        transactions.forEach((transaction) => {
+            if (transaction.isomorphic_group !== null) {
+                clusters.add(transaction.isomorphic_group);
+            }
+        });
+        
+        this.transactionsClusterGroups.current = Array.from(clusters);
+        return this.transactionsClusterGroups.current;
+    }
+
+
     setupGraphData(data: GraphData) {
         this.originalData.current = cloneDeep(data);
+        this.getTransactionsClusterGroups(data);
         this.SetCollapseAllSwaps(true); // Collapse all swap programs by default
 
         this.applyFilters();
@@ -1481,9 +1542,256 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Override in concrete strategies for strategy-specific grouping options
      */
     getTransactionClusterContent(strategyContent:React.ReactNode=null): React.ReactNode {
+        // Transaction Clusters options to handle grouping by transaction clusters
+        const TransactionClustersOptions = () => {
+            // Track the state of selected transaction clusters using local state
+            const [selectedClusters, setSelectedClusters] = React.useState<Record<number, boolean>>(() => {
+                // Initialize from the current selectedTransactionClusterGroup
+                const initialState: Record<number, boolean> = {};
+                
+                // Set initial state based on what's currently in selectedTransactionClusterGroup
+                this.transactionsClusterGroups.current.forEach(groupId => {
+                    initialState[groupId] = this.selectedTransactionClusterGroup.current.includes(groupId);
+                });
+                
+                return initialState;
+            });
+
+            // Track which cluster groups have their transactions expanded
+            const [expandedClusters, setExpandedClusters] = React.useState<Record<number, boolean>>({});
+
+            // Count transactions per cluster group
+            const transactionsPerCluster: Record<number, number> = React.useMemo(() => {
+                const counts: Record<number, number> = {};
+                
+                // Initialize counts for all groups to 0
+                this.transactionsClusterGroups.current.forEach(groupId => {
+                    counts[groupId] = 0;
+                });
+                
+                // Count transactions in each group
+                Object.values(this.originalData.current.transactions).forEach(transaction => {
+                    if (transaction.isomorphic_group !== null && counts[transaction.isomorphic_group] !== undefined) {
+                        counts[transaction.isomorphic_group]++;
+                    }
+                });
+                
+                return counts;
+            }, []);
+
+            // Get transactions for a specific cluster
+            const getClusterTransactions = (clusterId: number): string[] => {
+                return Object.entries(this.originalData.current.transactions)
+                    .filter(([_, transaction]) => transaction.isomorphic_group === clusterId)
+                    .map(([signature, _]) => signature);
+            };
+
+            // Sort cluster groups numerically
+            const sortedClusterGroups = React.useMemo(() => {
+                return [...this.transactionsClusterGroups.current].sort((a, b) => a - b);
+            }, []);
+
+            // Handle checkbox change
+            const handleCheckboxChange = (clusterId: number, checked: boolean) => {
+                // Update the local state
+                setSelectedClusters(prev => ({
+                    ...prev,
+                    [clusterId]: checked
+                }));
+                
+                // Update the selectedTransactionClusterGroup ref
+                const newSelection = checked 
+                    ? [...this.selectedTransactionClusterGroup.current, clusterId] 
+                    : this.selectedTransactionClusterGroup.current.filter(id => id !== clusterId);
+                
+                this.selectedTransactionClusterGroup.current = newSelection;
+                
+                // Apply the filters to update the graph
+                this.applyFilters();
+            };
+
+            // Toggle transaction list expansion for a cluster
+            const toggleClusterExpansion = (clusterId: number): void => {
+                setExpandedClusters(prev => ({
+                    ...prev,
+                    [clusterId]: !prev[clusterId]
+                }));
+            };
+
+            // Toggle all checkboxes
+            const handleToggleAll = (selectAll: boolean) => {
+                const updatedState: Record<number, boolean> = {};
+                
+                // Update all checkboxes to the same state
+                this.transactionsClusterGroups.current.forEach(groupId => {
+                    updatedState[groupId] = selectAll;
+                });
+                
+                setSelectedClusters(updatedState);
+                
+                // Update the selectedTransactionClusterGroup ref
+                this.selectedTransactionClusterGroup.current = selectAll 
+                    ? [...this.transactionsClusterGroups.current]
+                    : [];
+                
+                // Apply filters to update the graph
+                this.applyFilters();
+            };
+
+            // Calculate if all or some clusters are selected
+            const allSelected = this.transactionsClusterGroups.current.length > 0 && 
+                this.transactionsClusterGroups.current.every(id => selectedClusters[id]);
+            
+            const someSelected = this.transactionsClusterGroups.current.some(id => selectedClusters[id]) && !allSelected;
+
+            // ClusterTransactions component to display transactions for a cluster (using same pattern as FlowViewStrategy)
+            const ClusterTransactions = ({ clusterId }: { clusterId: number }) => {
+                // Get transactions for this cluster
+                const transactions = getClusterTransactions(clusterId);
+                
+                // Early return if no transactions
+                if (transactions.length === 0) return null;
+                
+                return (
+                    <div style={{ marginTop: '8px' }}>
+                        <ul style={{ 
+                            margin: '4px 0 8px 24px', 
+                            paddingLeft: '20px',
+                            maxHeight: '200px',
+                            overflowY: 'auto',
+                            backgroundColor: '#2A2A2A',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            padding: '8px'
+                        }}>
+                            {transactions.map((signature, txIndex) => (
+                                <li key={txIndex} style={{ margin: '4px 0', wordBreak: 'break-all' }}>
+                                    <AddressLabel 
+                                        address={signature} 
+                                        type={AddressType.TRANSACTION}
+                                        shortened={true} 
+                                        data={this.originalData.current} 
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            };
+
+            // Styles
+            const containerStyle = {
+                marginBottom: '16px'
+            };
+
+            const headerStyle = {
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '12px'
+            };
+
+            const checkboxGroupStyle = {
+                marginLeft: '8px',
+                marginBottom: '8px'
+            };
+
+            const checkboxStyle = {
+                marginBottom: '4px',
+                display: 'flex',
+                alignItems: 'center'
+            };
+
+            return (
+                <div style={containerStyle}>
+                    {this.transactionsClusterGroups.current.length > 0 ? (
+                        <>
+                            <div style={headerStyle}>
+                                <h3 style={{ margin: 0, marginRight: '16px' }}>Transaction Clusters</h3>
+                                <button 
+                                    onClick={() => handleToggleAll(true)} 
+                                    style={{ marginRight: '8px' }}
+                                    disabled={allSelected}
+                                >
+                                    Select All
+                                </button>
+                                <button 
+                                    onClick={() => handleToggleAll(false)}
+                                    disabled={!someSelected && !allSelected}
+                                >
+                                    Clear All
+                                </button>
+                            </div>
+                            
+                            <div style={checkboxGroupStyle}>
+                                {sortedClusterGroups.map((clusterId) => (
+                                    <div key={clusterId}>
+                                        <div style={checkboxStyle}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedClusters[clusterId] || false}
+                                                onChange={(e) => handleCheckboxChange(clusterId, e.target.checked)}
+                                                style={{ marginRight: '8px' }}
+                                            />
+                                            <span style={{ marginRight: '12px' }}>Cluster Group {clusterId} ({transactionsPerCluster[clusterId]})</span>
+                                            
+                                            {/* Show/Hide Transactions button moved inline */}
+                                            <div 
+                                                onClick={() => toggleClusterExpansion(clusterId)}
+                                                style={{ 
+                                                    cursor: 'pointer', 
+                                                    color: '#7B61FF',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    userSelect: 'none'
+                                                }}
+                                            >
+                                                <span style={{ marginRight: '4px' }}>
+                                                    {expandedClusters[clusterId] ? '▾' : '▸'}
+                                                </span>
+                                                <span>
+                                                    {expandedClusters[clusterId] ? 'Hide transactions' : 'Show transactions'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Transaction list only appears when expanded */}
+                                        {expandedClusters[clusterId] && (
+                                            <ul style={{ 
+                                                margin: '4px 0 8px 24px', 
+                                                paddingLeft: '20px',
+                                                maxHeight: '200px',
+                                                overflowY: 'auto',
+                                                backgroundColor: '#2A2A2A',
+                                                border: '1px solid #444',
+                                                borderRadius: '4px',
+                                                padding: '8px'
+                                            }}>
+                                                {getClusterTransactions(clusterId).map((signature, txIndex) => (
+                                                    <li key={txIndex} style={{ margin: '4px 0', wordBreak: 'break-all' }}>
+                                                        <AddressLabel 
+                                                            address={signature} 
+                                                            type={AddressType.TRANSACTION}
+                                                            shortened={true} 
+                                                            data={this.originalData.current} 
+                                                        />
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <p>No transaction clusters available</p>
+                    )}
+                </div>
+            );
+        }
+
         return (
             <div className="strategy-panel-content">
-                <p>Transactions Clusters options</p>
+                <TransactionClustersOptions />
                 {/* No common grouping controls in base strategy */}
                 {(strategyContent) ? strategyContent : ""}
             </div>
