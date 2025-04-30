@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
-import { GraphData } from '@/types/graph';
+import { AccountType, GraphData, TransferType } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
 import { Transfers } from './transfers/transfers';
@@ -30,9 +30,35 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
     setActiveTab(tab);
   };
 
+  const EXCLUDED_ACCOUNT_TYPES = [
+    AccountType.BURN_ACCOUNT,
+    AccountType.MINTTO_ACCOUNT,
+    AccountType.FEE_ACCOUNT
+  ];
+  
   // Aggregate account counts from transactions
-  const accountNumber: number = Object.values(apiGraphData.transactions).reduce((total, txData) => 
-  total + txData.accounts.length, 0);
+  const accountNumber: number = Object.values(apiGraphData.transactions).reduce((total, txData) => {
+    // Filter out excluded account types
+    const filteredAccount = txData.accounts.filter(
+      account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type)
+    );
+    return total + filteredAccount.length;
+  }
+  
+  , 0);
+
+  const EXCLUDED_TRANSFER_TYPES = [
+    TransferType.SWAP,
+    TransferType.SWAP_INCOMING,
+    TransferType.SWAP_OUTGOING,
+    TransferType.SWAP_ROUTER_INCOMING,
+    TransferType.SWAP_ROUTER_OUTGOING
+  ];
+
+  const transfersCount = apiGraphData.links.filter(
+    link => !EXCLUDED_TRANSFER_TYPES.includes(link.type)
+  ).length;
+
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -62,7 +88,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
             onClick={() => handleTabChange('transfers')} 
             className={`px-4 py-2 rounded-md transition-colors ${isActive('transfers') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
-            Transfers ({Object.keys(apiGraphData.links).length})
+            Transfers ({transfersCount})
           </button>
         </div>
       </div>

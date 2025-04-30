@@ -16,6 +16,12 @@ interface ExtendedAccountTransaction extends AccountTransaction {
   displayName?: string;
 }
 
+const EXCLUDED_ACCOUNT_TYPES = [
+  AccountType.BURN_ACCOUNT,
+  AccountType.MINTTO_ACCOUNT,
+  AccountType.FEE_ACCOUNT
+];
+
 export function Accounts({ apiGraphData }: AccountsProps) {
   const { getGraphic } = useMetadata();
   const [accounts, setAccounts] = useState<ExtendedAccountTransaction[]>([]);
@@ -37,8 +43,14 @@ export function Accounts({ apiGraphData }: AccountsProps) {
     // Process all transactions to extract unique accounts
     Object.values(apiGraphData.transactions).forEach(transaction => {
       if (!transaction.accounts) return;
+
+
+
+      const filteredAccount = transaction.accounts.filter(
+        account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type)
+      );
       
-      transaction.accounts.forEach(account => {
+      filteredAccount.forEach(account => {
         // Only add if it's not already in the map
         if (!accountsMap.has(account.address)) {
           accountsMap.set(account.address, {
