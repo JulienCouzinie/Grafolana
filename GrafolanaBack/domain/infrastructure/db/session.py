@@ -48,6 +48,7 @@ def init_db():
     from ...metadata.labeling.models import Label, LabelPriority
     from ...transaction.models.transaction import SolanaTransaction
     from ...metadata.spl_token.models import MintModel
+    from ...spam.model import SpamModel
 
     # Create all tables
     Base.metadata.create_all(engine)
