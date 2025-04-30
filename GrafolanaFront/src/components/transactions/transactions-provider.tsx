@@ -1,12 +1,13 @@
 'use client'
 
-import { createContext, useCallback, useContext, ReactNode } from 'react';
+import { createContext, useCallback, useContext, ReactNode, useState } from 'react';
 import { AccountVertex, GraphData } from '@/types/graph';
 
-// Define the context type with callback-based getters instead of Promise-returning getters
+// Define the context type that exposes both the graph data and getter methods
 interface TransactionsContextType {
-  getTransactionGraphData: (tx_signature: string, onDataReceived: (data: GraphData) => void) => void;
-  getWalletGraphData: (wallet_signature: string, onDataReceived: (data: GraphData) => void) => void;
+  graphData: GraphData;
+  getTransactionGraphData: (tx_signature: string) => Promise<void>;
+  getWalletGraphData: (wallet_signature: string) => Promise<void>;
 }
 
 // Create the context
@@ -26,6 +27,13 @@ interface TransactionsProviderProps {
 }
 
 export function TransactionsProvider({ children }: TransactionsProviderProps) {
+  // Add state for graph data
+  const [graphData, setGraphData] = useState<GraphData>({ 
+    nodes: [], 
+    links: [], 
+    transactions: {} 
+  });
+
   // Extract the mapper function from dashboard-feature
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
@@ -50,58 +58,51 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     return data;
   }, []);
 
-  // Modified getTransactionGraphData to resolve the promise internally and use a callback
-  const getTransactionGraphData = (tx_signature: string, onDataReceived: (data: GraphData) => void): void => {
-    (async () => {
-      try {
-        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ tx_signature }),
-        });
-        
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        let data: GraphData = await response.json();
-        data = mapAccountVertexToClass(data);
-        onDataReceived(data);
-      } catch (error) {
-        console.error('Failed to fetch graph data:', error);
-        // Return empty graph data on error
-        onDataReceived({ nodes: [], links: [], transactions: {} });
-      }
-    })();
+  // Modified getTransactionGraphData to update the state instead of returning data
+  const getTransactionGraphData = async (tx_signature: string): Promise<void> => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tx_signature }),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      let data: GraphData = await response.json();
+      data = mapAccountVertexToClass(data);
+      setGraphData(data);
+    } catch (error) {
+      console.error('Failed to fetch graph data:', error);
+      // Set empty graph data on error
+      setGraphData({ nodes: [], links: [], transactions: {} });
+    }
   };
 
-  // Modified getWalletGraphData to resolve the promise internally and use a callback
-  const getWalletGraphData = (wallet_signature: string, onDataReceived: (data: GraphData) => void): void => {
-    (async () => {
-      try {
-        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ wallet_signature }),
-        });
-        
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        let data: GraphData = await response.json();
-        data = mapAccountVertexToClass(data);
-        onDataReceived(data);
-      } catch (error) {
-        console.error('Failed to fetch graph data:', error);
-        // Return empty graph data on error
-        onDataReceived({ nodes: [], links: [], transactions: {} });
-      }
-    })();
+  // Modified getWalletGraphData to update the state instead of returning data
+  const getWalletGraphData = async (wallet_signature: string): Promise<void> => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ wallet_signature }),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      let data: GraphData = await response.json();
+      data = mapAccountVertexToClass(data);
+      setGraphData(data);
+    } catch (error) {
+      console.error('Failed to fetch graph data:', error);
+      // Set empty graph data on error
+      setGraphData({ nodes: [], links: [], transactions: {} });
+    }
   };
 
-  // Create the context value with the callback-style getter methods
+  // Create the context value with both the graph data and getter methods
   const value = {
+    graphData,
     getTransactionGraphData,
     getWalletGraphData,
   };

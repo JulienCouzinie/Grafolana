@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
 import { AccountType, GraphData, TransferType } from '@/types/graph';
 import Transactions from './transactions/transactions';
@@ -9,36 +9,18 @@ import { Transfers } from './transfers/transfers';
 import { MetadataPreloader } from './graph/MetadataPreloader';
 import { useTransactions } from '@/components/transactions/transactions-provider';
 
-interface GrafolioProps {
-  // apiGraphData is now optional as we'll manage it internally
-  apiGraphData?: GraphData;
-}
-
-export default function Grafolio({ apiGraphData: initialGraphData }: GrafolioProps) {
-  // Internal state for graph data
-  const [graphData, setGraphData] = useState<GraphData>(
-    initialGraphData || { nodes: [], links: [], transactions: {} }
-  );
+export default function Grafolio() {
   const [activeTab, setActiveTab] = useState<string>('graph');
   const [previousTab, setPreviousTab] = useState<string>('graph');
-
-  // Get the data fetching methods from TransactionsProvider
-  const { getTransactionGraphData, getWalletGraphData } = useTransactions();
-
-  // Use effect to update internal state if prop changes
-  useEffect(() => {
-    if (initialGraphData) {
-      setGraphData(initialGraphData);
-    }
-  }, [initialGraphData]);
+  
+  // Get the graphData and data fetching methods from TransactionsProvider
+  const { graphData, getTransactionGraphData, getWalletGraphData } = useTransactions();
 
   // Function to handle fetching transaction graph data
   const handleGetTransactionGraphData = () => {
     const txSignature = (document.getElementById('tx_signature') as HTMLInputElement)?.value;
     if (txSignature) {
-      getTransactionGraphData(txSignature, (data) => {
-        setGraphData(data);
-      });
+      getTransactionGraphData(txSignature);
     }
   };
 
@@ -46,9 +28,7 @@ export default function Grafolio({ apiGraphData: initialGraphData }: GrafolioPro
   const handleGetWalletGraphData = () => {
     const walletAddress = (document.getElementById('wallet_signature') as HTMLInputElement)?.value;
     if (walletAddress) {
-      getWalletGraphData(walletAddress, (data) => {
-        setGraphData(data);
-      });
+      getWalletGraphData(walletAddress);
     }
   };
 
