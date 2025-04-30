@@ -171,13 +171,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setGraphData(prevData => {
         // Create sets of existing node and link IDs for quick lookup
         const existingNodeIds = new Set(prevData.nodes.map(node => node.account_vertex.id));
-        const existingLinkIds = new Set(prevData.links.map(link => link.id));
+        const existingLinkIds = new Set(prevData.links.map(link => link.key + "-" + link.transaction_signature));
         
         // Filter out nodes that already exist in the graph
         const newNodes = newData.nodes.filter(node => !existingNodeIds.has(node.account_vertex.id));
         
         // Filter out links that already exist in the graph
-        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.id));
+        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.key + "-" + link.transaction_signature));
         
         // Merge transactions, avoiding duplicates
         const mergedTransactions: Record<string, TransactionData> = { 

@@ -12,23 +12,42 @@ import { useTransactions } from '@/components/transactions/transactions-provider
 export default function Grafolio() {
   const [activeTab, setActiveTab] = useState<string>('graph');
   const [previousTab, setPreviousTab] = useState<string>('graph');
+  const [address, setAddress] = useState<string>("CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX");
   
   // Get the graphData and data fetching methods from TransactionsProvider
-  const { graphData, getTransactionGraphData, getWalletGraphData } = useTransactions();
+  const { graphData, getTransactionGraphData, getWalletGraphData, addTransactionGraphData, addWalletGraphData } = useTransactions();
 
-  // Function to handle fetching transaction graph data
-  const handleGetTransactionGraphData = () => {
-    const txSignature = (document.getElementById('tx_signature') as HTMLInputElement)?.value;
-    if (txSignature) {
-      getTransactionGraphData(txSignature);
+  // Function to handle address input change
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setAddress(e.target.value);
+  };
+
+  // Function to handle fetching graph data based on address length
+  const handleGetGraphData = (): void => {
+    if (!address.trim()) return;
+    
+    // Determine the type of address based on its length
+    // Solana addresses are typically 44 characters, transaction signatures are 88 characters
+    if (address.length == 88) {
+      // It's likely a transaction signature
+      getTransactionGraphData(address);
+    } else if (address.length == 44) {
+      // It's likely a wallet address
+      getWalletGraphData(address);
     }
   };
 
-  // Function to handle fetching wallet graph data
-  const handleGetWalletGraphData = () => {
-    const walletAddress = (document.getElementById('wallet_signature') as HTMLInputElement)?.value;
-    if (walletAddress) {
-      getWalletGraphData(walletAddress);
+  // Function to handle adding data to existing graph
+  const handleAddToGraph = (): void => {
+    if (!address.trim()) return;
+    
+    // Handle both transaction signatures and wallet addresses
+    if (address.length >= 87) {
+      // It's likely a transaction signature
+      addTransactionGraphData(address);
+    } else {
+      // It's likely a wallet address
+      addWalletGraphData(address);
     }
   };
 
@@ -78,37 +97,35 @@ export default function Grafolio() {
     link => !EXCLUDED_TRANSFER_TYPES.includes(link.type)
   ).length;
 
+  // Check if the graph has data to determine whether to show the "Add to Graph" button
+  const hasGraphData: boolean = Object.keys(graphData.transactions).length > 0;
+
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Add the input controls that were previously in DashboardFeature */}
+      {/* Single input field with conditional "Add to Graph" button */}
       <div className="p-4 bg-gray-900">
         <input 
           type="text" 
-          id="tx_signature" 
-          placeholder="Enter Transaction Signature" 
+          id="address_input" 
+          placeholder="Enter Transaction Signature or Wallet Address" 
           style={{ width: '1000px', margin: '2px' }} 
-          defaultValue={"3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu"}
+          value={address}
+          onChange={handleAddressChange}
         />
         <button 
-          onClick={handleGetTransactionGraphData}
-          className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded"
+          onClick={handleGetGraphData}
+          className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded mr-2"
         >
-          GET TRANSACTION GRAPH
+          GET GRAPH
         </button>
-        <br />
-        <input 
-          type="text" 
-          id="wallet_signature" 
-          placeholder="Enter Wallet Address" 
-          defaultValue={"CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX"} 
-          style={{ width: '1000px', margin: '2px' }} 
-        />
-        <button 
-          onClick={handleGetWalletGraphData}
-          className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded"
-        >
-          GET WALLET GRAPH
-        </button>
+        {hasGraphData && (
+          <button 
+            onClick={handleAddToGraph}
+            className="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded"
+          >
+            ADD TO GRAPH
+          </button>
+        )}
       </div>
 
       <MetadataPreloader graphData={graphData} />
