@@ -32,9 +32,14 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
   // Preload Program Metadata
   useEffect(() => {
     const fetchProgramMetadata = async () => {
-      const programAddresses = Array.from(new Set(
-        graphData.links.map(link => link.program_address)
-      ));
+      let programAddresses: string[] = [];
+      Object.values(graphData.transactions).forEach(txData => 
+        txData.accounts.forEach(account => {
+          if (account.type === AccountType.PROGRAM_ACCOUNT) {
+            programAddresses.push(account.address);
+          }
+        })
+      );
 
       try {
         await FetchProgramInfosAndCache(programAddresses);
@@ -59,22 +64,15 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
           addressesWithTypes.push({ address: signer, type: AddressType.UNKNOWN}))
       );
       
-      graphData.nodes.forEach(node => {
-        addressesWithTypes.push({ address: node.account_vertex.address, type: AddressType.UNKNOWN });
-        if (node.owner) addressesWithTypes.push({ address: node.owner, type: AddressType.UNKNOWN });
-        node.authorities?.forEach(auth => 
-          addressesWithTypes.push({ address: auth, type: AddressType.UNKNOWN }));
-      });
-
-
       // Get Program addresses & Mint from transactions accounts
       Object.values(graphData.transactions).forEach(txData => 
         txData.accounts.forEach(account => {
           if (account.type === AccountType.PROGRAM_ACCOUNT) {
             addressesWithTypes.push({ address: account.address, type: AddressType.PROGRAM });
-          }
-          if (account.type === AccountType.TOKEN_MINT_ACCOUNT) {
+          } else if (account.type === AccountType.TOKEN_MINT_ACCOUNT) {
             addressesWithTypes.push({ address: account.address, type: AddressType.TOKEN });
+          } else {
+            addressesWithTypes.push({ address: account.address, type: AddressType.UNKNOWN });
           }
         })
       );
