@@ -15,7 +15,16 @@ export default function Grafolio() {
   const [address, setAddress] = useState<string>("CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX");
   
   // Get the graphData and data fetching methods from TransactionsProvider
-  const { graphData, getTransactionGraphData, getWalletGraphData, addTransactionGraphData, addWalletGraphData } = useTransactions();
+  // Added fetchedTransactions and fetchedWallets to check if address is already fetched
+  const { 
+    graphData, 
+    fetchedTransactions, 
+    fetchedWallets, 
+    getTransactionGraphData, 
+    getWalletGraphData, 
+    addTransactionGraphData, 
+    addWalletGraphData 
+  } = useTransactions();
 
   // Function to handle address input change
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -48,6 +57,20 @@ export default function Grafolio() {
     } else {
       // It's likely a wallet address
       addWalletGraphData(address);
+    }
+  };
+
+  // Function to check if the current address is already fetched
+  const isAddressFetched = (): boolean => {
+    if (!address.trim()) return false;
+    
+    // Check the appropriate list based on address length
+    if (address.length >= 87) {
+      // It's likely a transaction signature
+      return fetchedTransactions.has(address);
+    } else {
+      // It's likely a wallet address
+      return fetchedWallets.has(address);
     }
   };
 
@@ -118,7 +141,10 @@ export default function Grafolio() {
         >
           GET GRAPH
         </button>
-        {hasGraphData && (
+        {/* Only show ADD TO GRAPH if:
+            1. We have graph data already AND
+            2. The current address is not already fetched */}
+        {hasGraphData && !isAddressFetched() && (
           <button 
             onClick={handleAddToGraph}
             className="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded"

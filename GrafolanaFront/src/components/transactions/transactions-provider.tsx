@@ -4,13 +4,15 @@ import { createContext, useCallback, useContext, ReactNode, useState } from 'rea
 import { AccountVertex, GraphData, ForceGraphNode, ForceGraphLink, TransactionData } from '@/types/graph';
 
 // Define the context type that exposes both the graph data and getter methods
-interface TransactionsContextType {
-  graphData: GraphData;
-  getTransactionGraphData: (tx_signature: string) => Promise<void>;
-  getWalletGraphData: (wallet_signature: string) => Promise<void>;
-  addWalletGraphData: (tx_signature: string) => Promise<void>;
-  addTransactionGraphData: (tx_signature: string) => Promise<void>;
-}
+export interface TransactionsContextType {
+    graphData: GraphData;
+    fetchedTransactions: Set<string>; // Expose the list of fetched transaction signatures
+    fetchedWallets: Set<string>;      // Expose the list of fetched wallet addresses
+    getTransactionGraphData: (tx_signature: string) => Promise<void>;
+    getWalletGraphData: (wallet_signature: string) => Promise<void>;
+    addWalletGraphData: (tx_signature: string) => Promise<void>;
+    addTransactionGraphData: (tx_signature: string) => Promise<void>;
+  }
 
 // Create the context
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -36,6 +38,9 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     transactions: {} 
   });
 
+  // Add state to track fetched transaction signatures and wallet addresses
+  const [fetchedTransactions, setFetchedTransactions] = useState<Set<string>>(new Set());
+  const [fetchedWallets, setFetchedWallets] = useState<Set<string>>(new Set());
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
@@ -73,10 +78,17 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       let data: GraphData = await response.json();
       data = mapAccountVertexToClass(data);
       setGraphData(data);
+
+      // Reset tracking and add this transaction
+      setFetchedTransactions(new Set([tx_signature]));
+      setFetchedWallets(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
+      // Clear tracking on error
+      setFetchedTransactions(new Set());
+      setFetchedWallets(new Set());
     }
   };
 
@@ -93,21 +105,34 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       let data: GraphData = await response.json();
       data = mapAccountVertexToClass(data);
       setGraphData(data);
+
+      // Reset tracking and add this wallet
+      setFetchedWallets(new Set([wallet_signature]));
+      setFetchedTransactions(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
+      // Clear tracking on error
+      setFetchedTransactions(new Set());
+      setFetchedWallets(new Set());
     }
   };
 
-  const addWalletGraphData = async (tx_signature: string): Promise<void> => {
+  const addWalletGraphData = async (wallet_signature: string): Promise<void> => {
+    // Skip if already fetched
+    if (fetchedWallets.has(wallet_signature)) {
+      console.log(`Wallet ${wallet_signature} already fetched, skipping`);
+      return;
+    }
+
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tx_signature }),
+        body: JSON.stringify({ wallet_signature }),
       });
       
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -119,13 +144,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setGraphData(prevData => {
         // Create sets of existing node and link IDs for quick lookup
         const existingNodeIds = new Set(prevData.nodes.map(node => node.account_vertex.id));
-        const existingLinkIds = new Set(prevData.links.map(link => link.id));
+        const existingLinkIds = new Set(prevData.links.map(link => link.key + "-" + link.transaction_signature));
         
         // Filter out nodes that already exist in the graph
         const newNodes = newData.nodes.filter(node => !existingNodeIds.has(node.account_vertex.id));
         
         // Filter out links that already exist in the graph
-        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.id));
+        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.key + "-" + link.transaction_signature));
         
         // Merge transactions, avoiding duplicates
         const mergedTransactions: Record<string, TransactionData> = { 
@@ -146,6 +171,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
           transactions: mergedTransactions
         };
       });
+
+      // Add this wallet to the fetched list
+      setFetchedWallets(prev => {
+        const updated = new Set(prev);
+        updated.add(wallet_signature);
+        return updated;
+      });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
       // Don't change the existing graph data on error
@@ -153,6 +185,12 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   };
   
   const addTransactionGraphData = async (tx_signature: string): Promise<void> => {
+    // Skip if already fetched
+    if (fetchedTransactions.has(tx_signature)) {
+      console.log(`Transaction ${tx_signature} already fetched, skipping`);
+      return;
+    }
+
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -198,6 +236,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
           transactions: mergedTransactions
         };
       });
+
+      // Add this transaction to the fetched list
+      setFetchedTransactions(prev => {
+        const updated = new Set(prev);
+        updated.add(tx_signature);
+        return updated;
+      });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
       // Don't change the existing graph data on error
@@ -207,6 +252,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   // Create the context value with both the graph data and getter methods
   const value = {
     graphData,
+    fetchedTransactions,
+    fetchedWallets,
     getTransactionGraphData,
     getWalletGraphData,
     addWalletGraphData,

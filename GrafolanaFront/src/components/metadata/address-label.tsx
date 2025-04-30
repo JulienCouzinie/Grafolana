@@ -7,6 +7,8 @@ import { createPortal } from 'react-dom';
 import { useLabelEditDialog } from './label-edit-dialog-provider';
 import { shortenAddress } from '@/utils/addressUtils';
 import { GraphData } from '@/types/graph';
+// Import useTransactions hook
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 interface AddressLabelProps {
   address: string;
@@ -57,7 +59,7 @@ export function AddressLabel({
   const labelRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
-  const [isTransactionSpan, setisTransactionSpan] = useState(false); // Track if the label is a transaction span
+  const [isTransactionSpam, setisTransactionSpam] = useState(false); // Track if the label is a transaction span
   const spamImg = useStaticGraphics().spam.image;
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
@@ -69,8 +71,48 @@ export function AddressLabel({
     isOpen: false
   });
 
+  // Get transactions context data and methods
+  const { 
+    graphData: txGraphData, 
+    fetchedTransactions, 
+    fetchedWallets, 
+    getTransactionGraphData, 
+    getWalletGraphData, 
+    addTransactionGraphData, 
+    addWalletGraphData 
+  } = useTransactions();
+
+  // Function to determine address type and if it's already fetched
+  const getAddressDetails = useCallback((): {
+    isTransaction: boolean;
+    isWallet: boolean;
+    isAlreadyFetched: boolean;
+    hasGraphData: boolean;
+  } => {
+    // Determine type based on length (same logic as in Grafolio)
+    const isTransaction = address.length === 88;
+    const isWallet = address.length === 44;
+    
+    // Check if already fetched based on type
+    const isAlreadyFetched = isTransaction 
+      ? fetchedTransactions.has(address)
+      : isWallet 
+        ? fetchedWallets.has(address)
+        : false;
+
+    // Check if there's already graph data
+    const hasGraphData = Object.keys(txGraphData.transactions).length > 0;
+    
+    return {
+      isTransaction,
+      isWallet,
+      isAlreadyFetched,
+      hasGraphData
+    };
+  }, [address, fetchedTransactions, fetchedWallets, txGraphData]);
+
   // Check if the transaction is spam by checking if one of its signers is a known spam address
-  const isTransactionSpam =  useCallback((signature: string): boolean => { 
+  const isTransactionSpamCheck = useCallback((signature: string): boolean => { 
     const txData = data.transactions[signature];
     if (!txData || !txData.signers || txData.signers.length === 0) {
         return false;
@@ -80,8 +122,8 @@ export function AddressLabel({
   }, [data, isSpam]);
 
   useEffect(() => {
-    setisTransactionSpan(isTransactionSpam(address));
-  }, [data, isSpam]);
+    setisTransactionSpam(isTransactionSpamCheck(address));
+  }, [data, isTransactionSpamCheck, address]);
 
   useEffect(() => {
     function fetchLabel() {
@@ -226,9 +268,31 @@ export function AddressLabel({
     }
   }, [contextMenu.isOpen]);
 
+  // Handle graph operations (new methods for graph actions)
+  const handleGetGraph = (): void => {
+    const { isTransaction, isWallet } = getAddressDetails();
+
+    if (isTransaction) {
+      getTransactionGraphData(address);
+    } else if (isWallet) {
+      getWalletGraphData(address);
+    }
+    closeContextMenu();
+  };
+
+  const handleAddToGraph = (): void => {
+    const { isTransaction, isWallet } = getAddressDetails();
+
+    if (isTransaction) {
+      addTransactionGraphData(address);
+    } else if (isWallet) {
+      addWalletGraphData(address);
+    }
+    closeContextMenu();
+  };
+
   // Function to dynamically generate menu items based on current address and state
   const getContextMenuItems = (): ContextMenuItem[] => {
-    console.log("address type", type);
     const menuItems: ContextMenuItem[] = [
       {
         label: "Copy Address",
@@ -272,6 +336,28 @@ export function AddressLabel({
         label: "View in Explorer",
         action: "viewExplorer"
       });
+    }
+
+    // Get address details for graph-related operations
+    const { isTransaction, isWallet, isAlreadyFetched, hasGraphData } = getAddressDetails();
+
+    // Add graph operation options based on address type and state
+    if (isTransaction || isWallet) {
+      if (hasGraphData) {
+        // If graph already has data and address is not already fetched, show "Add to Graph"
+        if (!isAlreadyFetched) {
+          menuItems.push({
+            label: isTransaction ? "Add Transaction to Graph" : "Add Account to Graph",
+            action: "addToGraph"
+          });
+        }
+      } else {
+        // If graph is empty, show "Get Graph"
+        menuItems.push({
+          label: isTransaction ? "Get Transaction Graph" : "Get Account Graph",
+          action: "getGraph"
+        });
+      }
     }
 
     return menuItems;
@@ -321,6 +407,12 @@ export function AddressLabel({
       case 'viewTransaction':
         // Add transaction viewing logic
         window.open(`https://solscan.io/tx/${address}`, '_blank');
+        break;
+      case 'getGraph':
+        handleGetGraph();
+        break;
+      case 'addToGraph':
+        handleAddToGraph();
         break;
       default:
         break;
@@ -376,7 +468,7 @@ export function AddressLabel({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        {(isTransactionSpan || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
+        {(isTransactionSpam || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
         {displayLabel}
       </span>
       
