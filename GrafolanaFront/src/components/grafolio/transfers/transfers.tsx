@@ -331,7 +331,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
               
               return (
                 <tr 
-                  key={`${transfer.key}`}
+                  key={`${transfer.transaction_signature + "-" + transfer.key}`}
                   className="border-t border-gray-800 hover:bg-gray-800"
                 >
                   <td className="py-2 px-4">
