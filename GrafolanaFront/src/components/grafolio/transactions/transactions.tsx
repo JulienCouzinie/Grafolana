@@ -24,9 +24,11 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     const [pageSize, setPageSize] = useState<number>(10);
     
     // Filter state
-    const [filterSignature, setFilterSignature] = useState<string>('');
-    const [filterSigner, setFilterSigner] = useState<string>('');
+    const [filterSignatureOrSigner, setFilterSignatureOrSigner] = useState<string>('');
     const [filterMinTransfers, setFilterMinTransfers] = useState<string>('');
+    const [filterMaxTransfers, setFilterMaxTransfers] = useState<string>('');
+    const [filterMinSwaps, setFilterMinSwaps] = useState<string>('');
+    const [filterMaxSwaps, setFilterMaxSwaps] = useState<string>('');
 
     // Create array of transactions from the object
     const transactionEntries = useMemo(() => {
@@ -36,32 +38,47 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Apply filters to transactions
     const filteredTransactions = useMemo(() => {
         return transactionEntries.filter(([signature, txData]) => {
-            // Signature filter
-            if (filterSignature && !signature.toLowerCase().includes(filterSignature.toLowerCase())) {
-                return false;
-            }
-            
-            // Signer filter
-            if (filterSigner && !txData.signers.some(signer => 
-                signer.toLowerCase().includes(filterSigner.toLowerCase()))
-            ) {
-                return false;
-            }
-            
-            // Minimum transfers filter
-            if (filterMinTransfers) {
-                const linkCount = apiGraphData.links.filter(link => 
-                    link.transaction_signature === signature
-                ).length;
+            // Signature or Signer filter
+            if (filterSignatureOrSigner) {
+                const lowerCaseFilter = filterSignatureOrSigner.toLowerCase();
+                const matchesSignature = signature.toLowerCase().includes(lowerCaseFilter);
+                const matchesSigner = txData.signers.some(signer => 
+                    signer.toLowerCase().includes(lowerCaseFilter)
+                );
                 
-                if (linkCount < parseInt(filterMinTransfers, 10)) {
+                if (!matchesSignature && !matchesSigner) {
                     return false;
                 }
             }
             
+            // Transfers filter
+            const linkCount = apiGraphData.links.filter(link => 
+                link.transaction_signature === signature
+            ).length;
+            
+            // Minimum transfers filter
+            if (filterMinTransfers && linkCount < parseInt(filterMinTransfers, 10)) {
+                return false;
+            }
+            
+            // Maximum transfers filter
+            if (filterMaxTransfers && linkCount > parseInt(filterMaxTransfers, 10)) {
+                return false;
+            }
+            
+            // Minimum swaps filter
+            if (filterMinSwaps && txData.swaps.length < parseInt(filterMinSwaps, 10)) {
+                return false;
+            }
+            
+            // Maximum swaps filter
+            if (filterMaxSwaps && txData.swaps.length > parseInt(filterMaxSwaps, 10)) {
+                return false;
+            }
+            
             return true;
         });
-    }, [transactionEntries, filterSignature, filterSigner, filterMinTransfers, apiGraphData.links]);
+    }, [transactionEntries, filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, apiGraphData.links]);
     
     // Calculate paginated transactions
     const paginatedTransactions = useMemo(() => {
@@ -75,7 +92,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterSignature, filterSigner, filterMinTransfers]);
+    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps]);
     
     // Handle page navigation
     const goToPage = (page: number): void => {
@@ -91,9 +108,11 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     
     // Clear all filters
     const clearFilters = (): void => {
-        setFilterSignature('');
-        setFilterSigner('');
+        setFilterSignatureOrSigner('');
         setFilterMinTransfers('');
+        setFilterMaxTransfers('');
+        setFilterMinSwaps('');
+        setFilterMaxSwaps('');
     };
 
     // Render transaction content based on data availability
@@ -203,46 +222,69 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
             {/* Filters Section */}
             <div className="mb-6 bg-gray-800 p-4 rounded-md">
                 <div className="text-lg font-semibold mb-3">Filters</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-gray-400 mb-1">Transaction Signature</label>
+                <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-gray-400 mb-1">Signature or Signer Address</label>
                         <input
                             type="text"
-                            placeholder="Search by signature..."
+                            placeholder="Search by signature or signer address..."
                             className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
-                            value={filterSignature}
-                            onChange={(e) => setFilterSignature(e.target.value)}
+                            value={filterSignatureOrSigner}
+                            onChange={(e) => setFilterSignatureOrSigner(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="block text-gray-400 mb-1">Signer Address</label>
-                        <input
-                            type="text"
-                            placeholder="Search by signer..."
-                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
-                            value={filterSigner}
-                            onChange={(e) => setFilterSigner(e.target.value)}
-                        />
-                    </div>
-                    <div>
+                    <div className="w-24">
                         <label className="block text-gray-400 mb-1">Min. Transfers</label>
                         <input
                             type="number"
-                            placeholder="Minimum transfers..."
+                            placeholder="Min"
                             className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
                             value={filterMinTransfers}
                             onChange={(e) => setFilterMinTransfers(e.target.value)}
                             min="0"
                         />
                     </div>
-                </div>
-                <div className="mt-3 flex justify-end gap-3">
-                    <button 
-                        onClick={clearFilters}
-                        className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
-                    >
-                        Clear Filters
-                    </button>
+                    <div className="w-24">
+                        <label className="block text-gray-400 mb-1">Max. Transfers</label>
+                        <input
+                            type="number"
+                            placeholder="Max"
+                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                            value={filterMaxTransfers}
+                            onChange={(e) => setFilterMaxTransfers(e.target.value)}
+                            min="0"
+                        />
+                    </div>
+                    <div className="w-24">
+                        <label className="block text-gray-400 mb-1">Min. Swaps</label>
+                        <input
+                            type="number"
+                            placeholder="Min"
+                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                            value={filterMinSwaps}
+                            onChange={(e) => setFilterMinSwaps(e.target.value)}
+                            min="0"
+                        />
+                    </div>
+                    <div className="w-24">
+                        <label className="block text-gray-400 mb-1">Max. Swaps</label>
+                        <input
+                            type="number"
+                            placeholder="Max"
+                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                            value={filterMaxSwaps}
+                            onChange={(e) => setFilterMaxSwaps(e.target.value)}
+                            min="0"
+                        />
+                    </div>
+                    <div className="ml-auto">
+                        <button 
+                            onClick={clearFilters}
+                            className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
                 </div>
             </div>
 
