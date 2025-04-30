@@ -76,6 +76,9 @@ def get_transaction_from_signature():
 def get_transaction_graph_data_from_signature():
     tx_signature = request.json.get('tx_signature')
     user_wallet = request.json.get('user_wallet', "EQyYgCnwwZxuh3SfnrFBEiFqDUUSfpqiDorf66eqdEcz")
+
+    if not tx_signature:
+        return jsonify({"error": "No transaction signature provided"}), 400
     
     try:
         Signature.from_string(tx_signature)
@@ -91,6 +94,9 @@ def get_transaction_graph_data_from_signature():
 def get_wallet_graph_data_from_address():
     wallet_signature = request.json.get('wallet_signature')
 
+    if not wallet_signature:
+        return jsonify({"error": "No wallet address provided"}), 400
+
     try:
         Pubkey.from_string(wallet_signature)
     except ValueError:
@@ -105,6 +111,9 @@ def get_wallet_graph_data_from_address():
 @app.route('/api/metadata/get_mints_info', methods=['POST'])
 def get_mints_info_from_addresses():
     mint_addresses: List[str] = request.json.get('addresses')
+    if not mint_addresses:
+        return jsonify({"error": "No mint addresses provided"}), 400
+
     token_data_list = metadata_service.get_token_metadata(mint_addresses)
     return jsonify(token_data_list)
 
@@ -163,6 +172,8 @@ def manage_user_labels():
 @app.route('/api/metadata/programs', methods=['POST'])
 def get_program_metadata():
     program_addresses = request.json.get('addresses')
+    if not program_addresses:
+        return jsonify({"error": "No program addresses provided"}), 400
     program_metadatas = metadata_service.get_program_metadata(program_addresses)
     if not program_metadatas:
         return jsonify([])
@@ -185,14 +196,19 @@ def get_all_spam():
     spam_addresses = spam_service.get_all_spam(limit=limit, offset=offset)
     return jsonify(spam_addresses)
 
-@app.route('/api/metadata/spam/user/<user_id>', methods=['GET'])
-def get_spam_for_user(user_id):
+@app.route('/api/metadata/spam/user', methods=['POST'])
+def get_spam_for_user():
     """
     Endpoint to retrieve all ADMIN/DEFAULT spam plus user-specific spam.
     
-    URL parameters:
-    - user_id: The ID of the user to get spam for
+    Request JSON format:
+    {
+        "user_id": "user_identifier"
+    }
     """
+    data = request.json
+    user_id = data.get('user_id')
+    
     if not user_id:
         return jsonify({"error": "User ID is required"}), 400
         
@@ -228,24 +244,26 @@ def create_spam():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/metadata/spam/<int:spam_id>', methods=['DELETE'])
-def delete_spam(spam_id):
+@app.route('/api/metadata/spam/delete', methods=['DELETE'])
+def delete_spam():
     """
     Endpoint to delete a spam entry.
     
-    URL parameters:
-    - spam_id: The ID of the spam entry to delete
-    
     Request JSON format:
     {
+        "spam_id": 123,
         "user_id": "user_identifier"
     }
     """
     data = request.json
+    spam_id = data.get('spam_id')
     user_id = data.get('user_id')
     
     if not user_id:
         return jsonify({"error": "User ID is required"}), 400
+        
+    if not spam_id:
+        return jsonify({"error": "Spam ID is required"}), 400
         
     if spam_service.delete_user_spam(spam_id, user_id):
         return jsonify({"status": "success", "message": "Spam entry deleted successfully"}), 200

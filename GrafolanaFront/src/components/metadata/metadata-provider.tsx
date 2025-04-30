@@ -573,7 +573,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
   }, [publicKey]);
 
-  // Delete an address from spam
   const deleteFromSpam = useCallback(async (spamId: number): Promise<boolean> => {
     if (!publicKey) {
       throw new Error("User must be connected to delete addresses from spam list");
@@ -582,10 +581,11 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     const userId = publicKey.toBase58();
     
     try {
-      const response = await fetch(`http://localhost:5000/api/metadata/spam/${spamId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/metadata/spam/delete`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          spam_id: spamId,
           user_id: userId
         }),
       });
