@@ -8,6 +8,7 @@ from GrafolanaBack.domain.prices.sol_price_utils import start_price_updater
 from GrafolanaBack.domain.transaction.services.transaction_parser_service import TransactionParserService
 from GrafolanaBack.domain.spam.service import SpamService
 from GrafolanaBack.domain.spam.model import Creator
+from GrafolanaBack.domain.infrastructure.db.migration_service import check_and_run_migrations
 from solders.signature import Signature
 from solders.pubkey import Pubkey
 from dotenv import load_dotenv
@@ -19,6 +20,9 @@ PORT = os.getenv("PORT", 5000)
 app = Flask(__name__)
 application = app  # For WSGI compatibility
 handler = app # For Vercel compatibility
+
+# Run database migrations if needed
+check_and_run_migrations()
 
 cors = CORS(app, resources={r"/api/*": {"origins": CORS_DOMAIN}})
 compress = Compress()
