@@ -180,23 +180,7 @@ def get_program_metadata():
     else:
         return jsonify(program_metadatas)
 
-# Spam API Endpoints
-@app.route('/api/metadata/spam', methods=['GET'])
-def get_all_spam():
-    """
-    Endpoint to retrieve all spam addresses with pagination.
-    
-    Query parameters:
-    - limit: Maximum number of results to return (default: 100)
-    - offset: Number of results to skip (default: 0)
-    """
-    limit = request.args.get('limit', 100, type=int)
-    offset = request.args.get('offset', 0, type=int)
-    
-    spam_addresses = spam_service.get_all_spam(limit=limit, offset=offset)
-    return jsonify(spam_addresses)
-
-@app.route('/api/metadata/spam/user', methods=['POST'])
+@app.route('/api/metadata/spam', methods=['POST'])
 def get_spam_for_user():
     """
     Endpoint to retrieve all ADMIN/DEFAULT spam plus user-specific spam.
@@ -209,9 +193,6 @@ def get_spam_for_user():
     data = request.json
     user_id = data.get('user_id')
     
-    if not user_id:
-        return jsonify({"error": "User ID is required"}), 400
-        
     spam_addresses = spam_service.get_spam_for_user(user_id)
     return jsonify(spam_addresses)
 

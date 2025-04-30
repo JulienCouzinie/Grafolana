@@ -302,6 +302,11 @@ export function AddressLabel({
         // Add to spam list logic
         if (publicKey) {
           addToSpam(address);
+        } else {
+          // Show message to user that they need to connect their wallet first
+          alert("Please connect your wallet to mark addresses as spam.");
+          // Alternatively, you could use a more elegant notification system if available in your app
+          // For example: showNotification("Please connect your wallet to mark addresses as spam.", "warning");
         }
         break;
       case 'unmarkSpam':

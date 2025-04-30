@@ -8,6 +8,7 @@ import { AddressType, MintDTO } from '@/types/metadata';
 import { cloneDeep } from 'lodash';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { AddressLabel } from '@/components/metadata/address-label';
+import { type PublicKey } from '@solana/web3.js';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -59,6 +60,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     minValuetUSD: React.RefObject<number>;
     maxValueUSD: React.RefObject<number|null>;
 
+    publicKey: PublicKey | null = null; // Public key of the connected wallet
+
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
 
     savedNodePositions: Map<string, {position: NodePosition}> | null = null;
@@ -70,6 +73,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         originalDataRef: React.RefObject<GraphData>,
         selectedNodesRef: React.RefObject<Set<string>>,
         selectedLinksRef: React.RefObject<Set<string>>,
+        publicKey: PublicKey | null = null
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
@@ -103,6 +107,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.maxTokenAmount = useRef(null);
         this.minValuetUSD = useRef(0);
         this.maxValueUSD = useRef(null);
+
+        this.publicKey = publicKey;
 
     }
 
@@ -1033,7 +1039,12 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 break;
             case "mark_spam":
                 // Mark this address as spam
-                this.metadataServices.addToSpam(node.account_vertex.address);
+                if (this.publicKey) {
+                    this.metadataServices.addToSpam(node.account_vertex.address);
+                } else {
+                    alert("Please connect your wallet to mark addresses as spam.");
+                }
+
                 break;
             case "unmark_spam":
                 // Unmark this address from spam

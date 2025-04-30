@@ -11,6 +11,7 @@ import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { NodeImage } from '@/components/metadata/node-image';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 class AccountViewStrategy extends BaseViewStrategy {
   
@@ -555,6 +556,8 @@ export function useAccountViewStrategy(): ViewStrategy {
   const selectedNodes = useRef<Set<string>>(new Set<string>());
   const selectedLinks = useRef<Set<string>>(new Set<string>());
 
+  const { publicKey } = useWallet();
+
   // Create and return strategy instance
   return new AccountViewStrategy(
     metadataServices,
@@ -563,6 +566,7 @@ export function useAccountViewStrategy(): ViewStrategy {
     originalDataRef,
     selectedNodes,
     selectedLinks,
+    publicKey
   );
 }
 

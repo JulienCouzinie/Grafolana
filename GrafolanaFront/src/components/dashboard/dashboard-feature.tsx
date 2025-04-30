@@ -71,7 +71,7 @@ export default function DashboardFeature() {
     }
   };
 
-  if (publicKey) {
+  if (true) {
     return (
       <div className="flex flex-col h-full">
         <div className="p-4">

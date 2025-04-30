@@ -96,9 +96,9 @@ export const fetchMissingLabels = async (addresses: string[], userId?: string): 
  * @param userId The user ID to fetch spam for
  * @returns A list of spam addresses
  */
-export async function fetchSpamAddresses(userId: string): Promise<Spam[]> {
+export async function fetchSpamAddresses(userId?: string): Promise<Spam[]> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/metadata/spam/user`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/metadata/spam`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

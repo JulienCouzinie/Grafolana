@@ -10,6 +10,7 @@ import { AddressType } from '@/types/metadata';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { NodeImage } from '@/components/metadata/node-image';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 
 class FlowViewStrategy extends BaseViewStrategy {
@@ -489,6 +490,7 @@ export function useFlowViewStrategy(): ViewStrategy {
   
   const selectedNodes = useRef<Set<string>>(new Set<string>());
   const selectedLinks = useRef<Set<string>>(new Set<string>());
+  const { publicKey } = useWallet();
 
   // Create and return strategy instance
   return new FlowViewStrategy(
@@ -498,5 +500,6 @@ export function useFlowViewStrategy(): ViewStrategy {
     originalDataRef,
     selectedNodes, 
     selectedLinks,
+    publicKey
   );
 }

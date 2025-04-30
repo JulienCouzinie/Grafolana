@@ -5,9 +5,9 @@ from .model import Spam, Creator
 
 
 class SpamService:
-    def get_all_spam(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+    def get_all_spam(self) -> List[Dict[str, Any]]:
         """
-        Get all spam addresses with pagination
+        Get all spam addresses
         
         Returns:
             List of spam addresses as dictionaries
@@ -15,7 +15,7 @@ class SpamService:
         session = get_session()
         try:
             repo = SpamRepository(session)
-            spams = repo.get_all(limit=limit, offset=offset)
+            spams = repo.get_all()
             return [spam.to_dict() for spam in spams]
         finally:
             close_session(session)

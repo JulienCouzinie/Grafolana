@@ -503,9 +503,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
   // Add a function to fetch spam addresses
   const fetchSpamAddressesAndCache = useCallback(async () => {
-    if (!publicKey) return;
-    
-    const userId = publicKey.toBase58();
+   
+    const userId = publicKey?.toBase58();
     try {
       const spamList = await fetchSpamAddresses(userId);
       setSpamAddresses(spamList);
