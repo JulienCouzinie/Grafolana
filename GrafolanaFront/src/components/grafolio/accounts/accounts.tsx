@@ -23,6 +23,10 @@ export function Accounts({ apiGraphData }: AccountsProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterText, setFilterText] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
 
   // Extract and process accounts from transactions
   useEffect(() => {
@@ -46,9 +50,10 @@ export function Accounts({ apiGraphData }: AccountsProps) {
     });
     
     setAccounts(Array.from(accountsMap.values()));
+    setCurrentPage(1); // Reset to first page when data changes
   }, [apiGraphData]);
 
-  // Filter and sort accounts
+  // Filter and sort entire accounts dataset
   const filteredAndSortedAccounts = useMemo(() => {
     // First apply filters
     let result = [...accounts];
@@ -86,6 +91,20 @@ export function Accounts({ apiGraphData }: AccountsProps) {
     
     return result;
   }, [accounts, filterText, filterType, sortField, sortDirection]);
+  
+  // Get only accounts for current page
+  const paginatedAccounts = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredAndSortedAccounts.slice(startIndex, startIndex + pageSize);
+  }, [filteredAndSortedAccounts, currentPage, pageSize]);
+  
+  // Calculate total pages
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedAccounts.length / pageSize));
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText, filterType, sortField, sortDirection]);
 
   // Handle sort change
   const handleSortChange = (field: string) => {
@@ -99,6 +118,18 @@ export function Accounts({ apiGraphData }: AccountsProps) {
     }
   };
 
+  // Pagination controls
+  const goToPage = (page: number) => {
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(validPage);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setPageSize(Number(event.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
   // Mapping AccountType enum to readable strings
   const getTypeLabel = (type: AccountType): string => {
     return type.replace("_ACCOUNT", "").replace(/_/g, " ");
@@ -107,8 +138,8 @@ export function Accounts({ apiGraphData }: AccountsProps) {
   return (
     <div className="accounts-container p-4">
       {/* Filters and Search */}
-      <div className="filters mb-4 flex items-center gap-4">
-        <div className="search flex-1">
+      <div className="filters mb-4 flex flex-wrap items-center gap-4">
+        <div className="search flex-1 min-w-[200px]">
           <input
             type="text"
             placeholder="Search accounts..."
@@ -136,10 +167,32 @@ export function Accounts({ apiGraphData }: AccountsProps) {
             <option value={AccountType.STAKE_ACCOUNT}>Stake</option>
           </select>
         </div>
+        
+        {/* Page size selector */}
+        <div className="page-size-selector flex items-center gap-2">
+          <span className="text-gray-400">Items per page:</span>
+          <select
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={250}>250</option>
+          </select>
+        </div>
+      </div>
+      
+      {/* Summary and Pagination Info */}
+      <div className="flex flex-wrap justify-between items-center mb-4">
+        <div className="text-sm text-gray-400">
+          Showing {Math.min(filteredAndSortedAccounts.length, 1 + (currentPage - 1) * pageSize)}-{Math.min(filteredAndSortedAccounts.length, currentPage * pageSize)} of {filteredAndSortedAccounts.length} accounts
+        </div>
       </div>
       
       {/* Accounts Table */}
-      <div className="accounts-table">
+      <div className="accounts-table overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-900 text-left">
@@ -160,7 +213,7 @@ export function Accounts({ apiGraphData }: AccountsProps) {
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedAccounts.map((account) => {
+            {paginatedAccounts.map((account) => {
               // Get account graphic
               const accountGraphic = getGraphic(account.address, account.mint_address, account.type);
               
@@ -217,7 +270,48 @@ export function Accounts({ apiGraphData }: AccountsProps) {
         )}
       </div>
       
-      {/* Pagination could be added here if needed */}
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pagination mt-4 flex items-center justify-center gap-2">
+          <button
+            onClick={() => goToPage(1)}
+            disabled={currentPage === 1}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="First page"
+          >
+            &laquo;
+          </button>
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Previous page"
+          >
+            &lsaquo;
+          </button>
+          
+          <span className="px-4 py-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Next page"
+          >
+            &rsaquo;
+          </button>
+          <button
+            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Last page"
+          >
+            &raquo;
+          </button>
+        </div>
+      )}
     </div>
   );
 }
