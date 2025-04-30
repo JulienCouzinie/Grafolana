@@ -31,7 +31,9 @@ Setup:
     cd ..
     docker-compose up -d postgres
 
-    5. Run migrations:
+    5. Define Environement VAR (see at the end of this file)
+
+    6. Run migrations:
 
     cd GrafolanaBack
     python -m alembic upgrade head
@@ -46,6 +48,8 @@ Setup:
     3. Build the artifacts
     pnpm build
 
+    4. Environement VAR (see at the end of this file)
+
 
 ## Run the projet:
 
@@ -58,4 +62,23 @@ Setup:
     pnpm start
 
 
-##
+
+
+
+
+## ENV VAR BACKEND
+# Database configuration
+DB_USER=
+DB_PASSWORD=
+DB_HOST=
+DB_PORT=
+DB_NAME=
+
+# Flask settings
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+
+
+## ENV VAR FRONTEND example
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
