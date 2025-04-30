@@ -31,15 +31,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ReactQueryProvider>
           <SolanaProvider>
-          <StaticGraphicsProvider>
-            <MetadataProvider>
-              <LabelEditDialogProvider>
-                <UiLayout>{children}</UiLayout>
-              </LabelEditDialogProvider>
-            </MetadataProvider>
+            <StaticGraphicsProvider>
+              <MetadataProvider>
+                <LabelEditDialogProvider>
+                  <UiLayout>{children}</UiLayout>
+                </LabelEditDialogProvider>
+              </MetadataProvider>
             </StaticGraphicsProvider>
           </SolanaProvider>
-          
         </ReactQueryProvider>
       </body>
     </html>
