@@ -27,7 +27,25 @@ handler = app  # For Vercel compatibility
 # Run database migrations if needed
 check_and_run_migrations()
 
-cors = CORS(app, resources={r"/api/*": {"origins": CORS_DOMAIN}})
+cors = CORS(
+    app,
+    resources={r"/*": {"origins": CORS_DOMAIN}},
+    supports_credentials=True,
+    methods=["GET", "HEAD", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"]
+)
+
+# Add CORS headers to every response
+@app.after_request
+def after_request(response):
+    if CORS_DOMAIN:
+        response.headers.add('Access-Control-Allow-Origin', CORS_DOMAIN)
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+
 compress = Compress()
 compress.init_app(app)
 
