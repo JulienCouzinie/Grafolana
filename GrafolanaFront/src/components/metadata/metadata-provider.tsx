@@ -389,7 +389,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/metadata/labels/user', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/labels/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address, label, description, user_id: userId }),
@@ -421,7 +421,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/metadata/labels/user', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/labels/user', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address, user_id: userId }),
@@ -549,7 +549,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     const userId = publicKey.toBase58();
     
     try {
-      const response = await fetch('http://localhost:5000/api/metadata/spam', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/spam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

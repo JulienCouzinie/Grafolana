@@ -22,7 +22,7 @@ application = app  # For WSGI compatibility
 handler = app  # For Vercel compatibility
 
 # Configure Flask to listen on all interfaces (0.0.0.0) - critical for Render deployment
-app.config['SERVER_NAME'] = f"0.0.0.0:{PORT}"
+# app.config['SERVER_NAME'] = f"0.0.0.0:{PORT}"
 
 # Run database migrations if needed
 check_and_run_migrations()
@@ -40,7 +40,7 @@ spam_service = SpamService()
 def hello():
   return """
 
-    Flask is working on HelioHost.<br><br>
+    Flask is working
 
   """
 

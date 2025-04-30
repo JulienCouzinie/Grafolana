@@ -4,7 +4,7 @@ export const fetchMissingMintInfos = async (mintAddresses: string[]): Promise<Mi
     if (mintAddresses.length === 0) return [];
 
     try {
-        const response = await fetch('http://localhost:5000/api/metadata/get_mints_info', {
+        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/get_mints_info', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export const fetchMissingProgramInfos = async (programAddresses: string[]): Prom
     if (programAddresses.length === 0) return [];
 
     try {
-        const response = await fetch('http://localhost:5000/api/metadata/programs', {
+        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/programs', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const fetchMissingLabels = async (addresses: string[], userId?: string): 
     if (addresses.length === 0) return {};
 
     try {
-        const response = await fetch('http://localhost:5000/api/metadata/labels', {
+        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/labels', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const fetchMissingLabels = async (addresses: string[], userId?: string): 
  */
 export async function fetchSpamAddresses(userId: string): Promise<Spam[]> {
     try {
-      const response = await fetch(`http://localhost:5000/api/metadata/spam/user/${userId}`);
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/spam/user/${userId}');
       if (!response.ok) {
         throw new Error(`Error fetching spam addresses: ${response.status}`);
       }

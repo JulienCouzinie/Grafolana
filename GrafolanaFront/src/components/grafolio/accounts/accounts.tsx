@@ -173,7 +173,7 @@ export function Accounts({ apiGraphData }: AccountsProps) {
                 >
                   <td className="py-2 px-4">
                     {accountGraphic?.image && (
-                      <Image
+                      <img
                         src={accountGraphic.image.src} 
                         alt={getTypeLabel(account.type)} 
                         className="w-8 h-8 rounded-full"
