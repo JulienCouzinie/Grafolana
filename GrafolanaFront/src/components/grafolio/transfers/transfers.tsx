@@ -28,6 +28,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterText, setFilterText] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterFrom, setFilterFrom] = useState<string>(''); // New filter for source address
+  const [filterTo, setFilterTo] = useState<string>(''); // New filter for destination address
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -99,6 +101,20 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     if (filterType !== 'all') {
       result = result.filter(transfer => transfer.type === filterType);
     }
+
+    // From address filter
+    if (filterFrom) {
+      result = result.filter(transfer => 
+        transfer.source_account_vertex.address.toLowerCase().includes(filterFrom.toLowerCase())
+      );
+    }
+
+    // To address filter
+    if (filterTo) {
+      result = result.filter(transfer => 
+        transfer.target_account_vertex.address.toLowerCase().includes(filterTo.toLowerCase())
+      );
+    }
     
     // Then sort
     result.sort((a, b) => {
@@ -160,7 +176,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     });
     
     return result;
-  }, [transfers, filterText, filterType, sortField, sortDirection, calculateUSDValue, apiGraphData.transactions]);
+  }, [transfers, filterText, filterType, filterFrom, filterTo, sortField, sortDirection, calculateUSDValue, apiGraphData.transactions]);
   
   // Get only transfers for current page
   const paginatedTransfers = useMemo(() => {
@@ -174,7 +190,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, filterType, sortField, sortDirection]);
+  }, [filterText, filterType, filterFrom, filterTo, sortField, sortDirection]);
 
   // Handle sort change
   const handleSortChange = (field: string) => {
@@ -342,6 +358,26 @@ export function Transfers({ apiGraphData }: TransfersProps) {
               <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
             ))}
           </select>
+        </div>
+
+        <div className="from-filter flex-1 min-w-[200px]">
+          <input
+            type="text"
+            placeholder="Filter by source address"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+            value={filterFrom}
+            onChange={(e) => setFilterFrom(e.target.value)}
+          />
+        </div>
+
+        <div className="to-filter flex-1 min-w-[200px]">
+          <input
+            type="text"
+            placeholder="Filter by destination address"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+            value={filterTo}
+            onChange={(e) => setFilterTo(e.target.value)}
+          />
         </div>
         
         {/* Page size selector */}
