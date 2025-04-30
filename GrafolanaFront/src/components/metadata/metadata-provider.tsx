@@ -121,7 +121,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
   const FetchMintInfosAndCache = useCallback(async (mintAddresses: string[]): Promise<void> => {
     // Remove duplicates from input array
-    const uniqueAddresses = [...new Set(mintAddresses)];
+    let uniqueAddresses = [...new Set(mintAddresses)];
+    // Filter out null or undefined addresses
+    uniqueAddresses = uniqueAddresses.filter((addr): addr is string => (addr !== undefined || addr !== null) && addr.length > 0);
+
     const missingAddresses: string[] = [];
 
     // First check which mints we need to fetch
