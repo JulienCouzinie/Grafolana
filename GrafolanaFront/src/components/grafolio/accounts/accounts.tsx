@@ -6,6 +6,7 @@ import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
 import { AccountTransaction, AccountType, GraphData } from '@/types/graph';
 import { shortenAddress } from '@/utils/addressUtils';
+import Image from 'next/image';
 
 interface AccountsProps {
     apiGraphData: GraphData;
@@ -172,7 +173,7 @@ export function Accounts({ apiGraphData }: AccountsProps) {
                 >
                   <td className="py-2 px-4">
                     {accountGraphic?.image && (
-                      <img 
+                      <Image
                         src={accountGraphic.image.src} 
                         alt={getTypeLabel(account.type)} 
                         className="w-8 h-8 rounded-full"
