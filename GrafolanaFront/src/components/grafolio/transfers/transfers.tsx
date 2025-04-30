@@ -22,13 +22,17 @@ const EXCLUDED_TRANSFER_TYPES = [
 ];
 
 export function Transfers({ apiGraphData }: TransfersProps) {
-  const { getGraphic, getProgramInfo, getMintInfo, getMintImage } = useMetadata();
+  const { getProgramInfo, getMintInfo, getMintImage } = useMetadata();
   const { calculateUSDValue } = useUSDValue(); // Get the calculateUSDValue function
   const [transfers, setTransfers] = useState<ForceGraphLink[]>([]);
   const [sortField, setSortField] = useState<string>('type');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterText, setFilterText] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
 
   // Extract and process transfers from apiGraphData
   useEffect(() => {
@@ -40,6 +44,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     );
     
     setTransfers(filteredTransfers);
+    setCurrentPage(1); // Reset to first page when data changes
   }, [apiGraphData]);
 
   // Filter and sort transfers
@@ -114,6 +119,20 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     
     return result;
   }, [transfers, filterText, filterType, sortField, sortDirection, calculateUSDValue, apiGraphData.transactions]);
+  
+  // Get only transfers for current page
+  const paginatedTransfers = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredAndSortedTransfers.slice(startIndex, startIndex + pageSize);
+  }, [filteredAndSortedTransfers, currentPage, pageSize]);
+  
+  // Calculate total pages
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedTransfers.length / pageSize));
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText, filterType, sortField, sortDirection]);
 
   // Handle sort change
   const handleSortChange = (field: string) => {
@@ -125,6 +144,18 @@ export function Transfers({ apiGraphData }: TransfersProps) {
       setSortField(field);
       setSortDirection('asc');
     }
+  };
+  
+  // Pagination controls
+  const goToPage = (page: number): void => {
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(validPage);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+    setPageSize(Number(event.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
   };
 
   // Get unique transfer types for filter dropdown
@@ -289,6 +320,29 @@ export function Transfers({ apiGraphData }: TransfersProps) {
             ))}
           </select>
         </div>
+        
+        {/* Page size selector */}
+        <div className="page-size-selector flex items-center gap-2">
+          <span className="text-gray-400">Items per page:</span>
+          <select
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+      </div>
+      
+      {/* Summary and Pagination Info */}
+      <div className="flex flex-wrap justify-between items-center mb-4">
+        <div className="text-sm text-gray-400">
+          Showing {filteredAndSortedTransfers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-
+          {Math.min(currentPage * pageSize, filteredAndSortedTransfers.length)} of {filteredAndSortedTransfers.length} transfers
+        </div>
       </div>
       
       {/* Transfers Table */}
@@ -323,7 +377,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedTransfers.map((transfer) => {
+            {paginatedTransfers.map((transfer) => {
               // Get program icon
               const programInfo = getProgramInfo(transfer.program_address);
               // Get mint address
@@ -412,6 +466,49 @@ export function Transfers({ apiGraphData }: TransfersProps) {
           </div>
         )}
       </div>
+      
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pagination mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => goToPage(1)}
+            disabled={currentPage === 1}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="First page"
+          >
+            &laquo;
+          </button>
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Previous page"
+          >
+            &lsaquo;
+          </button>
+          
+          <span className="px-4 py-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Next page"
+          >
+            &rsaquo;
+          </button>
+          <button
+            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-gray-800 text-white rounded border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Last page"
+          >
+            &raquo;
+          </button>
+        </div>
+      )}
     </div>
   );
 }
