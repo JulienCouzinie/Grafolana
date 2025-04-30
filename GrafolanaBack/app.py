@@ -12,6 +12,7 @@ from solders.pubkey import Pubkey
 
 
 app = Flask(__name__)
+application = app  # For WSGI compatibility
 cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 compress = Compress()
 compress.init_app(app)

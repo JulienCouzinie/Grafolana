@@ -65,9 +65,6 @@ importers:
       react-force-graph-2d:
         specifier: ^1.27.0
         version: 1.27.0(react@19.0.0)
-      react-force-graph-3d:
-        specifier: ^1.26.1
-        version: 1.26.1(react@19.0.0)
       react-hot-toast:
         specifier: ^2.4.1
         version: 2.5.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4068,12 +4065,6 @@ packages:
 
   react-force-graph-2d@1.27.0:
     resolution: {integrity: sha512-NJAc7lWvY8PxBMn2uFXDDaeLcgJp37IYF6r0geOJlmMs5Lsf0IDmr35T7KNszHV3OUmTrZuPlyxrrzwGwyKhRg==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      react: '*'
-
-  react-force-graph-3d@1.26.1:
-    resolution: {integrity: sha512-Ff520+ngcja441fAyop+oiPPEcXaRhzvTqA+4ve6Kr341g3TIg0+s/i7pafCtYhgpPXcbjiDet0wskzGaNhIlQ==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '*'
@@ -9815,13 +9806,6 @@ snapshots:
   react-force-graph-2d@1.27.0(react@19.0.0):
     dependencies:
       force-graph: 1.49.5
-      prop-types: 15.8.1
-      react: 19.0.0
-      react-kapsule: 2.5.6(react@19.0.0)
-
-  react-force-graph-3d@1.26.1(react@19.0.0):
-    dependencies:
-      3d-force-graph: 1.76.2
       prop-types: 15.8.1
       react: 19.0.0
       react-kapsule: 2.5.6(react@19.0.0)
