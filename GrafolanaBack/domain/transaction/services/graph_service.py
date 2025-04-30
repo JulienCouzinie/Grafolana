@@ -249,7 +249,7 @@ class GraphService:
         for index, (source, dest, key, data) in enumerate(sorted_edges, start=1):
 
             edge_data = {
-                "key": index,
+                "key": key,
                 "program_address": data["program_address"],
                 "source_account_vertex": source.to_dict(),
                 "target_account_vertex": dest.to_dict(),

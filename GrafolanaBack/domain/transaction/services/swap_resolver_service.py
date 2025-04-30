@@ -138,7 +138,7 @@ class SwapResolverService:
                         swap_parent_id= router_swap.id,
                         parent_router_swap_id = router_swap.id,
                     ),
-                    key = incoming_key)
+                    key = incoming_key + 1)
         
         # Add virtual transfer from swap_program_account to user destination
         transaction_context.graph.add_edge(
@@ -153,7 +153,7 @@ class SwapResolverService:
                         swap_parent_id= router_swap.id,
                         parent_router_swap_id = router_swap.id,
                     ),
-                    key = outgoing_key)
+                    key = outgoing_key - 1)
         
         logger.debug(f"Resolved swap {router_swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={router_swap.fee}, tx: {transaction_context.transaction_signature}")
     
@@ -221,7 +221,7 @@ class SwapResolverService:
             
             # Create a new transfer key for the swap
             # We take the key of the transfer before the swap, and add 1 to it
-            swap_transfer_key = int(list(data.keys())[0]) + 1
+            swap_transfer_key = int(list(data.keys())[0]) + 5
 
         except nx.NetworkXNoPath:
             # Handle case where path doesn't exist
@@ -299,7 +299,7 @@ class SwapResolverService:
                         swap_parent_id= swap.id,
                         parent_router_swap_id = swap.parent_router_swap_id,
                     ),
-                    key = swap_incoming_transfer_key)
+                    key = swap_incoming_transfer_key + 1 )
         
         # Add virtual transfer from swap_program_account to user destination
         transaction_context.graph.add_edge(
@@ -314,7 +314,7 @@ class SwapResolverService:
                         swap_parent_id= swap.id,
                         parent_router_swap_id = swap.parent_router_swap_id,
                     ),
-                    key = swap_outgoing_transfer_key)
+                    key = swap_outgoing_transfer_key - 1)
         
         logger.debug(f"Resolved swap {swap.id} with amount_in={amount_in}, amount_out={amount_out}, fee={swap.fee}, tx: {transaction_context.transaction_signature}")
 
