@@ -1,20 +1,56 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
 import { AccountType, GraphData, TransferType } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
 import { Transfers } from './transfers/transfers';
 import { MetadataPreloader } from './graph/MetadataPreloader';
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 interface GrafolioProps {
-  apiGraphData: GraphData;
+  // apiGraphData is now optional as we'll manage it internally
+  apiGraphData?: GraphData;
 }
 
-export default function Grafolio({ apiGraphData }: GrafolioProps) {
+export default function Grafolio({ apiGraphData: initialGraphData }: GrafolioProps) {
+  // Internal state for graph data
+  const [graphData, setGraphData] = useState<GraphData>(
+    initialGraphData || { nodes: [], links: [], transactions: {} }
+  );
   const [activeTab, setActiveTab] = useState<string>('graph');
   const [previousTab, setPreviousTab] = useState<string>('graph');
+
+  // Get the data fetching methods from TransactionsProvider
+  const { getTransactionGraphData, getWalletGraphData } = useTransactions();
+
+  // Use effect to update internal state if prop changes
+  useEffect(() => {
+    if (initialGraphData) {
+      setGraphData(initialGraphData);
+    }
+  }, [initialGraphData]);
+
+  // Function to handle fetching transaction graph data
+  const handleGetTransactionGraphData = () => {
+    const txSignature = (document.getElementById('tx_signature') as HTMLInputElement)?.value;
+    if (txSignature) {
+      getTransactionGraphData(txSignature, (data) => {
+        setGraphData(data);
+      });
+    }
+  };
+
+  // Function to handle fetching wallet graph data
+  const handleGetWalletGraphData = () => {
+    const walletAddress = (document.getElementById('wallet_signature') as HTMLInputElement)?.value;
+    if (walletAddress) {
+      getWalletGraphData(walletAddress, (data) => {
+        setGraphData(data);
+      });
+    }
+  };
 
   // Function to determine which tab is active
   const isActive = (tab: string): string => activeTab === tab ? 'active' : '';
@@ -40,7 +76,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
   const uniqueAccountsSet: Set<string> = new Set();
 
   // Iterate through all transactions
-  Object.values(apiGraphData.transactions).forEach(txData => {
+  Object.values(graphData.transactions).forEach(txData => {
     // Filter out excluded account types and add to set
     txData.accounts
       .filter(account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type))
@@ -58,14 +94,44 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
     TransferType.SWAP_ROUTER_OUTGOING
   ];
 
-  const transfersCount = apiGraphData.links.filter(
+  const transfersCount = graphData.links.filter(
     link => !EXCLUDED_TRANSFER_TYPES.includes(link.type)
   ).length;
 
-
   return (
     <div className="flex flex-col h-full w-full">
-      <MetadataPreloader graphData={apiGraphData} />
+      {/* Add the input controls that were previously in DashboardFeature */}
+      <div className="p-4 bg-gray-900">
+        <input 
+          type="text" 
+          id="tx_signature" 
+          placeholder="Enter Transaction Signature" 
+          style={{ width: '1000px', margin: '2px' }} 
+          defaultValue={"3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu"}
+        />
+        <button 
+          onClick={handleGetTransactionGraphData}
+          className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded"
+        >
+          GET TRANSACTION GRAPH
+        </button>
+        <br />
+        <input 
+          type="text" 
+          id="wallet_signature" 
+          placeholder="Enter Wallet Address" 
+          defaultValue={"CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX"} 
+          style={{ width: '1000px', margin: '2px' }} 
+        />
+        <button 
+          onClick={handleGetWalletGraphData}
+          className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded"
+        >
+          GET WALLET GRAPH
+        </button>
+      </div>
+
+      <MetadataPreloader graphData={graphData} />
       {/* Tabs */}
       <div className="bg-gray-800 p-2">
         <div className="flex space-x-1">
@@ -79,7 +145,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
             onClick={() => handleTabChange('transactions')} 
             className={`px-4 py-2 rounded-md transition-colors ${isActive('transactions') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
-            Transactions ({Object.keys(apiGraphData.transactions).length})
+            Transactions ({Object.keys(graphData.transactions).length})
           </button>
           <button 
             onClick={() => handleTabChange('accounts')} 
@@ -101,23 +167,23 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
         {/* Graph Tab */}
         <div className={`w-full h-full ${getTabDisplayClass('graph')}`}>
           <TransactionGraph 
-            apiGraphData={apiGraphData}
+            apiGraphData={graphData}
           />
         </div>
         
         {/* Transactions Tab */}
         <div className={getTabDisplayClass('transactions')}>
-          <Transactions apiGraphData={apiGraphData} />
+          <Transactions apiGraphData={graphData} />
         </div>
         
         {/* Accounts Tab */}
         <div className={getTabDisplayClass('accounts')}>
-          <Accounts apiGraphData={apiGraphData} />
+          <Accounts apiGraphData={graphData} />
         </div>
         
         {/* Transfers Tab */}
         <div className={getTabDisplayClass('transfers')}>
-          <Transfers apiGraphData={apiGraphData} />
+          <Transfers apiGraphData={graphData} />
         </div>
       </div>
     </div>
