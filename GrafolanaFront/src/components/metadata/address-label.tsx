@@ -438,7 +438,7 @@ export function AddressLabel({
             </svg>
             {/* Checkmark icon */}
             <svg 
-              className={`w-3.5 h-3.5 absolute inset-1 transition-opacity duration-200 ${showCheckmark ? 'opacity-100' : 'opacity-0'}`} 
+              className={`w-3.5 h-3.5 absolute inset-0 transition-opacity duration-200 ${showCheckmark ? 'opacity-100' : 'opacity-0'}`} 
               viewBox="0 0 20 20" 
               xmlns="http://www.w3.org/2000/svg" 
               fill="currentColor" 
