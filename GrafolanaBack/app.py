@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict, Any, Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -9,11 +10,17 @@ from GrafolanaBack.domain.spam.service import SpamService
 from GrafolanaBack.domain.spam.model import Creator
 from solders.signature import Signature
 from solders.pubkey import Pubkey
+from dotenv import load_dotenv
 
+load_dotenv()
+CORS_DOMAIN = os.getenv("CORS_DOMAIN")
+PORT = os.getenv("PORT", 5000)
 
 app = Flask(__name__)
 application = app  # For WSGI compatibility
-cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+handler = app # For Vercel compatibility
+
+cors = CORS(app, resources={r"/api/*": {"origins": CORS_DOMAIN}})
 compress = Compress()
 compress.init_app(app)
 
@@ -21,6 +28,14 @@ start_price_updater() # Start the price updater in a separate thread
 
 transaction_parser_service = TransactionParserService()
 spam_service = SpamService()
+
+@app.route("/")
+def hello():
+  return """
+
+    Flask is working on HelioHost.<br><br>
+
+  """
 
 @app.route('/api/get_transaction_from_signature', methods=['POST'])
 def get_transaction_from_signature():
@@ -214,4 +229,4 @@ def delete_spam(spam_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=PORT)
