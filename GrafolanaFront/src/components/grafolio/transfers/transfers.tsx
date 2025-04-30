@@ -370,7 +370,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
       
       {/* Transfers Table */}
       <div className="transfers-table overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-gray-900 text-left">
               <th className="py-2 px-4">Type</th>
