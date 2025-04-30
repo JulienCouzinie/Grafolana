@@ -1732,7 +1732,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                                                 onChange={(e) => handleCheckboxChange(clusterId, e.target.checked)}
                                                 style={{ marginRight: '8px' }}
                                             />
-                                            <span style={{ marginRight: '12px' }}>Cluster Group {clusterId} ({transactionsPerCluster[clusterId]})</span>
+                                            <span style={{ marginRight: '12px' }}>Cluster Group {clusterId}</span>
                                             
                                             {/* Show/Hide Transactions button moved inline */}
                                             <div 
@@ -1749,7 +1749,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                                                     {expandedClusters[clusterId] ? '▾' : '▸'}
                                                 </span>
                                                 <span>
-                                                    {expandedClusters[clusterId] ? 'Hide transactions' : 'Show transactions'}
+                                                    {expandedClusters[clusterId] ? 'Hide transactions' : 'Show transactions'}  ({transactionsPerCluster[clusterId]})
                                                 </span>
                                             </div>
                                         </div>
