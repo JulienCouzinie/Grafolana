@@ -163,6 +163,31 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
+    /**
+     * rebuild links keys order for each transaction
+     * Rebuild the links keys by ordering them by key then redifining the keys starting from 1 in increments of 1
+     * @param data 
+     */
+    private rebuildLinksKeys(data: GraphData): void {
+        // Group links by transaction signature
+        const linksByTransaction = new Map<string, GraphLink[]>();
+        data.links.forEach((link) => {
+            if (!linksByTransaction.has(link.transaction_signature)) {
+                linksByTransaction.set(link.transaction_signature, []);
+            }
+            linksByTransaction.get(link.transaction_signature)?.push(link);
+        });
+
+        // Rebuild keys for each transaction group
+        linksByTransaction.forEach((links) => {
+            links.sort((a, b) => a.key - b.key); // Sort by key
+            links.forEach((link, index) => {
+                link.key = index + 1; // Reassign keys starting from 1
+            });
+        });
+    }
+
+
     private ApplyCollapseExpandSwapPrograms(data: GraphData): void {
 
         // Filter out the links that are not relevant based on the collapse state of swap programs
@@ -195,6 +220,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
            
             return true;
         });
+
+        // Rebuild the links keys after filtering
+        this.rebuildLinksKeys(data);
 
         this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
 
