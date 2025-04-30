@@ -64,6 +64,14 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     const node = getRelevantNode(transfer);
     return node?.mint_address;
   };
+  
+  // Helper function to get transaction date
+  const getTransferDate = (transfer: ForceGraphLink): string => {
+    const transaction = apiGraphData.transactions[transfer.transaction_signature];
+    if (!transaction || !transaction.timestamp) return "N/A";
+    
+    return new Date(transaction.timestamp).toLocaleString();
+  };
 
   // Filter and sort transfers
   const filteredAndSortedTransfers = useMemo(() => {
@@ -135,6 +143,17 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         const bUsd = getUsdValue(b);
         
         return sortDirection === 'asc' ? aUsd - bUsd : bUsd - aUsd;
+      }
+      
+      // Add sorting for date
+      if (sortField === 'date') {
+        const aTransaction = apiGraphData.transactions[a.transaction_signature];
+        const bTransaction = apiGraphData.transactions[b.transaction_signature];
+        
+        const aTimestamp = aTransaction?.timestamp || 0;
+        const bTimestamp = bTransaction?.timestamp || 0;
+        
+        return sortDirection === 'asc' ? aTimestamp - bTimestamp : bTimestamp - aTimestamp;
       }
 
       return 0;
@@ -305,7 +324,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         <div className="search flex-1 min-w-[200px]">
           <input
             type="text"
-            placeholder="Search transfers by account address, transaction signature or mint address"
+            placeholder="Search transfers by account address, program address, transaction signature or mint address"
             className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -378,6 +397,12 @@ export function Transfers({ apiGraphData }: TransfersProps) {
                 Program {sortField === 'program' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th className="py-2 px-4">Transaction</th>
+              <th 
+                className="py-2 px-4 cursor-pointer"
+                onClick={() => handleSortChange('date')}
+              >
+                Date {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -454,6 +479,9 @@ export function Transfers({ apiGraphData }: TransfersProps) {
                       shortened={true}
                       data={apiGraphData}
                     />
+                  </td>
+                  <td className="py-2 px-4">
+                    {getTransferDate(transfer)}
                   </td>
                 </tr>
               );
