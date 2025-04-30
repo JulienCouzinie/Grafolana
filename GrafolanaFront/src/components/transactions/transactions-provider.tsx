@@ -1,13 +1,15 @@
 'use client'
 
 import { createContext, useCallback, useContext, ReactNode, useState } from 'react';
-import { AccountVertex, GraphData } from '@/types/graph';
+import { AccountVertex, GraphData, ForceGraphNode, ForceGraphLink, TransactionData } from '@/types/graph';
 
 // Define the context type that exposes both the graph data and getter methods
 interface TransactionsContextType {
   graphData: GraphData;
   getTransactionGraphData: (tx_signature: string) => Promise<void>;
   getWalletGraphData: (wallet_signature: string) => Promise<void>;
+  addWalletGraphData: (tx_signature: string) => Promise<void>;
+  addTransactionGraphData: (tx_signature: string) => Promise<void>;
 }
 
 // Create the context
@@ -34,7 +36,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     transactions: {} 
   });
 
-  // Extract the mapper function from dashboard-feature
+
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
       node.account_vertex = new AccountVertex(node.account_vertex.address, node.account_vertex.version, node.account_vertex.transaction_signature);
@@ -58,7 +60,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     return data;
   }, []);
 
-  // Modified getTransactionGraphData to update the state instead of returning data
   const getTransactionGraphData = async (tx_signature: string): Promise<void> => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
@@ -79,7 +80,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
   };
 
-  // Modified getWalletGraphData to update the state instead of returning data
   const getWalletGraphData = async (wallet_signature: string): Promise<void> => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
@@ -100,11 +100,117 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
   };
 
+  const addWalletGraphData = async (tx_signature: string): Promise<void> => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tx_signature }),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      let newData: GraphData = await response.json();
+      newData = mapAccountVertexToClass(newData);
+      
+      // Merge the new data with existing graph data
+      setGraphData(prevData => {
+        // Create sets of existing node and link IDs for quick lookup
+        const existingNodeIds = new Set(prevData.nodes.map(node => node.account_vertex.id));
+        const existingLinkIds = new Set(prevData.links.map(link => link.id));
+        
+        // Filter out nodes that already exist in the graph
+        const newNodes = newData.nodes.filter(node => !existingNodeIds.has(node.account_vertex.id));
+        
+        // Filter out links that already exist in the graph
+        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.id));
+        
+        // Merge transactions, avoiding duplicates
+        const mergedTransactions: Record<string, TransactionData> = { 
+          ...prevData.transactions 
+        };
+        
+        // Add only transactions that don't already exist
+        Object.entries(newData.transactions).forEach(([key, transaction]) => {
+          if (!mergedTransactions[key]) {
+            mergedTransactions[key] = transaction;
+          }
+        });
+        
+        // Return the merged data
+        return {
+          nodes: [...prevData.nodes, ...newNodes],
+          links: [...prevData.links, ...newLinks],
+          transactions: mergedTransactions
+        };
+      });
+    } catch (error) {
+      console.error('Failed to fetch additional graph data:', error);
+      // Don't change the existing graph data on error
+    }
+  };
+  
+  const addTransactionGraphData = async (tx_signature: string): Promise<void> => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tx_signature }),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      let newData: GraphData = await response.json();
+      newData = mapAccountVertexToClass(newData);
+      
+      // Merge the new data with existing graph data
+      setGraphData(prevData => {
+        // Create sets of existing node and link IDs for quick lookup
+        const existingNodeIds = new Set(prevData.nodes.map(node => node.account_vertex.id));
+        const existingLinkIds = new Set(prevData.links.map(link => link.id));
+        
+        // Filter out nodes that already exist in the graph
+        const newNodes = newData.nodes.filter(node => !existingNodeIds.has(node.account_vertex.id));
+        
+        // Filter out links that already exist in the graph
+        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.id));
+        
+        // Merge transactions, avoiding duplicates
+        const mergedTransactions: Record<string, TransactionData> = { 
+          ...prevData.transactions 
+        };
+        
+        // Add only transactions that don't already exist
+        Object.entries(newData.transactions).forEach(([key, transaction]) => {
+          if (!mergedTransactions[key]) {
+            mergedTransactions[key] = transaction;
+          }
+        });
+        
+        // Return the merged data
+        return {
+          nodes: [...prevData.nodes, ...newNodes],
+          links: [...prevData.links, ...newLinks],
+          transactions: mergedTransactions
+        };
+      });
+    } catch (error) {
+      console.error('Failed to fetch additional graph data:', error);
+      // Don't change the existing graph data on error
+    }
+  };
+
   // Create the context value with both the graph data and getter methods
   const value = {
     graphData,
     getTransactionGraphData,
     getWalletGraphData,
+    addWalletGraphData,
+    addTransactionGraphData,
   };
 
   return (
