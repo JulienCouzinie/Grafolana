@@ -15,11 +15,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 CORS_DOMAIN = os.getenv("CORS_DOMAIN")
-PORT = os.getenv("PORT", 5000)
+PORT = int(os.getenv("PORT", 5000))
 
 app = Flask(__name__)
 application = app  # For WSGI compatibility
-handler = app # For Vercel compatibility
+handler = app  # For Vercel compatibility
+
+# Configure Flask to listen on all interfaces (0.0.0.0) - critical for Render deployment
+app.config['SERVER_NAME'] = f"0.0.0.0:{PORT}"
 
 # Run database migrations if needed
 check_and_run_migrations()
@@ -28,7 +31,7 @@ cors = CORS(app, resources={r"/api/*": {"origins": CORS_DOMAIN}})
 compress = Compress()
 compress.init_app(app)
 
-start_price_updater() # Start the price updater in a separate thread
+start_price_updater()  # Start the price updater in a separate thread
 
 transaction_parser_service = TransactionParserService()
 spam_service = SpamService()
