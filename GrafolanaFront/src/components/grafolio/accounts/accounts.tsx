@@ -40,7 +40,6 @@ export function Accounts({ apiGraphData }: AccountsProps) {
         if (!accountsMap.has(account.address)) {
           accountsMap.set(account.address, {
             ...account,
-            balance: 0, // Initialize balance, could be updated later if needed
             displayName: shortenAddress(account.address)
           });
         }
