@@ -4,7 +4,6 @@ import React, { JSX } from 'react';
 import { GraphData } from '@/types/graph';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { useMetadata } from '@/components/metadata/metadata-provider';
-import { useStaticGraphics } from '@/components/metadata/static-graphic-provider';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { useUSDValue } from '@/hooks/useUSDValue';
 import { AddressType } from '@/types/metadata';

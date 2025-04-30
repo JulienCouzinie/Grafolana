@@ -1,5 +1,5 @@
 import { ForceGraphLink, ForceGraphNode, GraphData, GraphNode } from '@/types/graph';
-import { Ref, RefObject } from 'react';
+import { RefObject } from 'react';
 
 export interface ContextMenuItem {
   label: string;

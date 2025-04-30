@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import * as d3 from 'd3-force';
-import { ForceGraphNode, GraphData, } from '@/types/graph';
+import { GraphData, } from '@/types/graph';
 import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
@@ -12,7 +12,6 @@ import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
-import { min } from 'lodash';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines

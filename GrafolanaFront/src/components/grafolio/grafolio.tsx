@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
 import { GraphData } from '@/types/graph';
-import { GraphNode } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
 import { Transfers } from './transfers/transfers';

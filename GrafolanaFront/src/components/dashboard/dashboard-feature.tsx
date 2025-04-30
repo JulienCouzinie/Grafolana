@@ -1,54 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import JSONPretty from 'react-json-pretty';
 import 'react-json-pretty/themes/monikai.css';
-import { TransactionGraph } from '@/components/grafolio/graph/TransactionGraph';
-import { AccountVertex, GraphData, GraphLink } from '../../types/graph';
-import { AddressLabel } from '../metadata/address-label';
+import { AccountVertex, GraphData } from '../../types/graph';
 import Grafolio from '../grafolio/grafolio';
-
 
 export default function DashboardFeature() {
   const { publicKey } = useWallet();
 
-  const [transactionJSON, setTransactionJSON] = useState<Record<string, unknown>>({});
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [], transactions: {}, });
-
-
-  const getTransactionFromWallet = async (walletkey: string, startTime: number, endTime: number) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/get_orders_from_wallet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ walletkey, startTime, endTime }),
-      });
-      const data = await response.json();
-      console.log(data.transactions);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-    }
-  };
-
-  const getTransactionFromSignature = async (tx_signature: string) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/get_transaction_from_signature', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tx_signature }),
-      });
-      const data = await response.json();
-      navigator.clipboard.writeText(JSON.stringify(data));
-      setTransactionJSON(data);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-    }
-  };
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
       data.nodes = data.nodes.map((node) => {

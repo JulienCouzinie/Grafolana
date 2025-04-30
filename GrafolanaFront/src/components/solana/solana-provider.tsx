@@ -1,10 +1,10 @@
 'use client'
 
 import {WalletError} from '@solana/wallet-adapter-base'
-import {ConnectionProvider, WalletProvider,} from '@solana/wallet-adapter-react'
+import { WalletProvider,} from '@solana/wallet-adapter-react'
 import {WalletModalProvider} from '@solana/wallet-adapter-react-ui'
 import dynamic from 'next/dynamic'
-import {ReactNode, useCallback, useEffect, useMemo} from 'react'
+import {ReactNode, useCallback, useEffect } from 'react'
 
 
 require('@solana/wallet-adapter-react-ui/styles.css')

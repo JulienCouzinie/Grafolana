@@ -1,6 +1,6 @@
-import ForceGraph2D, { ForceGraphProps, NodeObject, LinkObject, ForceGraphMethods } from 'react-force-graph-2d';
-import { GraphData, GraphNode, GraphLink, ForceGraphNode, ForceGraphLink } from '@/types/graph';
-import { ForwardedRef, forwardRef } from 'react';
+import ForceGraph2D, { ForceGraphProps, ForceGraphMethods } from 'react-force-graph-2d';
+import { ForceGraphNode, ForceGraphLink } from '@/types/graph';
+import { ForwardedRef } from 'react';
 
 /**
  * TypedForceGraphProps defines custom prop types for our NoSSRForceGraph component.

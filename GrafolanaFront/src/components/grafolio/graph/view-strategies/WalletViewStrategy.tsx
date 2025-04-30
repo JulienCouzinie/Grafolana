@@ -1,12 +1,11 @@
-import React, { Ref } from 'react';
+import React from 'react';
 import { GraphData, GraphLink, ForceGraphLink, ForceGraphNode, AccountType, AccountVertex, GraphNode, TransferType} from '@/types/graph';
 import { ViewStrategy } from './ViewStrategy';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useUSDValue } from '@/hooks/useUSDValue';
-import { useRef, useState } from 'react';
-import cloneDeep from 'lodash/cloneDeep';
+import { useRef } from 'react';
 
-import { BaseViewStrategy, SOLANA_COLORS } from './BaseViewStrategy';
+import { BaseViewStrategy } from './BaseViewStrategy';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
 import { NodeImage } from '@/components/metadata/node-image';

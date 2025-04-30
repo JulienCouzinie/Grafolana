@@ -1,12 +1,11 @@
-import React, { Ref } from 'react';
+import React from 'react';
 import { GraphData, GraphNode, GraphLink, ForceGraphLink, ForceGraphNode, AccountVertex, AccountType, TransferType, NodePosition, Swap } from '@/types/graph';
 import { ContextMenuItem, ViewStrategy } from './ViewStrategy';
-import { useCallback, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useUSDValue } from '@/hooks/useUSDValue';
-import { AddressType, MintDTO } from '@/types/metadata';
-import { cloneDeep, min } from 'lodash';
-import { AddressLabel } from '@/components/metadata/address-label';
+import { MintDTO } from '@/types/metadata';
+import { cloneDeep } from 'lodash';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 
 // Shared color palette
