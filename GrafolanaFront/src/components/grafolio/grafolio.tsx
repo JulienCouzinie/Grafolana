@@ -6,6 +6,7 @@ import { GraphData } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
 import { Transfers } from './transfers/transfers';
+import { MetadataPreloader } from './graph/MetadataPreloader';
 
 interface GrafolioProps {
   apiGraphData: GraphData;
@@ -35,6 +36,7 @@ export default function Grafolio({ apiGraphData }: GrafolioProps) {
 
   return (
     <div className="flex flex-col h-full w-full">
+      <MetadataPreloader graphData={apiGraphData} />
       {/* Tabs */}
       <div className="bg-gray-800 p-2">
         <div className="flex space-x-1">

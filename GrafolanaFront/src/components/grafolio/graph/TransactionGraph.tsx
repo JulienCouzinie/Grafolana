@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import * as d3 from 'd3-force';
 import { GraphData, } from '@/types/graph';
-import { MetadataPreloader } from './MetadataPreloader';
 import { useFlowViewStrategy } from './view-strategies/FlowViewStrategy';
 import { useAccountViewStrategy } from './view-strategies/AccountViewStrategy';
 import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from 'react-resizable-panels';
@@ -314,8 +313,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
 
   return (
     // Apply the ref to the top-level container
-    <div className="w-full h-full" ref={containerRef}>
-      <MetadataPreloader graphData={apiGraphData} />
+    <div className="w-full h-full" ref={containerRef}>    
       {/* Context Menu */}
       {contextMenu.isOpen && contextMenu.node && (
         <div 
