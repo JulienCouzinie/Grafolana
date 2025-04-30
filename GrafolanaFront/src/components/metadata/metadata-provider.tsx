@@ -125,6 +125,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     // Filter out null or undefined addresses
     uniqueAddresses = uniqueAddresses.filter((addr): addr is string => (addr !== undefined || addr !== null) && addr.length > 0);
 
+    if (uniqueAddresses.length === 0) return;
+
     const missingAddresses: string[] = [];
 
     // First check which mints we need to fetch
