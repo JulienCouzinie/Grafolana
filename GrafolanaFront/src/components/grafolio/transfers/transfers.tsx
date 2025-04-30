@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { AddressLabel } from '@/components/metadata/address-label';
@@ -47,21 +46,45 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     setCurrentPage(1); // Reset to first page when data changes
   }, [apiGraphData]);
 
+  // Helper function to get the correct node based on transfer type
+  const getRelevantNode = (transfer: ForceGraphLink) => {
+    if (transfer.type === TransferType.MINTTO) {
+      return apiGraphData.nodes.find(
+        node => node.account_vertex.address === transfer.target_account_vertex.address
+      );
+    } else {
+      return apiGraphData.nodes.find(
+        node => node.account_vertex.address === transfer.source_account_vertex.address
+      );
+    }
+  };
+
+  // Helper function to get mint address for a transfer
+  const getMintAddress = (transfer: ForceGraphLink): string | undefined => {
+    const node = getRelevantNode(transfer);
+    return node?.mint_address;
+  };
+
   // Filter and sort transfers
   const filteredAndSortedTransfers = useMemo(() => {
     // First apply filters
     let result = [...transfers];
     
-    // Text filter
+    // Text filter - extended to include mint addresses
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      result = result.filter(transfer => 
-        transfer.source_account_vertex.address.toLowerCase().includes(lowerFilter) ||
-        transfer.target_account_vertex.address.toLowerCase().includes(lowerFilter) ||
-        transfer.program_address.toLowerCase().includes(lowerFilter) ||
-        transfer.transaction_signature.toLowerCase().includes(lowerFilter) ||
-        transfer.type.toLowerCase().includes(lowerFilter)
-      );
+      result = result.filter(transfer => {
+        // Get the mint address for this transfer
+        const mintAddress = getMintAddress(transfer);
+        
+        // Check if any field matches the filter text
+        return transfer.source_account_vertex.address.toLowerCase().includes(lowerFilter) ||
+          transfer.target_account_vertex.address.toLowerCase().includes(lowerFilter) ||
+          transfer.program_address.toLowerCase().includes(lowerFilter) ||
+          transfer.transaction_signature.toLowerCase().includes(lowerFilter) ||
+          // Add check for mint address
+          (mintAddress && mintAddress.toLowerCase().includes(lowerFilter));
+      });
     }
     
     // Type filter
@@ -180,25 +203,6 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     }
   };
 
-  // Helper function to get the correct node based on transfer type
-  const getRelevantNode = (transfer: ForceGraphLink) => {
-    if (transfer.type === TransferType.MINTTO) {
-      return apiGraphData.nodes.find(
-        node => node.account_vertex.address === transfer.target_account_vertex.address
-      );
-    } else {
-      return apiGraphData.nodes.find(
-        node => node.account_vertex.address === transfer.source_account_vertex.address
-      );
-    }
-  };
-
-  // Helper function to get mint address for a transfer
-  const getMintAddress = (transfer: ForceGraphLink): string | undefined => {
-    const node = getRelevantNode(transfer);
-    return node?.mint_address;
-  };
-
   // Format USD value with appropriate decimals
   const formatUSDValue = (value: number | null): string => {
     if (value === null || isNaN(value)) return 'N/A';
@@ -301,7 +305,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         <div className="search flex-1 min-w-[200px]">
           <input
             type="text"
-            placeholder="Search transfers..."
+            placeholder="Search transfers by account address, transaction signature or mint address"
             className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -340,7 +344,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
       {/* Summary and Pagination Info */}
       <div className="flex flex-wrap justify-between items-center mb-4">
         <div className="text-sm text-gray-400">
-          Showing {filteredAndSortedTransfers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-
+          Showing {filteredAndSortedTransfers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}- 
           {Math.min(currentPage * pageSize, filteredAndSortedTransfers.length)} of {filteredAndSortedTransfers.length} transfers
         </div>
       </div>
