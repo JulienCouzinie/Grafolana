@@ -180,7 +180,7 @@ class FlowViewStrategy extends BaseViewStrategy {
         // Adjust label position based on curvature
         const curvature = link.curvature || 0;
         const angle = Math.atan2(end.y - start.y, end.x - start.x);
-        const curveOffset = curvature * 17; // Adjust this value to control the offset
+        const curveOffset = -curvature * 17; // Adjust this value to control the offset
 
         const labelX = middleX + curveOffset * Math.cos(angle + Math.PI / 2);
         const labelY = middleY + curveOffset * Math.sin(angle + Math.PI / 2);
