@@ -17,6 +17,7 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - Recognizes 144 differents swap instructions from 59 differents DEX programs
 - Map transfers by parsing 17 differents instructions from Solana's Built in programs
 - Offers 3 differents graph's views: Transers, Accounts and Wallets
+- Stores minimum 4 years worth of SOL prices in DB for quick lookup and updates every minutes
 - USD prices derivation mechanism for SPL token using swap's datas and Binance API for SOL prices
 - Transactions Clustering algorithm that groups transactions by their graph's shape
 - Fast & Failsafe RPC transactions batching using multiple RPC enpoints with loadbalancer respecting rate limits
