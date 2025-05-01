@@ -247,7 +247,7 @@ The app is accessible here
 #### Database
 - PostgreSQL
 
-You can use the [docker compose file](docker-compose.yml) to quickly spin up a PostgreSQL container o
+You can use the [docker compose file](docker-compose.yml) to quickly spin up a PostgreSQL container.
 
 #### Backend
 - Python 3.10+
@@ -392,6 +392,17 @@ flask run --host=0.0.0.0 --no-reload --no-debug
 cd GrafolanaFront
 pnpm start
 ```
+
+
+## Unit Tests & Integration Test
+
+No.
+
+There are no tests for now. Didn't have time given the one month limit for the hackaton.
+But someday...
+
+The actual tests files in the backend folders are actually just sandboxes I used throughout the developement to rapidly test ideas.
+
 
 
 ## License
