@@ -47,6 +47,17 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - List of Accounts
 - List of Transfers
 
+### The Graph 
+#### Legend
+Legend of the differents colors used for drawing nodes
+![LEGEND](doc/legend.png)
+
+#### Indicators
+Some little icons serves as indicator for some contextual node's info.
+We have Signer indicator for accounts that have signed transactions.
+A pool icon to showcase the swap's liquidity pools.
+A stake icon for .. stake accounts !
+![Indicators](doc/indicators.png)
 
 ### Design Choices: Virtual Links & Nodes
 #### Swaps
