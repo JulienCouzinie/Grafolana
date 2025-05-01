@@ -11,6 +11,7 @@ import { useWalletViewStrategy } from './view-strategies/WalletViewStrategy';
 import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
+import { useMetadata } from '@/components/metadata/metadata-provider';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -78,6 +79,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     program: null,
   });
 
+  const {spamAddresses} = useMetadata();
+
   const [redraw, setRedraw] = useState<number>(0);
 
   // Add a reference to the graph component at the beginning of your component
@@ -121,7 +124,12 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     handleBackGroundClick,
   } = useGraphInteractions(strategy, fgRef);
 
-  
+  useEffect(() => {
+    if (strategy){
+      strategy.applyFilters();
+    }
+  }, [spamAddresses]); // Re-run when spam addresses change
+
   // Add an effect to cache the processed data for the current view mode
   useEffect(() => {
     if (strategy) {

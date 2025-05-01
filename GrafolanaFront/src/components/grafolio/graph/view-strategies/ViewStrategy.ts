@@ -113,4 +113,10 @@ export interface ViewStrategy {
    * @returns React node with Links information specific to this strategy
    */
   getLinksInfoContent(): React.ReactNode;
+
+  /**
+   * Applies all the filters to the graph data
+   * Can be used to update the graph view when filters are changed
+   */
+  applyFilters() : void;
 }

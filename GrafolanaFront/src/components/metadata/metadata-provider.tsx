@@ -35,6 +35,7 @@ interface MetadataContextType {
   canUnMarkSpam: (address: string) => boolean;
   addToSpam: (address: string) => Promise<Spam>;
   deleteFromSpam: (spamId: number) => Promise<boolean>;
+  spamAddresses: Spam[];
 }
 
 const MetadataContext = createContext<MetadataContextType | undefined>(undefined);
@@ -644,6 +645,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
       getGraphic,
       getGraphicByNode,
+
+      spamAddresses
 
     }}>
       {children}

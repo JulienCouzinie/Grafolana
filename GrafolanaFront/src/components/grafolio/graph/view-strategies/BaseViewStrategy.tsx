@@ -591,7 +591,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
     }
 
-    protected applyFilters() {
+    public applyFilters() {
         this.saveCurrentNodePositions()
         // Start with the original data
         let data = cloneDeep(this.originalData.current); 
@@ -1038,18 +1038,18 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 }
                 break;
             case "mark_spam":
-                // Mark this address as spam
-                //if (this.publicKey) {
-                    this.metadataServices.addToSpam(node.account_vertex.address);
-                //} else {
-                //    alert("Please connect your wallet to mark addresses as spam.");
-                //}
-
+                    this.metadataServices.addToSpam(node.account_vertex.address).then((spam) => {
+                        this.applyFilters()
+                    });
+                    
                 break;
             case "unmark_spam":
                 // Unmark this address from spam
                 const spam = this.metadataServices.getSpam(node.account_vertex.address);
-                this.metadataServices.deleteFromSpam(spam!.id);
+                this.metadataServices.deleteFromSpam(spam!.id).then((spam) => {
+                    this.applyFilters()
+                });
+                
                 break;
             default:
                 console.log(`Unhandled action: ${action} for node:`, node);
