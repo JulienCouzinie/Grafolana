@@ -23,7 +23,8 @@ export default function Grafolio() {
     getTransactionGraphData, 
     getWalletGraphData, 
     addTransactionGraphData, 
-    addWalletGraphData 
+    addWalletGraphData,
+    isLoading // Add isLoading state from the TransactionsProvider
   } = useTransactions();
 
   // Function to handle address input change
@@ -138,6 +139,7 @@ export default function Grafolio() {
         <button 
           onClick={handleGetGraphData}
           className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-1 rounded mr-2"
+          disabled={isLoading}
         >
           GET GRAPH
         </button>
@@ -148,9 +150,20 @@ export default function Grafolio() {
           <button 
             onClick={handleAddToGraph}
             className="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded"
+            disabled={isLoading}
           >
             ADD TO GRAPH
           </button>
+        )}
+        {/* Loading spinner */}
+        {isLoading && (
+          <div className="inline-block ml-3">
+            <img 
+              src="/spinner.svg" 
+              alt="Loading" 
+              className="h-5 w-5"
+            />
+          </div>
         )}
       </div>
 

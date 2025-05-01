@@ -12,6 +12,7 @@ export interface TransactionsContextType {
     getWalletGraphData: (wallet_signature: string) => Promise<void>;
     addWalletGraphData: (tx_signature: string) => Promise<void>;
     addTransactionGraphData: (tx_signature: string) => Promise<void>;
+    isLoading: boolean; // Loading state indicator
   }
 
 // Create the context
@@ -41,6 +42,9 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   // Add state to track fetched transaction signatures and wallet addresses
   const [fetchedTransactions, setFetchedTransactions] = useState<Set<string>>(new Set());
   const [fetchedWallets, setFetchedWallets] = useState<Set<string>>(new Set());
+  
+  // Add loading state
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
@@ -66,6 +70,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   }, []);
 
   const getTransactionGraphData = async (tx_signature: string): Promise<void> => {
+    setIsLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -89,10 +94,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       // Clear tracking on error
       setFetchedTransactions(new Set());
       setFetchedWallets(new Set());
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getWalletGraphData = async (wallet_signature: string): Promise<void> => {
+    setIsLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
         method: 'POST',
@@ -116,6 +124,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       // Clear tracking on error
       setFetchedTransactions(new Set());
       setFetchedWallets(new Set());
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,6 +136,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
         method: 'POST',
@@ -181,6 +192,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
       // Don't change the existing graph data on error
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -191,6 +204,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -246,6 +260,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
       // Don't change the existing graph data on error
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -258,6 +274,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     getWalletGraphData,
     addWalletGraphData,
     addTransactionGraphData,
+    isLoading, // Add loading state to the context value
   };
 
   return (
