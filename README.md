@@ -352,3 +352,7 @@ pnpm start
 
 
 
+## Buy Me A Coffee ☕ !
+
+Feel like contributing or just want to pay me a coffee ?!
+Donations accepted here CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX 
