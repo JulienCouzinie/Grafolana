@@ -48,7 +48,7 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - List of Transfers
 
 
-### Design Choices
+### Design Choices: Virtual Links & Nodes
 #### Swaps
 ![Swaps](image.png)
 
@@ -69,6 +69,13 @@ These nodes don't represents actual accounts and are just used to get a better v
 
 As detailed in the screenshot here, a virtual burn account might be used as a swap source account when the swap requires burning some token: here its a Sanctum's PrefundWithdrawStake.
 
+#### Fees
+![Fees](doc/fees.png)
+Fees paid during a transaction are shown as actual transfers, both regular and priority fees.
+To be able to stay consistent with the graph Node/Link pattern I decided to create virtual Fee accounts.
+Hovering a fee account will show the total fee. 
+In Transfer View, each fee account is tied to a transaction and will only show total fees for that transaction.
+In Accounts and Wallets Views: If multiple transaction are loaded in the graph the fee account will show the total fees of all the transactions.
 
 ## The View System
 ![View System](doc/views.png)
@@ -84,7 +91,7 @@ It's basically an arbitrage WSOL->WSOL
 ![Transfers View](doc/transfersview.png)
 This is a Transfers Centric view.
 
-Each transaction as it's transfers mapped as Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
+Each transaction has it's transfers mapped as Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
 Each link is a transfer and the number represents its order in the sequence.
 
 ### Accounts View
@@ -93,6 +100,10 @@ This is an Accounts Centric view.
 
 Contrary to the Transfers View where accounts can appear multiple time in one graph here each node is unique. So cycles appear and we can clearly recognize an arbitrage here.
 
+As mutliples transfer between the same two accounts can happen, they are aggretated but still appear while hovering a link in the "composites" section.
+Example here with a transfer fee aggreting both the FEE and PRIORITY FEE transfers:
+![Fees Composite](doc/accountviewcompositelinks.png)
+
 ### Wallets View
 ![Wallets View](doc/walletsview.png)
 This is a Wallet Centric View.
@@ -100,6 +111,9 @@ This is a Wallet Centric View.
 Here Token accounts are aggregated behind the wallet's they belongs to.
 This allow for an even more simplified view best for showcasing the relation between the actual wallets owning these accounts.
 
+As many token accounts can be "hidden" behing a wallet in this view, we can still see them by hoving a node :
+
+![Composite Accounts](doc/walletviewcompositeacounts.png)
 
 ## FAQ
 
