@@ -89,6 +89,71 @@ Hovering a fee account will show the total fee.
 In Transfer View, each fee account is tied to a transaction and will only show total fees for that transaction.
 In Accounts and Wallets Views: If multiple transaction are loaded in the graph the fee account will show the total fees of all the transactions.
 
+## Graph Controls
+![Graph Controls](doc/graphcontrols.png)
+The left panels offers contextual informations and some options to control the graph.
+
+### General Options
+![General](doc/general.png)
+The General section offers some general options to hide/show certain types of Nodes/Links in the graph.
+
+#### Hide Spam
+By default the system Hides spam transaction.
+Hiding spam may result in an empty graph if all transactions are spam !
+
+Here is the difference for the same wallet:
+![showhidespam](doc/hideshowspam.png)
+
+#### Swap Routers
+Swaps Routing operation can sometimes represents complex graph structure.
+While being interesting they might not be always relevant for forensic analysis.
+Swap routing operating are collapsed by default, offering a better view of what's happening without encombering the view.
+
+It's possible to expand a swap router by right-clicking on the program's node with the "Expand Swap Program" option.
+Or Collapse/Expand all swaps router using the controls in the left panel.
+
+Here is the same transaction (3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu) with swap routers collapsed and expanded.
+![routerexpandedcollapse](doc/routerexpandcollapse.png)
+
+#### Swap Programs
+The same way as swap router "Collapse/Expand", you can control normal swap operation too using either right-clicking a node then "Expand Swap Program" or by using the left panel controls.
+
+Here is the same transaction with both Swap Routers and Swap Programs Expanded
+![allswapsexpanded](doc/swapandrouterexpanded.png)
+
+
+#### Other Options
+Some other usefull options to Hide/Show fees, Create & Close Accounts transfers.
+
+Fees are hidden by default to help with clarity.
+
+## Transactions Clusters
+
+Each transaction is mapped into a [NetworkX](https://networkx.org/) graph.
+When fetching graph data for an account address, the engine is going to compare all the generated graph of each transactions together using an [isomorphism algorithm](https://networkx.org/documentation/stable/reference/algorithms/isomorphism.html).
+Two graph are considered isomorphic if they share the same shape of nodes and link.
+So this is ideal to detect lookalike frequent transactions that repeat the same pattern.
+
+This control panel offers the possibility to only show transactions belonging to a certain detected cluster.
+
+Here we can see an example where the engine grouped these 26 transactions together in the same Cluster Group number 2.
+These are actual spam transactions.
+
+Be carefull of the other filters activated as you might get an empty graph. Here I had to disable "Hide Spam" to actually see them.
+![cluster](doc/cluster.png)
+
+## Selected Contextual Infos
+It's possible to select one or many Nodes / Links in the graph by clicking on them.
+Multiple selecting is done while holding CTRL key.
+
+Informations related to the selected entities will show up in the control panel under the relevant section:
+![selected](doc/selected.png)
+
+Here the central node of this little cluster of spam transfers has been selected:
+
+![selectednode](doc/selectednode.png)
+
+
 ## The View System
 ![View System](doc/views.png)
 
