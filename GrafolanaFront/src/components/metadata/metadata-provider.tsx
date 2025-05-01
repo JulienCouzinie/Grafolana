@@ -91,7 +91,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   const preloadImage = useCallback((imageUrl: string, mint: boolean=false) => {
     if (!images.current.has(imageUrl)) {
       imageLoadingStates.current.set(imageUrl, true);
-      const img = new window.Image();
+      const img = new Image();
       img.crossOrigin = "anonymous";
 
       img.onload = async () => {
@@ -553,7 +553,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     const userId = publicKey.toBase58();
     
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/spam', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/metadata/spam/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

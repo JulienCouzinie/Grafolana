@@ -1039,11 +1039,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 break;
             case "mark_spam":
                 // Mark this address as spam
-                if (this.publicKey) {
+                //if (this.publicKey) {
                     this.metadataServices.addToSpam(node.account_vertex.address);
-                } else {
-                    alert("Please connect your wallet to mark addresses as spam.");
-                }
+                //} else {
+                //    alert("Please connect your wallet to mark addresses as spam.");
+                //}
 
                 break;
             case "unmark_spam":

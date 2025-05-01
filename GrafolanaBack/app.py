@@ -196,7 +196,7 @@ def get_spam_for_user():
     spam_addresses = spam_service.get_spam_for_user(user_id)
     return jsonify(spam_addresses)
 
-@app.route('/api/metadata/spam', methods=['POST'])
+@app.route('/api/metadata/spam/create', methods=['POST'])
 def create_spam():
     """
     Endpoint to create a new spam entry.
