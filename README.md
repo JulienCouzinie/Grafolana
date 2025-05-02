@@ -158,8 +158,13 @@ Here the central node of this little cluster of spam transfers has been selected
 ![View System](doc/views.png)
 
 The View System offers 3 ways to look at the transactions datas.
+
+It's important to note that each view has its own "Graph Controls" panel. Filters set in one view only apply to this particular view.
+
+The 3 differents views offer different use cases depending on your needs.
+
 Let's take an example with this transaction that covers a lot of use cases.
-It's basically an arbitrage WSOL->WSOL
+It's an arbitrage WSOL->WSOL :
 ```
 3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu
 ```
