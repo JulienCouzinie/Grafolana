@@ -788,7 +788,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         }
 
         // Draw key icon for signers
-        if (this.processedData.current.transactions[node.account_vertex.transaction_signature]?.signers.includes(node.owner??"")) {
+        if (this.processedData.current.transactions[node.account_vertex.transaction_signature]?.signers.includes(node.mint_address??"")) {
             this.drawSignerIcon(ctx, node, nodeSize);
         }
     }
