@@ -49,7 +49,8 @@ def upgrade() -> None:
     ('5Hr7wZg7oBpVhH5nngRqzr5W7ZFUfCsfEhbziZJak7fr', 'DEFAULT', NOW(), NOW()),
     ('FLiPGqowc82LLR173hKiFYBq2fCxLZEST5iHbHwj8xKb', 'DEFAULT', NOW(), NOW()),
     ('FLiPgGTXtBtEJoytikaywvWgbz5a56DdHKZU72HSYMFF', 'DEFAULT', NOW(), NOW()),
-    ('5ifyfzJLkpThxrjvCmzTPRfpvUtBBkXLNb4URD7vq7Nm', 'DEFAULT', NOW(), NOW())         
+    ('5ifyfzJLkpThxrjvCmzTPRfpvUtBBkXLNb4URD7vq7Nm', 'DEFAULT', NOW(), NOW()),
+    ('9KxQy6StbkJhubAbfvfriUK6LYYJ5cSkBoS3ZhcbdUx2', 'DEFAULT', NOW(), NOW())
     """)
 
 
