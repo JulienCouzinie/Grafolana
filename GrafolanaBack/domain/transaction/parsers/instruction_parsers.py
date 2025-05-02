@@ -193,8 +193,7 @@ class CreateAccountParser(InstructionParser):
     def can_parse(self, instruction: Parsed_Instruction) -> bool:
         return (instruction.program_name == "system" and 
                 instruction.parsed is not None and 
-                (instruction.parsed.get("type") == "createAccount" or
-                 instruction.parsed.get("type") == "createAccountWithSeed"))
+                (instruction.parsed.get("type") in ["createAccountWithSeed", "createAccount"]))
     
     def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         lamports = int(instruction.parsed["info"]["lamports"])
@@ -362,6 +361,28 @@ class SyncNativeParser(InstructionParser):
         # Convert the lamports balance to WSOL, deducting rent exempt lamports cost
         account_version.balance_token += account_version.balance_lamport - 203928
         
+        return True
+
+class InitializeParser(InstructionParser):
+    """Parser for Token Program syncNative instructions (converts lamports to wrapped SOL)."""
+    
+    def can_parse(self, instruction: Parsed_Instruction) -> bool:
+        return (instruction.program_name == "spl-token" and 
+                instruction.parsed is not None and 
+                instruction.parsed.get("type") in ["initializeAccount","initializeAccount2","initializeAccount3"])
+    
+    def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
+        account_address = str(instruction.parsed["info"]["account"])
+        mint_address = str(instruction.parsed["info"]["mint"])
+        owner = str(instruction.parsed["info"]["owner"])
+
+        mint_address = WRAPPED_SOL_ADDRESS
+        account_version = context.account_repository.account_versions.get(account_address)[-1]
+        account_version.account.mint_address = mint_address
+        account_version.account.type = AccountType.TOKEN_ACCOUNT
+        
+        context.account_repository.update_owner_in_all_versions(account_address, owner)
+
         return True
     
 class InitializeMintParser(InstructionParser):

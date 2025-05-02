@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Set, Tuple, Any
 from GrafolanaBack.domain.transaction.models.swap import Swap
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.transaction.parsers.instruction_parsers import (
-    InitializeMintParser, InstructionParser, SystemTransferParser, TokenTransferParser, 
+    InitializeMintParser, InitializeParser, InstructionParser, SystemTransferParser, TokenTransferParser, 
     TokenTransferCheckedParser, CreateAccountParser, CloseAccountParser,
     BurnParser, MintToParser, StakeInitializeParser, StakeWithdrawParser,
     StakeSplitParser, StakeAuthorizeParser, AssociatedTokenAccountCreateParser,
@@ -38,7 +38,8 @@ class InstructionParserService:
             ComputeBudgetSetComputeUnitPriceParser(),
             SyncNativeParser(),
             SystemAssignParser(),
-            InitializeMintParser()
+            InitializeMintParser(),
+            InitializeParser(),
         ]
     
     def parse_transfer(self, instruction: Parsed_Instruction, context: TransactionContext, parent_swap_id: int = None, parent_router_swap_id: int = None) -> bool:
