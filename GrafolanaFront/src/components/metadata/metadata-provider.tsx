@@ -90,6 +90,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   const getCacheKey = (address: string, uid?: string) => uid ? `${address}:${uid}` : address;
 
   const preloadImage = useCallback((imageUrl: string, mint: boolean=false) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     if (!images.current.has(imageUrl)) {
       imageLoadingStates.current.set(imageUrl, true);
       const img = new Image();
