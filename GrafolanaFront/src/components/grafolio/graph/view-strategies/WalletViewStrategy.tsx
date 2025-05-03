@@ -11,6 +11,7 @@ import { AddressType } from '@/types/metadata';
 import { NodeImage } from '@/components/metadata/node-image';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 
 class WalletViewStrategy extends BaseViewStrategy {
@@ -662,6 +663,8 @@ class WalletViewStrategy extends BaseViewStrategy {
 export function useWalletViewStrategy(): ViewStrategy {
   const metadataServices = useMetadata();
   const usdServices = useUSDValue();
+  const transactionProvider = useTransactions()
+
   const processedDataRef = useRef<GraphData>({
     nodes: [],
     links: [],
@@ -682,6 +685,7 @@ export function useWalletViewStrategy(): ViewStrategy {
   return new WalletViewStrategy(
     metadataServices,
     usdServices,
+    transactionProvider,
     processedDataRef,
     originalDataRef,
     selectedNodes,

@@ -12,6 +12,7 @@ import { AddressLabel } from '@/components/metadata/address-label';
 import { NodeImage } from '@/components/metadata/node-image';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 class AccountViewStrategy extends BaseViewStrategy {
   
@@ -534,6 +535,8 @@ class AccountViewStrategy extends BaseViewStrategy {
 export function useAccountViewStrategy(): ViewStrategy {
   const metadataServices = useMetadata();
   const usdServices = useUSDValue();
+  const transactionProvider = useTransactions()
+
   const processedDataRef = useRef<GraphData>({
     nodes: [],
     links: [],
@@ -554,6 +557,7 @@ export function useAccountViewStrategy(): ViewStrategy {
   return new AccountViewStrategy(
     metadataServices,
     usdServices,
+    transactionProvider,
     processedDataRef,
     originalDataRef,
     selectedNodes,
