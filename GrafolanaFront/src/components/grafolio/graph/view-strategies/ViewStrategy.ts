@@ -85,6 +85,12 @@ export interface ViewStrategy {
   selectedLinks: RefObject<Set<string>>;
 
   /**
+   * Return informations about the current graph
+   * @returns 
+   */
+  getInfoContent: () => React.ReactNode;
+
+  /**
    * Returns the content to be displayed in the General accordion section
    * @returns React node with general controls specific to this strategy
    */

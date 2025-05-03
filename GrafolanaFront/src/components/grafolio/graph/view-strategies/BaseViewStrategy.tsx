@@ -9,6 +9,7 @@ import { cloneDeep } from 'lodash';
 import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { type PublicKey } from '@solana/web3.js';
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -34,9 +35,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     // Services - provide direct access to the service objects
     protected metadataServices: ReturnType<typeof useMetadata>;
     protected usdServices: ReturnType<typeof useUSDValue>;
-
-    
-
+    protected transactionProvider: ReturnType<typeof useTransactions>;
+   
     selectedNodes: React.RefObject<Set<string>>;
     selectedLinks: React.RefObject<Set<string>>;
     hoveredNode: ForceGraphNode | null;
@@ -69,6 +69,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     constructor(
         metadataServices: ReturnType<typeof useMetadata>,
         usdServices: ReturnType<typeof useUSDValue>,
+        transactionProvider: ReturnType<typeof useTransactions>,
         processedDataRef: React.RefObject<GraphData>,
         originalDataRef: React.RefObject<GraphData>,
         selectedNodesRef: React.RefObject<Set<string>>,
@@ -77,6 +78,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     ) {
         this.metadataServices = metadataServices;
         this.usdServices = usdServices;
+        this.transactionProvider = transactionProvider;
+
         this.processedData = processedDataRef;
         this.originalData = originalDataRef;
 
@@ -1055,6 +1058,75 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 console.log(`Unhandled action: ${action} for node:`, node);
         }
     }
+
+    getInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
+
+        const Informations = () => {
+            const walletsAnalysedList = [...this.transactionProvider.fetchedWallets.values()];
+            const walletsAnalysed = walletsAnalysedList.map((wallet, index) => {
+                return <React.Fragment key={index}>
+                    <AddressLabel data={this.originalData.current}  address={wallet} shortened={true} /><br/>
+                </React.Fragment>
+            });
+
+            const transactionsAnalysedList = [...this.transactionProvider.fetchedTransactions.values()];
+            const transactionsAnalysed = transactionsAnalysedList.map((transaction, index) => {
+                return <React.Fragment key={index}>
+                    <AddressLabel data={this.originalData.current}  address={transaction} shortened={true} /><br/>
+                </React.Fragment>
+            });
+
+            const transactionsShown = new Set<string>();
+            // Get the transactions shown by iterating over the links 
+            this.processedData.current.links.forEach((link) => {
+                transactionsShown.add(link.transaction_signature);
+                if (link.composite && link.composite.length > 0) {
+                    link.composite.forEach((composite) => {
+                        transactionsShown.add(composite.transaction_signature);
+                    });
+                }
+            });
+            // Get the transactions show by iterating over the nodes
+            this.processedData.current.nodes.forEach((node) => {
+                transactionsShown.add(node.account_vertex.transaction_signature);
+                if (node.composite && node.composite.length > 0) {
+                    node.composite.forEach((composite) => {
+                        transactionsShown.add(composite.account_vertex.transaction_signature);
+                    });
+                }
+            });
+
+            const transactionsOriginal = [...Object.values(this.originalData.current.transactions)];
+            return (
+                <div className="informations" style={{ marginTop: '16px' }}>
+                    <h3>Entities analysed :</h3>
+                    <div style={{ marginLeft: '8px' }}>
+                        Wallets ({walletsAnalysedList.length}):<br/>
+                        {walletsAnalysed}
+                        Transactions ({transactionsAnalysedList.length}):
+                        {transactionsAnalysed}
+                    </div>
+                    <br/><br/>
+                    <h3>Entities shown:</h3>
+                    <div style={{ marginLeft: '8px' }}>
+                        Transactions: {[...transactionsShown].length}/{transactionsOriginal.length}<br/>
+                        Nodes: {this.processedData.current.nodes.length}/{this.originalData.current.nodes.length}<br/>
+                        Links: {this.processedData.current.links.length}/{this.originalData.current.links.length}<br/>
+                    </div>
+                </div>
+            );
+
+        }
+
+        return (
+            <div className="strategy-panel-content">
+                <Informations />
+                {/* Render the strategy-specific content if provided */}
+                {(strategyContent) ? strategyContent : ""}
+            </div>
+        );
+    }
+
 
     getGeneralContent(strategyContent:React.ReactNode=null): React.ReactNode {
         // SPam options to handle showing/hiding spam

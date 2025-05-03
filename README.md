@@ -5,26 +5,31 @@
 Grafolana is a Forensic Analysis Tool for the Solana ecosystem.
 It provides with precise tracking and visualization of on-chain fund movements using a graph based approach.
 
+Designed with two core principles: simplicity and independence. Our forensic analysis tool delivers powerful transaction visualization through elegant graph interfaces and intuitive views, all without registration barriers. We leverage only native Solana RPC capabilities—no costly commercial APIs required. Maximum insight, minimum overhead.
+
 Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackathon/redacted/) in the [Solana Forensic Analysis Tool Category](https://earn.superteam.fun/listing/solana-forensic-analysis-tool/)
 
 
 ## Features
 
 ### Backend
+- [Creates graph based on transaction datas](GrafolanaBack/domain/transaction)
 - Retrieve graph data for transactions signatures
 - Retrieve graph data for the last 1000 transactions of an account address
-- Create Directed Acyclic Graph of each transaction by versionning accounts to avoid cycles
-- Recognizes 144 differents swap instructions from 59 differents DEX programs
-- Map transfers by parsing 17 differents instructions from Solana's Built in programs
-- Offers 3 differents graph's views: Transers, Accounts and Wallets
+- Create Directed Acyclic Graph of each transaction by versionning accounts to avoid cycles and offers graphic sequential view of transfers
+- Recognizes 144 differents swap instructions from 59 differents [DEX programs](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py)
+- Map transfers by parsing 20 differents [instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py) from Solana's Built in programs
+- Native SOL transfer inference (Ex: Pumpfun Sell operations)
+- Offers [3 differents graph's views](GrafolanaFront/src/components/grafolio/graph/view-strategies): Transers, Accounts and Wallets
 - Stores minimum 4 years worth of SOL prices in DB for quick lookup and updates every minutes
-- USD prices derivation mechanism for SPL token using swap's datas and Binance API for SOL prices
+- [USD prices](GrafolanaBack/domain/prices) derivation mechanism for SPL token using swap's datas and Binance API for SOL prices
 - Transactions Clustering algorithm that groups transactions by their graph's shape
-- Fast & Failsafe RPC transactions batching using multiple RPC enpoints with loadbalancer respecting rate limits
-- Metadata retrieval system for SPL tokens mints
+- [Fast & Failsafe RPC transactions batching](GrafolanaBack/domain/rpc/rpc_acync_transaction_fetcher.py) using multiple RPC enpoints with loadbalancer respecting rate limits
+- [Metadata retrieval system](GrafolanaBack/domain/metadata/spl_token) for SPL tokens mints
 - Storage of transactions and mint metadata in Database for fast retrieval
-- Labelling system allowing users to edit labels for any address
-- Spam (dusting) detection system using default address blacklist in database, user can mark address as spam
+- [Labelling system](GrafolanaBack/domain/metadata/labeling) allowing users to edit labels for any address
+- Solana [System's Programs and Swap Programs Medadata](GrafolanaBack/domain/metadata/program)
+- [Spam (dusting) detection system](GrafolanaBack/domain/spam) using default address blacklist in database, user can mark address as spam
 
 ### UI Graph
 - Unique field for loading graph data by transaction signatures or addresses

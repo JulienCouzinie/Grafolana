@@ -95,6 +95,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   const walletStrategy = useWalletViewStrategy();
 
   // Add state to store accordion content
+  const [infoContent, setInfoContent] = useState<React.ReactNode | null>(null);
   const [generalContent, setGeneralContent] = useState<React.ReactNode | null>(null);
   const [filtersContent, setFiltersContent] = useState<React.ReactNode | null>(null);
   const [transactionClusterContent, setTransactionClusterContent] = useState<React.ReactNode | null>(null);
@@ -185,6 +186,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   useEffect(() => {
     if (strategy) {
       // Update all accordion content from strategy
+      setInfoContent(strategy.getInfoContent());
       setGeneralContent(strategy.getGeneralContent());
       setFiltersContent(strategy.getFiltersContent());
       setTransactionClusterContent(strategy.getTransactionClusterContent());
@@ -381,7 +383,12 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
-              <AccordionItem title="General" defaultOpen={false}>
+                <AccordionItem title="Informations" defaultOpen={false}>
+                  <div className="accordion-content">
+                    {infoContent || <p>No informations available for this view</p>}
+                  </div>
+                </AccordionItem>
+                <AccordionItem title="General" defaultOpen={false}>
                   <div className="accordion-content">
                     {generalContent || <p>No general options available for this view</p>}
                   </div>
