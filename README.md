@@ -197,6 +197,24 @@ As many token accounts can be "hidden" behing a wallet in this view, we can stil
 
 ![Composite Accounts](doc/walletviewcompositeacounts.png)
 
+## Price Derivation System
+
+Estimating the USD price of any given SPL token at any given timestamp is quite a hard problem. Especially without paying for a reliable data source.
+In order to give an estimate USD price for SPL token transfers, the app uses a derivation mechanism.
+This derivation mechanism is based on the price's ratio of swap operations.
+For the price derivation mechanism to succeed a transaction needs to have a chain of swaps (or just one) with at least one reference coin involved.
+Reference coins are SOL, WSOL, USDC and USDT.
+The app fetches and stores SOL prices from binance API and stores them in the DB.
+Storing SOL prices in the DB is a necessity for obvious performances issues. Otherwise each transaction processed would necessitate one Binance API call which was proven to be highly inefficient.
+
+### Price Updater Background Task
+
+When deployed the app will run a background task that will constantly updates the SOL prices DB.
+It stores SOL prices down to the minute level for the past 4 years.
+On the first deployment the price updater background task will have to populate the DB with the entire SOL price's history for the past 4 years so it takes between 5-10 minutes for the app to be ready.
+Each subsequent deployments will just have to catch up which will just takes a couple of seconds.
+
+
 ## FAQ
 
 #### How do I add multiples transactions signatures/address to the graph?
@@ -245,7 +263,7 @@ The app is accessible here
 [Grafolana DEMO : grafolana.vercel.app](https://grafolana.vercel.app/)
 
 
-## Setup and Installation
+## Setup and Deployment
 
 ### Prerequisites
 
@@ -330,7 +348,7 @@ PUBLICNODE=https://solana-rpc.publicnode.com:10,https://rpc.shyft.to?api_key=YOU
 SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},${W3NODE},${PUBLICNODE}
 ```
 
-#### Installation
+##### Installation
     First set PYTHONPATH to correct Path
     ```export PYTHONPATH=/f/Développement/Python/Grafolana```
 
@@ -387,6 +405,8 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
 
 #### Deployment
 ##### Backend
+On the first deployment the price updater background task will need to populate the DB with SOL prices for the past 4 years down to the minute level. It takes usually between 5-10 minutes to complete. So it's recommended to wait for the task to finish before starting using the app.
+On the next deployment the price updater will just have to catch up and it's going to be way faster.
 ```
 cd GrafolanaBack
 flask run --host=0.0.0.0 --no-reload --no-debug
