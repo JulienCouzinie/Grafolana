@@ -376,7 +376,6 @@ class InitializeParser(InstructionParser):
         mint_address = str(instruction.parsed["info"]["mint"])
         owner = str(instruction.parsed["info"]["owner"])
 
-        mint_address = WRAPPED_SOL_ADDRESS
         account_version = context.account_repository.account_versions.get(account_address)[-1]
         account_version.account.mint_address = mint_address
         account_version.account.type = AccountType.TOKEN_ACCOUNT
