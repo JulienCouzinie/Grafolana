@@ -1456,6 +1456,33 @@ swap_programs_data = {
             }
         ]
     },
+    "PUMPKIN": {
+        PROGRAM_ADDRESS: "E55ogQGmvvBKtZeGHaNoCASCBAV4rFFedCMzhku2YTqz",
+        LABEL: "Pumpkin",
+        ROUTER: False,
+        ICON: "https://app.pumpkin.fun/favicon.ico",
+        WEBSITE: "https://app.pumpkin.fun/",
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 3sk64wctrv78aJmMTpmThSyCM27hSkVmBfXJtBPNLkd871a2MEQGFqJVbQRNKWUtAK2qMoRZW8MbqzGpczxiyqpz
+            {
+                DISCRIMINATOR: "f16ade2c59fee9a1",
+                LABEL: "buy",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX:4
+            },
+            # Transaction : 4ibV8TMfubWaxBdaAE8dG4gQ8FUg2dHTciPfo5zJyFE6fqdTNzpANQYnBBhLzdtktc7FEvxErAKB76ZJshzzgpKN
+            {
+                DISCRIMINATOR: "fd22ee3246acdc21",
+                LABEL: "sell",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 8,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX:3
+            }
+        ]
+    },
     "RAYDIUM_CONCENTRATED_LIQUIDITY": {
         PROGRAM_ADDRESS: "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
         LABEL: "Raydium Concentrated Liquidity",
