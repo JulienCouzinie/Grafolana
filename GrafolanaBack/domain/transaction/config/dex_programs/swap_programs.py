@@ -845,6 +845,23 @@ swap_programs_data = {
             },
         ]
     },
+    "METEORA_DYNAMIC_BONDING_CURVE": {
+        # Transaction: 5a95yoi7RDPx8Y18FxCzTXEYr8vZ9LttgNwHzGpb4DuVuDVD8YNW74ayz8Wbr6FsNfegGjgFS1RKSTpNMFsJCu1q
+        PROGRAM_ADDRESS: "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+        LABEL: "Meteora Dynamic Bonding Curve",
+        ROUTER: False,
+        ICON: "https://www.meteora.ag/icons/logo.svg",
+        WEBSITE: "https://docs.meteora.ag/product-overview/dynamic-bonding-curve-dbc-overview/what-is-the-dynamic-bonding-curve",
+        INSTRUCTION_PARSE_PARAM: [
+            {
+                INSTRUCTION_NAME: "swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 6
+            }
+        ]
+    },
     "METEORA_POOL": {
         # Transaction: 4rmPQ8bs4XYKWxxVv7vjzvSj9aM7Wma5mSmQa72RAsT3tkTTCoB2ehVbyAY8zSW58oWD68SZ2FWJ2CGsQFSfvdWY
         PROGRAM_ADDRESS: "Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB",
