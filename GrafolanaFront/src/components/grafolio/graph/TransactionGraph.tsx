@@ -383,11 +383,6 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
-                <AccordionItem title="Informations" defaultOpen={false}>
-                  <div className="accordion-content">
-                    {infoContent || <p>No informations available for this view</p>}
-                  </div>
-                </AccordionItem>
                 <AccordionItem title="General" defaultOpen={false}>
                   <div className="accordion-content">
                     {generalContent || <p>No general options available for this view</p>}
