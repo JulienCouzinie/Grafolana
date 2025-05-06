@@ -89,7 +89,13 @@ class TokenTransferParser(InstructionParser):
         amount = int(instruction.parsed["info"]["amount"])
         source_address = str(instruction.parsed["info"]["source"])
         destination_address = str(instruction.parsed["info"]["destination"])
-        authority = str(instruction.parsed["info"]["authority"])
+        if "authority" in instruction.parsed["info"]:
+            authority = str(instruction.parsed["info"]["authority"])
+        elif "multisigAuthority" in instruction.parsed["info"]:
+            authority = str(instruction.parsed["info"]["multisigAuthority"][0])
+            # TODO Get all multisig signers and add them as authorities, but we can only add one for now so fuck it
+        else:
+            authority = None
         
         # Get source version account
         account_version_source = GraphBuilderService.prepare_source_account_version(
