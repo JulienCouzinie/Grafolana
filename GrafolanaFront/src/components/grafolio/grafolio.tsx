@@ -38,10 +38,10 @@ export default function Grafolio() {
     
     // Determine the type of address based on its length
     // Solana addresses are typically 44 characters, transaction signatures are 88 characters
-    if (address.length == 88) {
+    if (address.length == 88 || address.length == 87) {
       // It's likely a transaction signature
       getTransactionGraphData(address);
-    } else if (address.length == 44) {
+    } else if (address.length == 44 || address.length == 43) {
       // It's likely a wallet address
       getWalletGraphData(address);
     }

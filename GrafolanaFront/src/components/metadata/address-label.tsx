@@ -90,8 +90,8 @@ export function AddressLabel({
     hasGraphData: boolean;
   } => {
     // Determine type based on length (same logic as in Grafolio)
-    const isTransaction = address.length === 88;
-    const isWallet = address.length === 44;
+    const isTransaction = address.length === 88 || address.length === 87;
+    const isWallet = address.length === 44 || address.length === 43;
     
     // Check if already fetched based on type
     const isAlreadyFetched = isTransaction 
