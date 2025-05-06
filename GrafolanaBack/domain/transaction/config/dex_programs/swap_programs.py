@@ -932,11 +932,11 @@ swap_programs_data = {
             # Need to reverse engineer the transaction to infer the SOL transfer
         ]
     },
-    "MOONSHOT": {
+    "MOONIT": {
         PROGRAM_ADDRESS: "MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG",
-        LABEL: "Moonshot",
-        ICON: "https://moonshot.money/favicon-32x32.png",
-        WEBSITE: "https://moonshot.money",
+        LABEL: "Moonit",
+        ICON: "https://moon.it/favicon-32x32.png",
+        WEBSITE: "https://moon.it/",
         ROUTER: False,
         INSTRUCTION_PARSE_PARAM: [
             # Transaction : 4svRy8ZKEpv1CFw3no1K1zQxsxhippR9MNX5FQYArdqSoJDmqzUsCRMUvv2TjwRUnbrcyhBjpAnTE72QHdEc5LeB
@@ -2032,7 +2032,7 @@ class SwapPrograms:
     METEORA_POOL: Optional[SwapProgram]
     MINTECH: Optional[SwapProgram]
     MOMES: Optional[SwapProgram]
-    MOONSHOT: Optional[SwapProgram]
+    MOONIT: Optional[SwapProgram]
     NOVA_BOTS: Optional[SwapProgram]
     OBRIC_V2: Optional[SwapProgram]
     ONEDEX: Optional[SwapProgram]
