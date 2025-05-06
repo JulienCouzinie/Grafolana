@@ -264,7 +264,7 @@ class TransactionService:
             logger.error(f"Error processing callback for transaction {signature}: {str(e)}", exc_info=True)
             # On error, use the original transaction data
             with threading.Lock():
-                results_dict[signature] = tx_data
+                results_dict[signature] = None
     
     def _process_fetched_transaction(self, signature: str, tx_data: Any, error: Optional[Exception]) -> Optional[EncodedConfirmedTransactionWithStatusMeta]:
         """
