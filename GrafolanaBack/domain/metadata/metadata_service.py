@@ -11,6 +11,7 @@ from typing import List, Dict, Optional, Any
 from GrafolanaBack.domain.metadata.spl_token.parsers.mint_metadata_parser import get_mints_info_dto
 from GrafolanaBack.domain.metadata.spl_token.models.classes import MintDTO
 from GrafolanaBack.domain.metadata.spl_token.repositories.mint_repository import MintRepository
+from GrafolanaBack.domain.metadata.spl_token.parsers.token_list_parser import TOKEN_LIST
 
 # Import program metadata components
 from GrafolanaBack.domain.metadata.program.programs import get_program_metadatas
@@ -39,30 +40,51 @@ class MetadataService:
         """
         Get metadata for a list of token mint addresses.
         
-        First checks the database, then fetches any missing information from the blockchain.
+        First checks TOKEN_LIST, then the database, then fetches any missing information from the blockchain.
         """
         if not mint_addresses:
             return []
-            
-        # First check the database
-        db_mints = MintRepository.get_mints_by_addresses(mint_addresses)
         
-        # Identify any mints not in the database
-        missing_addresses = [addr for addr in mint_addresses if addr not in db_mints]
+        result = []
+        missing_addresses = []
+        found_addresses = set()
         
-        # If we have all the mints, return them
+        # First check TOKEN_LIST
+        for addr in mint_addresses:
+            token_data = TOKEN_LIST.get_token_by_address(addr)
+            if token_data:
+                result.append(token_data)
+                found_addresses.add(addr)
+            else:
+                missing_addresses.append(addr)
+        
+        # If all addresses were found in TOKEN_LIST, return them
         if not missing_addresses:
-            return list(db_mints.values())
+            return result
+                
+        # Then check the database for any addresses not found in TOKEN_LIST
+        db_mints = MintRepository.get_mints_by_addresses(missing_addresses)
         
-        # Fetch missing mints from blockchain
-        fetched_mints = get_mints_info_dto(missing_addresses)
+        # Add database results to our result list and track which mints were found
+        for addr, mint in db_mints.items():
+            result.append(mint)
+            found_addresses.add(addr)
+        
+        # Calculate which addresses are still missing
+        final_missing = [addr for addr in mint_addresses if addr not in found_addresses]
+        
+        # If we have all the mints now, return them
+        if not final_missing:
+            return result
+        
+        # Fetch remaining missing mints from blockchain
+        fetched_mints = get_mints_info_dto(final_missing)
         
         # Store the fetched mints in the database
         if fetched_mints:
             MintRepository.create_or_update_mints(fetched_mints)
         
-        # Combine database and fetched results
-        result = list(db_mints.values())
+        # Add fetched mints to our result
         result.extend(fetched_mints)
         
         return result

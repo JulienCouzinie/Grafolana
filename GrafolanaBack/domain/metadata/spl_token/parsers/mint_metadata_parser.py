@@ -1,40 +1,35 @@
 import asyncio
-import base58
+import os
 import json
 import socket
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union
 import aiohttp
-import aiohttp.resolver
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
-from solana.rpc.types import MemcmpOpts
 from spl.token._layouts import MINT_LAYOUT
 from base64 import b64decode
 
-
-from GrafolanaBack.domain.metadata.spl_token.models.classes import IPv4Resolver, MetadataData, MetaplexMetadata, MintDTO, MintMapper, OffchainMetadata, Mint, MintInfo
+from GrafolanaBack.domain.metadata.spl_token.models.classes import IPv4Resolver, MintDTO, MintMapper, OffchainMetadata, Mint, MintInfo
 from GrafolanaBack.domain.metadata.spl_token.parsers.metaplex_metadata_parser import MetaplexMetadataParser
-from GrafolanaBack.domain.metadata.spl_token.config.token_defaults import TOKEN_DEFAULTS
-from GrafolanaBack.domain.logging.logging import mint_logger
-from GrafolanaBack.domain.caching.cache_utils import cache
-from GrafolanaBack.domain.transaction.config.constants import SOL
 from GrafolanaBack.domain.logging.logging import logger
 
+from dotenv import load_dotenv
 # Constants
 METAPLEX_PROGRAM_ID = Pubkey.from_string("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
+load_dotenv()
+SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL")
 
 class SolanaTokenFetcher:
-    def __init__(self, rpc_url: str = "https://api.mainnet-beta.solana.com", ipv4_only: bool = True):
+    def __init__(self, ipv4_only: bool = True):
         """
         Initialize with Solana RPC URL
         
         Args:
-            rpc_url: Solana RPC endpoint URL
             ipv4_only: Force IPv4 only for HTTP connections (default: True)
         """
-        self.client = AsyncClient(rpc_url)
+        self.client = AsyncClient(SOLANA_RPC_URL)
         self.http_session = None
         self.ipv4_only = ipv4_only
 
@@ -194,11 +189,6 @@ class SolanaTokenFetcher:
             
         token_data_list = []
 
-        if SOL in mint_addresses:
-            token_data = self._create_default_token(SOL)
-            token_data_list.append(token_data)
-            mint_addresses.remove(SOL)
-
         fetch_offchain_tasks = []
         mint_pubkeys = [Pubkey.from_string(mint_pubkey) for mint_pubkey in mint_addresses]
 
@@ -247,11 +237,6 @@ class SolanaTokenFetcher:
                     if uri:
                         task = self.fetch_and_parse_offchain_metadata(uri)
                         fetch_offchain_tasks.append((token_data, task))
-                    else:
-                        if mint_addr in TOKEN_DEFAULTS:
-                            token_defaults = self._create_default_token(mint_addr)
-                            token_data.off_chain_metadata = token_defaults.off_chain_metadata
-                        
                 except Exception as e:
                     logger.error(f"Error parsing metadata for mint {mint_addr}: {str(e)}")
             
@@ -262,73 +247,15 @@ class SolanaTokenFetcher:
             await asyncio.gather(*(asyncio.create_task(self._process_offchain_task(token, task)) 
                                     for token, task in fetch_offchain_tasks))
         
-
-
         return token_data_list
 
-    def _create_default_token(self, mint_addr: str) -> Mint:
-        """Create a token with default metadata"""
-        if mint_addr not in TOKEN_DEFAULTS:
-            return Mint(mint_address=mint_addr)
-            
-        defaults = TOKEN_DEFAULTS[mint_addr]
-        
-        mint_info = MintInfo(
-            address=mint_addr,
-            decimals=defaults.decimals,
-            supply=0,
-            is_initialized=True,
-        )
-
-        on_chain_metadata = MetaplexMetadata(
-            data=MetadataData(name=defaults.name,
-                              uri="",
-                              seller_fee_basis_points=None,
-                              creators=None,
-                              symbol=defaults.symbol),
-            mint=mint_addr,
-            primary_sale_happened=None,
-            update_authority=None,
-            is_mutable=None            
-        )
-        
-        off_chain_metadata = OffchainMetadata(
-            name=defaults.name,
-            symbol=defaults.symbol,
-            description=defaults.description,
-            image=defaults.image_path,
-            external_url=defaults.website
-        )
-        
-        return Mint(
-            mint_address=mint_addr,
-            mint_info=mint_info,
-            off_chain_metadata=off_chain_metadata,
-            on_chain_metadata=on_chain_metadata
-        )
-
-    def _apply_default_metadata(self, token: Mint):
-        """Apply default metadata for known tokens if metadata is missing"""
-        if token.mint_address in TOKEN_DEFAULTS:
-            defaults = TOKEN_DEFAULTS[token.mint_address]
-            
-            if not token.off_chain_metadata:
-                token.off_chain_metadata = OffchainMetadata(
-                    name=defaults.name,
-                    symbol=defaults.symbol,
-                    description=defaults.description,
-                    image=defaults.image_path,
-                    external_url=defaults.website
-                )
-            elif not token.off_chain_metadata.image:
-                token.off_chain_metadata.image = defaults.image_path
-        
     async def _process_offchain_task(self, token_data: Mint, task):
         """Helper to process off-chain metadata fetch tasks"""
         off_chain = await task
-        token_data.off_chain_metadata = off_chain
+        if off_chain:
+            token_data.off_chain_metadata = off_chain
 
-@cache.memoize(name="SolanaTokenFetcher.get_mints_info")
+# @cache.memoize(name="SolanaTokenFetcher.get_mints_info")
 def get_mints_info(mint_addresses_tuple: tuple) -> List[Mint]:
     """
     Synchronous wrapper for fetching token metadata
