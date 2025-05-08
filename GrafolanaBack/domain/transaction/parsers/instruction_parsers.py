@@ -387,6 +387,9 @@ class InitializeParser(InstructionParser):
         account_version = context.account_repository.account_versions.get(account_address)[-1]
         account_version.account.mint_address = mint_address
         account_version.account.type = AccountType.TOKEN_ACCOUNT
+
+        if mint_address == WRAPPED_SOL_ADDRESS:
+            account_version.balance_token = account_version.balance_lamport - 203928
         
         context.account_repository.update_owner_in_all_versions(account_address, owner)
 
