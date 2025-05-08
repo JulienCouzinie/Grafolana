@@ -6,7 +6,7 @@ import unittest
 class Test_CreateConfig(unittest.TestCase):
     def test_ConfigDexProgram(self):
         for program in swap_programs_data.keys():
-            print(f"{program}: Optional[DexProgram]")
+            print(f"{program}: Optional[SwapProgram]")
 
     
 
