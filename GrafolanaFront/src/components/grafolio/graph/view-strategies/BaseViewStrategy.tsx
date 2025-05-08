@@ -891,7 +891,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             return "Error: Node not found";
         }
         
-        if (link.type === TransferType.SWAP_OUTGOING || link.type === TransferType.SWAP_ROUTER_OUTGOING) {
+        if (link.type === TransferType.SWAP_OUTGOING || link.type === TransferType.SWAP_ROUTER_OUTGOING || link.type === TransferType.CLOSE_ACCOUNT) {
             mintSource = this.metadataServices.getMintInfo(destinationNode.mint_address!);
         } else {
             mintSource = this.metadataServices.getMintInfo(sourceNode.mint_address!);

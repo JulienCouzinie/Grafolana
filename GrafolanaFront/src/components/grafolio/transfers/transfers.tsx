@@ -6,6 +6,7 @@ import { AddressType } from '@/types/metadata';
 import { ForceGraphLink, GraphData, TransferType } from '@/types/graph';
 import { calculateTokenAmount } from '@/utils/tokenUtils'; // Import the token utility
 import { useUSDValue } from '@/hooks/useUSDValue'; // Import the useUSDValue hook
+import { get } from 'lodash';
 
 interface TransfersProps {
   apiGraphData: GraphData;
@@ -50,7 +51,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
 
   // Helper function to get the correct node based on transfer type
   const getRelevantNode = (transfer: ForceGraphLink) => {
-    if (transfer.type === TransferType.MINTTO) {
+    if (transfer.type === TransferType.MINTTO || transfer.type === TransferType.CLOSE_ACCOUNT) {
       return apiGraphData.nodes.find(
         node => node.account_vertex.address === transfer.target_account_vertex.address
       );
@@ -253,9 +254,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Get transfer details HTML - modified to only show amount
   const getTransferDetails = (transfer: ForceGraphLink): React.ReactNode => {
     // Find the correct source node to get its actual type (AccountVertex doesn't have type property)
-    const sourceNode = apiGraphData.nodes.find(
-      node => node.account_vertex.address === transfer.source_account_vertex.address
-    );
+
+    const sourceNode = getRelevantNode(transfer)
     
     // Get mint info for the token
     const mintInfo = getMintInfo(sourceNode?.mint_address!);
@@ -301,17 +301,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
 
   // New function to display mint information
   const getMintHTML = (transfer: ForceGraphLink): React.ReactNode => {
-    let node;
-    if (transfer.type === TransferType.MINTTO) {
-        node = apiGraphData.nodes.find(
-        node => node.account_vertex.address === transfer.target_account_vertex.address
-      );
-      console.log("MINTTO", node?.mint_address);
-    } else {
-        node = apiGraphData.nodes.find(
-        node => node.account_vertex.address === transfer.source_account_vertex.address
-        );
-    }
+    let node = getRelevantNode(transfer);
     
     // Get mint info for the token
     const mintInfo = getMintInfo(node?.mint_address!);
