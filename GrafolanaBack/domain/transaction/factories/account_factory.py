@@ -1,6 +1,9 @@
 from typing import Dict, List, Optional, Set
 from solders.transaction_status import UiTransactionTokenBalance
 
+from GrafolanaBack.domain.metadata.program.system_programs import SYSTEM_PROGRAMS
+from GrafolanaBack.domain.transaction.config.dex_programs.dex_program_struct import PROGRAM_ADDRESS
+from GrafolanaBack.domain.transaction.config.dex_programs.swap_programs import SWAP_PROGRAMS
 from GrafolanaBack.domain.transaction.models.account import Account, AccountType, AccountVersion
 from GrafolanaBack.domain.transaction.repositories.account_repository import AccountRepository
 from GrafolanaBack.domain.transaction.config.constants import FEE, SOL, WRAPPED_SOL_ADDRESS
@@ -62,6 +65,9 @@ class AccountFactory:
         """
         mints: Set[str] = set()
 
+        swap_addresses = [ swap_program.program_address for swap_program in SWAP_PROGRAMS.get_map().values() ]
+        system_program_addresses = [ system_program[PROGRAM_ADDRESS] for system_program in SYSTEM_PROGRAMS.values()]
+
         # Process pre_token_balances
         for pre_token_balance in pre_token_balances:
             account_index = pre_token_balance.account_index
@@ -114,4 +120,12 @@ class AccountFactory:
             if mint_account := repo.get_account(mint):
                 mint_account.type = AccountType.TOKEN_MINT_ACCOUNT
                 mint_account.mint_address = mint
+
+        for account in repo.get_all_accounts():
+            if account.address in swap_addresses or account.address in system_program_addresses:
+                account.type = AccountType.PROGRAM_ACCOUNT
+            
+
+        
+
         
