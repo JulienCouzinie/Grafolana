@@ -16,6 +16,7 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - [Creates graph based on transaction datas](GrafolanaBack/domain/transaction)
 - Retrieve graph data for transactions signatures
 - Retrieve graph data for the last 1000 transactions of an account address
+- Retrieve graph data for a block using its slot number
 - Create Directed Acyclic Graph of each transaction by versionning accounts to avoid cycles and offers graphic sequential view of transfers
 - Recognizes 144 differents swap instructions from 59 differents [DEX programs](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py)
 - Map transfers by parsing 20 differents [instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py) from Solana's Built in programs
@@ -32,7 +33,7 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - [Spam (dusting) detection system](GrafolanaBack/domain/spam) using default address blacklist in database, user can mark address as spam
 
 ### UI Graph
-- Unique field for loading graph data by transaction signatures or addresses
+- Unique field for loading graph data by transaction signatures, addresses or slot number
 - Add multiple addresses/transactions to the same graph
 - Interactive graph UI with right click context menu actions: copy address/rename/mark as spam/fix position
 - "Address Label" component allowing to show addresses and interact with them
