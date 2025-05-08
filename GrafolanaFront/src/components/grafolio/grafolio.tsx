@@ -1,18 +1,29 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { TransactionGraph } from './graph/TransactionGraph';
-import { AccountType, GraphData, TransferType } from '@/types/graph';
+import { AccountType, TransferType } from '@/types/graph';
 import Transactions from './transactions/transactions';
 import { Accounts } from './accounts/accounts';
 import { Transfers } from './transfers/transfers';
 import { MetadataPreloader } from './graph/MetadataPreloader';
 import { useTransactions } from '@/components/transactions/transactions-provider';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function Grafolio() {
+  const { publicKey } = useWallet();
+
   const [activeTab, setActiveTab] = useState<string>('graph');
   const [previousTab, setPreviousTab] = useState<string>('graph');
-  const [address, setAddress] = useState<string>("CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX");
+  
+
+  let default_address = "CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX";
+
+  if (publicKey) {
+    default_address = publicKey.toBase58();
+  }
+
+  const [address, setAddress] = useState<string>(default_address);
   
   // Get the graphData and data fetching methods from TransactionsProvider
   // Added fetchedTransactions and fetchedWallets to check if address is already fetched
@@ -20,59 +31,79 @@ export default function Grafolio() {
     graphData, 
     fetchedTransactions, 
     fetchedWallets, 
+    fetchedBlocks,
+
     getTransactionGraphData, 
     getWalletGraphData, 
+    getBlockGraphData,
+
     addTransactionGraphData, 
     addWalletGraphData,
+    addBlockGraphData,
+
     isLoading // Add isLoading state from the TransactionsProvider
   } = useTransactions();
 
   // Function to handle address input change
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setAddress(e.target.value);
+    console.log("Address changed to:", e.target.value);
   };
 
   // Function to handle fetching graph data based on address length
   const handleGetGraphData = (): void => {
     if (!address.trim()) return;
+    const slot = parseInt(address, 10);
     
-    // Determine the type of address based on its length
-    // Solana addresses are typically 44 characters, transaction signatures are 88 characters
+    // Determine the type of address.current based on its length
+    // Solana address.currentes are typically 44 characters, transaction signatures are 88 characters
     if (address.length == 88 || address.length == 87) {
       // It's likely a transaction signature
       getTransactionGraphData(address);
     } else if (address.length == 44 || address.length == 43) {
-      // It's likely a wallet address
+      // It's likely a wallet address.current
       getWalletGraphData(address);
+    } else if (!isNaN(slot) && slot > 0) {
+      // It's likely a block slot number
+      getBlockGraphData(slot);
     }
   };
 
   // Function to handle adding data to existing graph
   const handleAddToGraph = (): void => {
     if (!address.trim()) return;
+    const slot = parseInt(address, 10);
     
-    // Handle both transaction signatures and wallet addresses
-    if (address.length >= 87) {
+    // Handle both transaction signatures and wallet address.currentes
+    if (address.length == 88 || address.length == 87) {
       // It's likely a transaction signature
       addTransactionGraphData(address);
-    } else {
-      // It's likely a wallet address
+    } else if (address.length == 44 || address.length == 43) {
+      // It's likely a wallet address.current
       addWalletGraphData(address);
+    } else if (!isNaN(slot) && slot > 0) {
+      // It's likely a block slot number
+      addBlockGraphData(slot);
     }
   };
 
-  // Function to check if the current address is already fetched
+  // Function to check if the current address.current is already fetched
   const isAddressFetched = (): boolean => {
     if (!address.trim()) return false;
+    const slot = parseInt(address, 10);
     
-    // Check the appropriate list based on address length
-    if (address.length >= 87) {
+    // Check the appropriate list based on address.current length
+    if (address.length == 88 || address.length == 87) {
       // It's likely a transaction signature
       return fetchedTransactions.has(address);
-    } else {
-      // It's likely a wallet address
+    } else if (address.length == 44 || address.length == 43) {
+      // It's likely a wallet address.current
       return fetchedWallets.has(address);
+    } else if (!isNaN(slot) && slot > 0) {
+      // It's likely a block slot number
+      return fetchedBlocks.has(slot);
     }
+    return false;
   };
 
   // Function to determine which tab is active
@@ -131,10 +162,11 @@ export default function Grafolio() {
         <input 
           type="text" 
           id="address_input" 
-          placeholder="Enter Transaction Signature or Wallet Address" 
+          placeholder="Enter Transaction Signature or Wallet Address or Block number" 
           style={{ width: '1000px', margin: '2px' }} 
           value={address}
           onChange={handleAddressChange}
+          //defaultValue={default_address} // Set default value to the current address
         />
         <button 
           onClick={handleGetGraphData}

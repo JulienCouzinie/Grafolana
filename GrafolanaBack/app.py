@@ -107,6 +107,23 @@ def get_wallet_graph_data_from_address():
     
     return jsonify(graph_data)
 
+@app.route('/api/get_block_graph_data', methods=['POST'])
+def get_block_graph_data_from_slot():
+    slot_number = request.json.get('slot_number')
+
+    if not slot_number:
+        return jsonify({"error": "No block slot provided"}), 400
+
+    try:
+        int(slot_number)
+    except ValueError:
+        return jsonify({"error": "Invalid block slot"}), 400
+
+    # Get the graph data
+    graph_data = transaction_parser_service.get_block_graph(slot_number)
+    
+    return jsonify(graph_data)
+
 # Metadata API Endpoints
 @app.route('/api/metadata/get_mints_info', methods=['POST'])
 def get_mints_info_from_addresses():

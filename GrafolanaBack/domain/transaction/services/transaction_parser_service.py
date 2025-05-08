@@ -1,10 +1,11 @@
 import copy
+import json
 import time
 from typing import Dict, List, Optional, Set, Tuple, Any, cast
 
 from solders.signature import Signature
 from solders.pubkey import Pubkey
-from solders.transaction_status import  EncodedConfirmedTransactionWithStatusMeta
+from solders.transaction_status import  EncodedConfirmedTransactionWithStatusMeta, EncodedTransactionWithStatusMeta
 
 from GrafolanaBack.domain.transaction.models.account import AccountType
 from GrafolanaBack.domain.transaction.models.graph import TransactionGraph
@@ -21,6 +22,7 @@ from GrafolanaBack.domain.transaction.services.transaction_service import Transa
 from GrafolanaBack.domain.transaction.utils.instruction_utils import Parsed_Instruction, get_instruction_call_stack
 from GrafolanaBack.domain.caching.cache_utils import cache
 from GrafolanaBack.domain.rpc.rpc_connection_utils import client
+from GrafolanaBack.domain.rpc.rpc_web_api import get_block_transactions
 from GrafolanaBack.domain.logging.logging import logger
 
 class TransactionParserService:
@@ -39,7 +41,7 @@ class TransactionParserService:
         self.transaction_service = TransactionService()
     
     # @timing_decorator
-    def parse_transaction(self, transaction_signature: str, encoded_transaction: EncodedConfirmedTransactionWithStatusMeta) -> TransactionContext:
+    def parse_transaction(self, transaction_signature: str, transaction: EncodedTransactionWithStatusMeta, block_time: int, slot: int) -> TransactionContext:
         """
         Parse a transaction by its signature, building a graph representation of the transaction.
         
@@ -54,8 +56,8 @@ class TransactionParserService:
         graph = TransactionGraph()
 
         # Extract basic transaction info
-        blocktime = encoded_transaction.block_time
-        transaction = encoded_transaction.transaction
+        # blocktime = encoded_transaction.block_time
+        # transaction = encoded_transaction.transaction
         
         # Extract account addresses and signers
         accounts = transaction.transaction.message.account_keys
@@ -82,19 +84,19 @@ class TransactionParserService:
             transaction_signature
         )
 
-        err = encoded_transaction.transaction.meta.err.to_json() if encoded_transaction.transaction.meta.err else None
+        err = transaction.meta.err.to_json() if transaction.meta.err else None
 
         # Parse instructions
         instructions = get_instruction_call_stack(transaction)
         
         # Parse transaction context
         transaction_context = TransactionContext(
-            slot=encoded_transaction.slot,
+            slot=slot,
             transaction_signature=transaction_signature,
             graph=graph,
             account_repository=account_repository,
             signer_wallets=signer_wallets,
-            blocktime=blocktime,
+            blocktime=block_time,
             fee=transaction.meta.fee,
             fee_payer=fee_payer,
             compute_units_consumed=transaction.meta.compute_units_consumed,
@@ -143,7 +145,7 @@ class TransactionParserService:
     
     def parse_and_get_graph_data(self, transaction_signature: str, encoded_transaction: EncodedConfirmedTransactionWithStatusMeta, error: Optional[Exception], w=None) -> Dict[str, Any]:
         # Parse the transaction and get the context
-        context = self.parse_transaction(transaction_signature, encoded_transaction)
+        context = self.parse_transaction(transaction_signature, encoded_transaction.transaction, encoded_transaction.block_time, encoded_transaction.slot)
         if not context:
             logger.error(f"Failed to parse transaction: {transaction_signature}")
             return {"nodes": [], "links": [], "swaps": [], "fees": {"fee": 0, "priority_fee": 0}}
@@ -155,7 +157,7 @@ class TransactionParserService:
     
     def parse_transaction_call_back(self, transaction_signature: str, encoded_transaction: EncodedConfirmedTransactionWithStatusMeta) -> TransactionContext:
         # Parse the transaction and get the context
-        context = self.parse_transaction(transaction_signature, encoded_transaction)
+        context = self.parse_transaction(transaction_signature, encoded_transaction.transaction, encoded_transaction.block_time, encoded_transaction.slot)
         return context
     
     def get_multiple_transactions_graph_data(self, transaction_signatures: List[str]) -> Dict[str, Any]:
@@ -238,6 +240,42 @@ class TransactionParserService:
             signatures.append(sig.signature)
 
         return signatures
+
+    def get_block_graph(self, slot_number: int) -> Dict[str, Any]:
+        block = get_block_transactions(slot=slot_number)
+        
+        if not block:
+            logger.error(f"Block {slot_number} not found")
+            return None
+        
+        
+        
+        all_transaction_contex = {}
+        transaction_json: Dict
+        for transaction_json in block["result"]["transactions"]:
+            transaction = EncodedTransactionWithStatusMeta.from_json(json.dumps(transaction_json))
+            transaction_signature = transaction.transaction.signatures[0]
+            context = self.parse_transaction(str(transaction_signature), transaction, block["result"]["blockTime"], slot_number)
+            all_transaction_contex.update({transaction_signature: context})
+
+        # Strip all_transaction_contex of transaction_context that are None
+        all_transaction_contex = {sig: context for sig, context in all_transaction_contex.items() if context is not None}
+        if not all_transaction_contex:
+            return {"nodes": [], "links": [], "swaps": [], "fees": {"fee": 0, "priority_fee": 0}}
+
+       # now = int(time.monotonic() * 1000)
+        graphspace = Graphspace(all_transaction_contex)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to Graphspace: {timeittook} ms")
+
+        self.graph_service.analyse_isomorphic_transactions(graphspace)
+        
+        # now = int(time.monotonic() * 1000)
+        graphdata = self.graph_service.get_graph_data_from_graphspace(graphspace)
+        # timeittook = int(time.monotonic() * 1000) - now
+        # logger.info(f"Time taken to get_graph_data_from_graphspace: {timeittook} ms")
+        
+        return graphdata
 
     def _process_instructions(self, instructions: List[Parsed_Instruction], context: TransactionContext, _parent_swap_id: int = None, _parent_router_swap_id: int = None) -> None:
         """Process a list of instructions and its inner instructions recursively."""

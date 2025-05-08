@@ -6,7 +6,7 @@ from GrafolanaBack.domain.transaction.models.account import AccountVersion
 from GrafolanaBack.domain.transaction.models.graph import TransactionGraph, TransferProperties, TransferType
 from GrafolanaBack.domain.transaction.models.transaction_context import TransactionContext
 from GrafolanaBack.domain.rpc.rpc_connection_utils import client
-from GrafolanaBack.domain.rpc.rpc_web_api import get_block
+from GrafolanaBack.domain.rpc.rpc_web_api import get_block_signatures
 
 
 class Graphspace:
@@ -24,7 +24,7 @@ class Graphspace:
         self._build_graph()
 
     def _get_transaction_signatures_from_slot(self, slot: int) -> Optional[List[str]]:
-        block = get_block(slot)
+        block = get_block_signatures(slot)
         if block and "signatures" in block['result']:
            return block['result']['signatures']
         return None

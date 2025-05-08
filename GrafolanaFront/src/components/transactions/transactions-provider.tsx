@@ -6,12 +6,19 @@ import { AccountVertex, GraphData, ForceGraphNode, ForceGraphLink, TransactionDa
 // Define the context type that exposes both the graph data and getter methods
 export interface TransactionsContextType {
     graphData: GraphData;
+
     fetchedTransactions: Set<string>; // Expose the list of fetched transaction signatures
     fetchedWallets: Set<string>;      // Expose the list of fetched wallet addresses
+    fetchedBlocks: Set<number>;      // Expose the list of fetched blocks
+
     getTransactionGraphData: (tx_signature: string) => Promise<void>;
     getWalletGraphData: (wallet_signature: string) => Promise<void>;
+    getBlockGraphData: (block_number: number) => Promise<void>;
+
     addWalletGraphData: (tx_signature: string) => Promise<void>;
     addTransactionGraphData: (tx_signature: string) => Promise<void>;
+    addBlockGraphData: (block_number: number) => Promise<void>;
+
     isLoading: boolean; // Loading state indicator
   }
 
@@ -42,6 +49,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   // Add state to track fetched transaction signatures and wallet addresses
   const [fetchedTransactions, setFetchedTransactions] = useState<Set<string>>(new Set());
   const [fetchedWallets, setFetchedWallets] = useState<Set<string>>(new Set());
+  const [fetchedBlocks, setFetchedBlocks] = useState<Set<number>>(new Set());
   
   // Add loading state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -116,6 +124,36 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
       // Reset tracking and add this wallet
       setFetchedWallets(new Set([wallet_signature]));
+      setFetchedTransactions(new Set());
+    } catch (error) {
+      console.error('Failed to fetch graph data:', error);
+      // Set empty graph data on error
+      setGraphData({ nodes: [], links: [], transactions: {} });
+      // Clear tracking on error
+      setFetchedTransactions(new Set());
+      setFetchedWallets(new Set());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getBlockGraphData = async (block_number: number): Promise<void> => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slot_number: block_number }),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      let data: GraphData = await response.json();
+      data = mapAccountVertexToClass(data);
+      setGraphData(data);
+
+      // Reset tracking and add this block
+      setFetchedWallets(new Set());
       setFetchedTransactions(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
@@ -265,15 +303,90 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
   };
 
+  const addBlockGraphData = async (block_number: number): Promise<void> => {
+    // Skip if already fetched
+    if (fetchedBlocks.has(block_number)) {
+      console.log(`Block ${block_number} already fetched, skipping`);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ block_number }),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      let newData: GraphData = await response.json();
+      newData = mapAccountVertexToClass(newData);
+      
+      // Merge the new data with existing graph data
+      setGraphData(prevData => {
+        // Create sets of existing node and link IDs for quick lookup
+        const existingNodeIds = new Set(prevData.nodes.map(node => node.account_vertex.id));
+        const existingLinkIds = new Set(prevData.links.map(link => link.key + "-" + link.transaction_signature));
+        
+        // Filter out nodes that already exist in the graph
+        const newNodes = newData.nodes.filter(node => !existingNodeIds.has(node.account_vertex.id));
+        
+        // Filter out links that already exist in the graph
+        const newLinks = newData.links.filter(link => !existingLinkIds.has(link.key + "-" + link.transaction_signature));
+        
+        // Merge transactions, avoiding duplicates
+        const mergedTransactions: Record<string, TransactionData> = { 
+          ...prevData.transactions 
+        };
+        
+        // Add only transactions that don't already exist
+        Object.entries(newData.transactions).forEach(([key, transaction]) => {
+          if (!mergedTransactions[key]) {
+            mergedTransactions[key] = transaction;
+          }
+        });
+        
+        // Return the merged data
+        return {
+          nodes: [...prevData.nodes, ...newNodes],
+          links: [...prevData.links, ...newLinks],
+          transactions: mergedTransactions
+        };
+      });
+
+      // Add this block to the fetched list
+      setFetchedBlocks(prev => {
+        const updated = new Set(prev);
+        updated.add(block_number);
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to fetch additional graph data:', error);
+      // Don't change the existing graph data on error
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   // Create the context value with both the graph data and getter methods
   const value = {
     graphData,
+    
     fetchedTransactions,
     fetchedWallets,
+    fetchedBlocks,
+
     getTransactionGraphData,
     getWalletGraphData,
+    getBlockGraphData,
+
     addWalletGraphData,
     addTransactionGraphData,
+    addBlockGraphData,
+
     isLoading, // Add loading state to the context value
   };
 
