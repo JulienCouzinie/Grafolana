@@ -266,10 +266,12 @@ class CloseAccountParser(InstructionParser):
             owner = owner,
             balance_token = 0,
             balance_lamport = 0,
-            account_type = AccountType.TOKEN_ACCOUNT
+            account_type = AccountType.TOKEN_ACCOUNT,
         )
 
-        amount_lamport = account_version_source.balance_token + 203928
+        latest_version = context.account_repository.get_latest_version(account_address)
+
+        amount_lamport = latest_version.balance_token + 203928
 
         # Get destination version account
         account_version_destination = GraphBuilderService.prepare_destination_account_version(
