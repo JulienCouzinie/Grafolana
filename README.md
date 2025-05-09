@@ -54,6 +54,8 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - List of Accounts
 - List of Transfers
 
+
+## Guide
 ### The Graph 
 #### Legend
 Legend of the differents colors used for drawing nodes:
@@ -68,8 +70,8 @@ A stake icon for .. stake accounts !
 
 ![Indicators](doc/indicators.png)
 
-### Design Choices: Virtual Links & Nodes
-#### Swaps
+#### Design Choices: Virtual Links & Nodes
+##### Swaps
 ![Swaps](image.png)
 
 When swaps are recognized by the system a virtual swap transfer representing the swap is added to the graph.
@@ -81,7 +83,7 @@ User source account -> Pool 1 [GAP] Pool 2 -> User destination accounts
 
 This is purely a technical choice to allow to link nodes and show a consolidated view of the flow and does not represents an actual transfer.
 
-#### Burn & MintTo
+##### Burn & MintTo
 ![Burn & MintTo](doc/burnminto.png)
 Burn & Minto will appear as actual transfer leading or pointing to a virtual account that represents either its destination: burn or its source: mintto.
 
@@ -89,7 +91,7 @@ These nodes don't represents actual accounts and are just used to get a better v
 
 As detailed in the screenshot here, a virtual burn account might be used as a swap source account when the swap requires burning some token: here its a Sanctum's PrefundWithdrawStake.
 
-#### Fees
+##### Fees
 ![Fees](doc/fees.png)
 Fees paid during a transaction are shown as actual transfers, both regular and priority fees.
 To be able to stay consistent with the graph Node/Link pattern I decided to create virtual Fee accounts.
@@ -97,22 +99,22 @@ Hovering a fee account will show the total fee.
 In Transfer View, each fee account is tied to a transaction and will only show total fees for that transaction.
 In Accounts and Wallets Views: If multiple transaction are loaded in the graph the fee account will show the total fees of all the transactions.
 
-## Graph Controls
+#### Graph Controls
 ![Graph Controls](doc/graphcontrols.png)
 The left panels offers contextual informations and some options to control the graph.
 
-### General Options
+##### General Options
 ![General](doc/general.png)
 The General section offers some general options to hide/show certain types of Nodes/Links in the graph.
 
-#### Hide Spam
+###### Hide Spam
 By default the system Hides spam transaction.
 Hiding spam may result in an empty graph if all transactions are spam !
 
 Here is the difference for the same wallet:
 ![showhidespam](doc/hideshowspam.png)
 
-#### Swap Routers
+###### Swap Routers
 Swaps Routing operation can sometimes represents complex graph structure.
 While being interesting they might not be always relevant for forensic analysis.
 Swap routing operating are collapsed by default, offering a better view of what's happening without encombering the view.
@@ -123,19 +125,19 @@ Or Collapse/Expand all swaps router using the controls in the left panel.
 Here is the same transaction (3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu) with swap routers collapsed and expanded.
 ![routerexpandedcollapse](doc/routerexpandcollapse.png)
 
-#### Swap Programs
+###### Swap Programs
 The same way as swap router "Collapse/Expand", you can control normal swap operation too using either right-clicking a node then "Expand Swap Program" or by using the left panel controls.
 
 Here is the same transaction with both Swap Routers and Swap Programs Expanded
 ![allswapsexpanded](doc/swapandrouterexpanded.png)
 
 
-#### Other Options
+###### Other Options
 Some other usefull options to Hide/Show fees, Create & Close Accounts transfers.
 
 Fees are hidden by default to help with clarity.
 
-## Transactions Clusters
+##### Transactions Clusters
 
 Each transaction is mapped into a [NetworkX](https://networkx.org/) graph.
 When fetching graph data for an account address, the engine is going to compare all the generated graph of each transactions together using an [isomorphism algorithm](https://networkx.org/documentation/stable/reference/algorithms/isomorphism.html).
@@ -150,7 +152,7 @@ These are actual spam transactions.
 Be carefull of the other filters activated as you might get an empty graph. Here I had to disable "Hide Spam" to actually see them.
 ![cluster](doc/cluster.png)
 
-## Selected Contextual Infos
+##### Selected Contextual Infos
 It's possible to select one or many Nodes / Links in the graph by clicking on them.
 Multiple selecting is done while holding CTRL key.
 
@@ -162,7 +164,7 @@ Here the central node of this little cluster of spam transfers has been selected
 ![selectednode](doc/selectednode.png)
 
 
-## The View System
+#### The View System
 ![View System](doc/views.png)
 
 The View System offers 3 ways to look at the transactions datas.
@@ -177,14 +179,14 @@ It's an arbitrage WSOL->WSOL :
 3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu
 ```
 
-### Transfers View
+##### Transfers View
 ![Transfers View](doc/transfersview.png)
 This is a Transfers Centric view.
 
 Each transaction has it's transfers mapped as Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
 Each link is a transfer and the number represents its order in the sequence.
 
-### Accounts View
+##### Accounts View
 ![Accounts View](doc/accountsview.png)
 This is an Accounts Centric view.
 
@@ -194,7 +196,7 @@ As mutliples transfer between the same two accounts can happen, they are aggreta
 Example here with a transfer fee aggreting both the FEE and PRIORITY FEE transfers:
 ![Fees Composite](doc/accountviewcompositelinks.png)
 
-### Wallets View
+##### Wallets View
 ![Wallets View](doc/walletsview.png)
 This is a Wallet Centric View.
 
@@ -205,7 +207,118 @@ As many token accounts can be "hidden" behing a wallet in this view, we can stil
 
 ![Composite Accounts](doc/walletviewcompositeacounts.png)
 
-## Price Derivation System
+
+
+
+
+### Transfers Detection
+
+The transaction parser is able to detect a variety of transfers types by [parsing its instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py).
+In Solana, it's possible to transfer tokens using multiple different instructions.
+
+In this section we cover all the possible transfers you'll be able to find using this app.
+
+#### Normal Transfers
+
+These are the "goto" instructions to transfer SOL or SPL Tokens.
+
+System Program's instructions:
+    - transfer
+
+Token Program's instructions:
+    - transfer
+    - transferChecked
+
+#### Creating accounts
+
+In solana, it's possible to transfer SOL by creating accounts.
+
+System Program's instructions:
+    - createAccountWithSeed
+    - createAccount
+
+Associated Token Account Program's instructions:
+    - create
+    - createIdempotent
+
+#### Closing Accounts
+
+Closing an account allows to collect its rent-exempt. It's also classically used to unwrap WrappedSOL. In both cases Grafolana considers this instruction as an actual transfer.
+Closing an account is quite a difficult instruction to analyze as the getTransaction RPC API unfortunatly won't provide with the amount of lamports transfered.
+The only way is to track the account's balance throughout the transaction.
+It's only an estimate as Solana Programs can natively send SOL without the need to invoke any other instruction. This could result in cases where an account's balance could have been changed by a native SOL transfer before being closed, thus making the amount the transfer from closing inaccurate.
+
+Token Program's Instruction:
+    - closeAccount
+
+#### Withdraw from Stake Accounts
+
+Grafolana detects withdraws from stake accounts.
+
+Stake Program's instruction:
+    - withdraw
+
+#### Splitting Stake Accounts
+
+Grafolana detects stake accounts splitting as transfers too.
+
+Stake Program's instruction:
+    - split
+
+#### Stake Account Ownership reassigments
+
+Changing an account's owner is an actual way of transfering the balance to someone else. So Grafolana considers stake accounts ownership reassigments as actual transfers.
+It's done by granting the "Withdrawer" authorization to a wallet.
+
+Stake Program's instruction:
+    - authorize
+
+#### Native Solana Transfer
+
+As said previously, Solana allows programs to directly write data into accounts. Which means that Programs wan natively send SOL without needing to invoke the System Program. 
+It's quite an effective way to obfuscate SOL transfers.
+The only way to detect these in a transaction is by carefully tracking the balance changes of all involved accounts and infering possible Native Sol transfer by comparing the end result to the actual "post_balances" provided by the GetTransaction RPC API.
+For now these Native Solana Transfers are NOT DETECTED but will be in future update.
+
+However some Native Solana Transfers are actually inferred when it comes to certain swap programs that are known for transfering SOL in such a way.
+The Pump.fun program is one of them: the SELL instruction will actually send SOL back to the seller's wallet using a Native SOL transfer. In this particular case the transfer and its amount are infered by parsing Pump.fun inner instructions.
+
+
+
+
+
+### Swap Detection Mechanisms
+
+#### Recognizing Swap Operations
+
+Grafolana uses different ways to properly recognize Swap Operations.
+It does so using data from a [config file](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py).
+
+It recognizes Swap programs by their program address.
+Then recognizes its different instructions by different indicators:
+    - Instruction's name
+    - Instruction's discriminator
+    - Number of accounts
+    - The value of a certain byte in the instruction's data
+    - The last byte of the instruction's data
+
+#### Fetching The Details of a Swap Operation
+
+Grafolana uses an heuristic approach to detect Swap operations and the amounts involved.
+
+Relying on the classic IDL and instruction's data parsing is costly and require a lot of reverse engineering as DEXes usually don't provide with their own IDL and data structures.
+
+So in Grafolana we decided to go for an original and way simpler method by analyzing the transfers operated by the Swap Program.
+This method only requires to know the accounts involved in the swap: the user's source/destination accounts, and the liquidity pool's source/destination accounts.
+
+So besides the infos needed to recognize a Swap instruction, adding a new swap instruction to Grafolana is quite easy as it only requires giving the index of the user and pools accounts.
+
+Then the [Swap Resolver Service](GrafolanaBack/domain/transaction/services/swap_resolver_service.py) will leverage NetworkX capabilities to infer the correct swap's amounts.
+
+
+
+
+### Price Derivation System
 
 Estimating the USD price of any given SPL token at any given timestamp is quite a hard problem. Especially without paying for a reliable data source.
 In order to give an estimate USD price for SPL token transfers, the app uses a derivation mechanism.
@@ -215,7 +328,7 @@ Reference coins are SOL, WSOL, USDC and USDT.
 The app fetches and stores SOL prices from binance API and stores them in the DB.
 Storing SOL prices in the DB is a necessity for obvious performances issues. Otherwise each transaction processed would necessitate one Binance API call which was proven to be highly inefficient.
 
-### Price Updater Background Task
+#### Price Updater Background Task
 
 When deployed the app will run a background task that will constantly updates the SOL prices DB.
 It stores SOL prices down to the minute level for the past 4 years.
