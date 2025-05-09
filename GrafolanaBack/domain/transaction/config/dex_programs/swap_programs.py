@@ -380,6 +380,31 @@ swap_programs_data = {
             }
         ]
     },
+    "BOOPFUN": {
+        PROGRAM_ADDRESS: "boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4",
+        LABEL: "Boom.fun",
+        ICON: "https://boop.fun/favicon.ico",
+        WEBSITE: "https://boop.fun/",
+        ROUTER: False,
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 5WaeEwMcQNZi6N2mpCDGwk4CgXP5kZhZy88J7AfLXTwYy3c7tS2jTxkyQxiMt79QCnWaR8tCHQN3mZQPkeVdcmJ6
+            {
+                INSTRUCTION_NAME: "buy_token",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            # Transaction : 65LmC6yLyMng2QFqAnRJXxi4EMFqU82vkZntHEPrq9G45BwdBnRr78mMnQFcCQtVnLfRNRxQWYJ69Bu33mtDG4H6
+            {
+                INSTRUCTION_NAME: "sell_token",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 3
+            }
+        ]
+    },
     "CREMA_FINANCE": {
         PROGRAM_ADDRESS: "CLMM9tUoggJu2wagPkkqs9eFG4BWhVBZWkP1qv3Sp7tR",
         LABEL: "Crema Finance",
