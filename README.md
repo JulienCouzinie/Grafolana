@@ -464,9 +464,10 @@ ALCHEMY=https://solana-mainnet.g.alchemy.com/v2/YOUR-ALCHEMY-API-KEY:25
 SYNDICA=https://solana-mainnet.api.syndica.io/api-key/YOUR-SYNDICA-API-KEY:15
 CHAINSTACK=https://solana-mainnet.core.chainstack.com/YOUR-CHAINSTACK-API-KEY:2
 W3NODE=https://solana.w3node.com/YOUR-W3NODE-API-KEY/api:25
-PUBLICNODE=https://solana-rpc.publicnode.com:10,https://rpc.shyft.to?api_key=YOUR-PUBLICNODE-API-KEY:25
+PUBLICNODE=https://solana-rpc.publicnode.com:10
+SHYFT=https://rpc.shyft.to?api_key=YOUR-PUBLICNODE-API-KEY:25
 
-SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},${W3NODE},${PUBLICNODE}
+SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},${W3NODE},${PUBLICNODE},${SHYFT}
 ```
 
 ##### Installation
