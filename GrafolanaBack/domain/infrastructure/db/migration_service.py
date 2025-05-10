@@ -8,6 +8,7 @@ from alembic.config import Config
 from sqlalchemy import inspect
 from sqlalchemy.exc import OperationalError
 from GrafolanaBack.domain.infrastructure.db.session import engine
+from GrafolanaBack.domain.logging.logging import logger
 
 def get_database_url() -> str:
     """
@@ -57,18 +58,18 @@ def check_and_run_migrations() -> None:
         config = get_alembic_config()
         
         # Run migrations
-        print("Running database migrations...")
+        logger.info("Running database migrations...")
         command.upgrade(config, 'head')
-        print("Database migrations completed successfully.")
+        logger.info("Database migrations completed successfully.")
         
     except OperationalError as e:
-        print(f"Database connection error: {e}")
-        print("Running migrations to create database...")
+        logger.error(f"Database connection error: {e}")
+        logger.error("Running migrations to create database...")
         
         # Try running migrations anyway - this might create the database
         config = get_alembic_config()
         command.upgrade(config, 'head')
-        print("Database migrations completed successfully.")
+        logger.info("Database migrations completed successfully.")
     except Exception as e:
-        print(f"Error during migration check: {e}")
+        logger.error(f"Error during migration check: {e}")
         raise
