@@ -72,7 +72,7 @@ A stake icon for .. stake accounts !
 
 #### Design Choices: Virtual Links & Nodes
 ##### Swaps
-![Swaps](image.png)
+![Swaps](GrafolanaFront/public/swap.png)
 
 When swaps are recognized by the system a virtual swap transfer representing the swap is added to the graph.
 It allows to connect accounts together by this programmatic relationship.
@@ -82,6 +82,10 @@ I decided to connect the pools accounts used by the swaps as it "fills the gap" 
 User source account -> Pool 1 [GAP] Pool 2 -> User destination accounts
 
 This is purely a technical choice to allow to link nodes and show a consolidated view of the flow and does not represents an actual transfer.
+
+Swap will appear on the graph as a link with dotted style like the image above. Mouse hovering the swap's link will provide with detailed infos about the swap.
+
+Note that you first need to expand the Swap Routers and/or Swap programs in the "General" section of the "Graph Controls" panel to be able to see the virtual swaps transfers.
 
 ##### Burn & MintTo
 ![Burn & MintTo](doc/burnminto.png)
@@ -194,6 +198,7 @@ Contrary to the Transfers View where accounts can appear multiple time in one gr
 
 As mutliples transfer between the same two accounts can happen, they are aggretated but still appear while hovering a link in the "composites" section.
 Example here with a transfer fee aggreting both the FEE and PRIORITY FEE transfers:
+
 ![Fees Composite](doc/accountviewcompositelinks.png)
 
 ##### Wallets View
