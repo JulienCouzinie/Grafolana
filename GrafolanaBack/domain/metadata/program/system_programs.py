@@ -234,5 +234,21 @@ This program is essential for anyone using or building with .sol domains, making
         WEBSITE: "https://solana.com/en",
         DESCRIPTION: 
 """Solana transaction fees break down into a small mandatory base fee—paid in lamports per signature and per compute‐unit budget—and an optional priority fee (a “tip”) that users attach via the ComputeBudgetProgram to request more compute units at a specified micro-lamports-per-unit price. The base fee covers the network’s fixed costs (signing, data storage, account locks) and is set so that each signature costs 5,000 lamports; half of that amount is burned forever and half goes to the validator who produces the block . If the network is busy, users can include a priority fee calculated as “compute-unit limit × compute-unit price,” which goes entirely to the validator to incentivize faster inclusion . Following governance changes (SIMD-0096), all priority fees now accrue 100 % to validators rather than being split . Total cost per transaction is therefore the sum of the base fee (5,000 lamports × signatures) and any chosen priority fee (CU_limit × CU_price)."""
+    },
+    "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb": {
+        PROGRAM_ADDRESS: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        LABEL: "Token 2022 Program",
+        ICON: "https://spl.solana.com/img/favicon.ico",
+        WEBSITE: "https://spl.solana.com/token-2022",
+        DESCRIPTION: 
+"""The Token 2022 Program, an evolution of Solana’s original token standard, redefines digital asset management with enhanced flexibility, security, and programmability. As a core upgrade to the SPL Token Program, it extends Solana’s token capabilities far beyond basic minting and transfers, introducing features purpose-built for modern DeFi, NFT, and tokenized ecosystems.
+
+Engineered for next-generation token use cases, the Token 2022 Program enables developers to create fungible and non-fungible assets with a rich suite of advanced configurations. Key functionalities include transfer fees, confidential transfers (with zero-knowledge support), permanent and non-permanent freezing of token accounts, extended metadata, programmable hooks, and advanced minting controls—allowing tokens to behave like programmable money or dynamic access rights. It supports multiple authorities (e.g., mint, freeze, transfer) and precision configurations to suit everything from stablecoins to gamified loyalty points.
+
+Written in Rust and tightly integrated into the Solana runtime, Token 2022 is optimized for performance and composability. It maintains compatibility with existing Solana tooling while offering opt-in upgrades over the legacy SPL Token Program. This ensures that developers can progressively adopt Token 2022 features without compromising user experience or security.
+
+At its core, the Token 2022 Program embodies Solana’s commitment to pushing blockchain boundaries—empowering developers to build expressive financial primitives, smart token systems, and adaptive digital assets at scale. Whether powering novel DAO mechanisms, confidential assets, or multi-token ecosystems, it provides the foundational toolkit for the next era of on-chain innovation.
+
+As an official program maintained by the Solana Foundation, Token 2022 represents the future of token infrastructure on Solana—modular, secure, and future-ready."""
     }
 }
