@@ -8,7 +8,6 @@ import { AddressType } from '@/types/metadata';
 import { ForceGraphLink, GraphData, TransferType } from '@/types/graph';
 import { calculateTokenAmount } from '@/utils/tokenUtils'; // Import the token utility
 import { useUSDValue } from '@/hooks/useUSDValue'; // Import the useUSDValue hook
-import { get } from 'lodash';
 
 interface TransfersProps {
   apiGraphData: GraphData;
