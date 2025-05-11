@@ -63,11 +63,11 @@ importers:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
       react-force-graph:
-        specifier: ^1.47.4
-        version: 1.47.4(aframe@1.7.0)(react@19.0.0)(three@0.164.1)
+        specifier: ^1.47.6
+        version: 1.47.6(aframe@1.7.0)(react@19.0.0)(three@0.164.1)
       react-force-graph-2d:
-        specifier: ^1.27.0
-        version: 1.27.0(react@19.0.0)
+        specifier: ^1.27.1
+        version: 1.27.1(react@19.0.0)
       react-hot-toast:
         specifier: ^2.4.1
         version: 2.5.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4108,14 +4108,14 @@ packages:
     peerDependencies:
       react: ^19.0.0
 
-  react-force-graph-2d@1.27.0:
-    resolution: {integrity: sha512-NJAc7lWvY8PxBMn2uFXDDaeLcgJp37IYF6r0geOJlmMs5Lsf0IDmr35T7KNszHV3OUmTrZuPlyxrrzwGwyKhRg==}
+  react-force-graph-2d@1.27.1:
+    resolution: {integrity: sha512-/b1k+HbW9QCzGILJibyzN2PVZdDWTFuEylqcJGkUTBs0uLcK0h2LgOUuVU+GpRGpuXmj9sBAt43zz+PTETFHGg==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '*'
 
-  react-force-graph@1.47.4:
-    resolution: {integrity: sha512-GK7rtykEUaQwfeVXqLNMmbeuNoKWctS4n3KTP5gueHBfP/muIWkF06nY71Hiyrfe5wNmUjBYOY8VN5liiekFAQ==}
+  react-force-graph@1.47.6:
+    resolution: {integrity: sha512-+XeJnpYcQWG6ayXI2/QnHvAKpv0QJ0J2J8CXJU385faUYQEVeesLnwnUZJb096+u73VYqGKFGPK8y4I2dfn3lg==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '*'
@@ -9896,14 +9896,14 @@ snapshots:
       react: 19.0.0
       scheduler: 0.25.0
 
-  react-force-graph-2d@1.27.0(react@19.0.0):
+  react-force-graph-2d@1.27.1(react@19.0.0):
     dependencies:
       force-graph: 1.49.5
       prop-types: 15.8.1
       react: 19.0.0
       react-kapsule: 2.5.6(react@19.0.0)
 
-  react-force-graph@1.47.4(aframe@1.7.0)(react@19.0.0)(three@0.164.1):
+  react-force-graph@1.47.6(aframe@1.7.0)(react@19.0.0)(three@0.164.1):
     dependencies:
       3d-force-graph: 1.76.2
       3d-force-graph-ar: 1.9.4(aframe@1.7.0)(three@0.164.1)
