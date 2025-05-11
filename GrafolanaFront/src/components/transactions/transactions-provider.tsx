@@ -155,6 +155,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       // Reset tracking and add this block
       setFetchedWallets(new Set());
       setFetchedTransactions(new Set());
+      setFetchedBlocks(new Set([block_number]));
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
       // Set empty graph data on error
