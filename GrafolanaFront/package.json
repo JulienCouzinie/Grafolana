@@ -28,6 +28,7 @@
     "lodash": "^4.17.21",
     "next": "15.1.6",
     "react": "19.0.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "19.0.0",
     "react-force-graph": "^1.47.4",
     "react-force-graph-2d": "^1.27.0",
