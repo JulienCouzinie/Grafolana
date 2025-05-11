@@ -10,11 +10,13 @@ export function UiLayout({ children }: { children: ReactNode }) {
     <div className="full-height-layout">
       <div className="navbar bg-base-300 dark:text-neutral-content flex-col md:flex-row space-y-2 md:space-y-0">
         <div className="flex-1">
-          <img 
-            src="/grafolanalogo.png" 
-            alt="Grafolana Logo" 
-            className="h-12" // 48px height
-          />
+          <a href="/" className="btn btn-ghost normal-case text-xl">
+            <img 
+              src="/grafolanalogo.png" 
+              alt="Grafolana Logo" 
+              className="h-12" // 48px height
+            />
+          </a>
         </div>
         <div className="flex-none space-x-2">
           <WalletButton />
