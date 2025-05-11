@@ -85,6 +85,54 @@ class FlowViewStrategy extends BaseViewStrategy {
     return links;
   }
 
+  /**
+   * Aligns the positions of nodes that share the same transaction signature in a grid-like structure.
+   * So each transaction will have its node rendered in the same position.
+   * This is useful for visualizing graph with multiple transactions
+   * The grid has a size x by x with x equals rootsquare(rootsquare) the total number of nodes
+   * @param nodes A
+   * @returns 
+   */
+  private alignNodesPositionsByTransaction(nodes: ForceGraphNode[]): ForceGraphNode[] {
+    const transactionMap = new Map<string, ForceGraphNode[]>();
+    nodes.forEach((node) => {
+      const transactionSignature = node.account_vertex.transaction_signature;
+      if (!transactionMap.has(transactionSignature)) {
+        transactionMap.set(transactionSignature, []);
+      }
+      transactionMap.get(transactionSignature)!.push(node);
+    });
+
+    const gridSize = Math.ceil(Math.sqrt(transactionMap.size));
+    let xOffset = 0;
+    let yOffset = 0;
+
+    console.log('Grid size:', gridSize);
+    console.log('Transaction map:', transactionMap);
+
+    transactionMap.forEach((nodes, transactionSignature) => {
+      // Calculate the position for each node in the grid
+      // Each node of the same transaction will be rendered in the same position
+      const x = xOffset * 2000;
+      const y = yOffset * 2000;
+      nodes.forEach((node) => {
+        node.x = x;
+        node.y = y;
+      });
+      xOffset++;
+      if (xOffset >= gridSize) {
+        xOffset = 0;
+        yOffset++;
+      }
+    });
+
+    return nodes;
+  }
+
+  positionNodes(): void {
+    this.processedData.current.nodes = this.alignNodesPositionsByTransaction(this.processedData.current.nodes);
+  }
+
   initializeGraphData(data: GraphData, setGraphData: React.Dispatch<React.SetStateAction<GraphData>>): void {
     this.setReprocessCallback((dataToProcess: GraphData) => this.processGraphData(dataToProcess, setGraphData));
 
@@ -97,6 +145,7 @@ class FlowViewStrategy extends BaseViewStrategy {
     links = this.assignLinkCurvature(links);
 
     let nodes = this.assignNodesID(data.nodes);
+    
     let transactions = data.transactions;
 
     this.processedData.current.nodes = nodes;

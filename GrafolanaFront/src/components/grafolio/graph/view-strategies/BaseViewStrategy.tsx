@@ -124,6 +124,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.publicKey = publicKey;
     }
 
+    positionNodes(): void {
+    }
+
     /**
      * Set the callback function that will be called when data needs to be reprocessed
      * @param callback Function to trigger reprocessing

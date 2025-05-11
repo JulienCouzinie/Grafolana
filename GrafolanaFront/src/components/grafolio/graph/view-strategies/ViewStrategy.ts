@@ -125,4 +125,6 @@ export interface ViewStrategy {
    * Can be used to update the graph view when filters are changed
    */
   applyFilters() : void;
+
+  positionNodes: () => void;
 }
