@@ -10,6 +10,8 @@ import { calculateTokenAmount } from '@/utils/tokenUtils';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { type PublicKey } from '@solana/web3.js';
 import { useTransactions } from '@/components/transactions/transactions-provider';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 // Shared color palette
 export const SOLANA_COLORS = {
@@ -60,6 +62,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     minValuetUSD: React.RefObject<number>;
     maxValueUSD: React.RefObject<number|null>;
 
+    minDateTime: React.RefObject<Date|null>;
+    maxDateTime: React.RefObject<Date|null>;
+
     publicKey: PublicKey | null = null; // Public key of the connected wallet
 
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
@@ -82,8 +87,6 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         this.processedData = processedDataRef;
         this.originalData = originalDataRef;
-
-        
         
         // Initialize hover states
         this.hoveredNode = null;
@@ -110,6 +113,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.maxTokenAmount = useRef(null);
         this.minValuetUSD = useRef(0);
         this.maxValueUSD = useRef(null);
+
+        this.minDateTime = useRef<Date|null>(null);
+        this.maxDateTime = useRef<Date|null>(null);
 
         this.publicKey = publicKey;
 
@@ -208,6 +214,44 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         });
     }
 
+    protected setMinDateTime(date: Date|null): void {
+        this.minDateTime.current = date;
+    }
+
+    protected setMaxDateTime(date: Date|null): void {
+        this.maxDateTime.current = date;
+    }
+
+    /**
+     * Apply filter to filter transactions by their timestamp
+     * @param data - graph data to filter
+     */
+    protected ApplyDateFilters(data: GraphData): void {
+        // If neither min nor max date is set, no filtering needed
+        if (!this.minDateTime.current && !this.maxDateTime.current) {
+            return;
+        }
+
+        // Filter out transactions that don't match the date range
+        data.links = data.links.filter((link) => {
+            const transaction = this.originalData.current.transactions[link.transaction_signature];
+            if (!transaction || !transaction.timestamp) return true; // Keep if no timestamp data
+            
+            // Apply min date filter
+            if (this.minDateTime.current && transaction.timestamp < this.minDateTime.current.getTime()) {
+                return false;
+            }
+            
+            // Apply max date filter
+            if (this.maxDateTime.current && transaction.timestamp > this.maxDateTime.current.getTime()) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
 
     private ApplyCollapseExpandSwapPrograms(data: GraphData): void {
 
@@ -601,6 +645,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         // Apply TransactionClusterGroup filter
         this.ApplyTransactionClusterGroup(data);
+
+        // Apply date range filters
+        this.ApplyDateFilters(data);
 
         // Apply HideSpam filter
         this.ApplyHideSpam(data);
@@ -1416,7 +1463,115 @@ export abstract class BaseViewStrategy implements ViewStrategy {
      * Override in concrete strategies for strategy-specific filtering options
      */
     getFiltersContent(strategyContent:React.ReactNode=null): React.ReactNode {
-        // TransferFilters component to handle transfer filtering options
+        // DateTimeFilters component to handle date/time filtering
+        const DateTimeFilters = () => {
+            // State for datetime inputs
+            const [minDateTime, setMinDateTime] = React.useState<Date | null>(this.minDateTime.current);
+            const [maxDateTime, setMaxDateTime] = React.useState<Date | null>(this.maxDateTime.current);
+
+            // Handle apply filters
+            const handleApplyDateFilters = (): void => {
+                // Update filter values using class setters
+                this.setMinDateTime(minDateTime);
+                this.setMaxDateTime(maxDateTime);
+                
+                // Apply the filters
+                this.applyFilters();
+            };
+
+            // Clear date filters
+            const handleClearDateFilters = (): void => {
+                setMinDateTime(null);
+                setMaxDateTime(null);
+                this.setMinDateTime(null);
+                this.setMaxDateTime(null);
+                this.applyFilters();
+            };
+
+            // Common styles
+            const containerStyle = {
+                marginBottom: '16px'
+            };
+
+            const fieldStyle = {
+                marginBottom: '8px'
+            };
+
+            const labelStyle = {
+                display: 'block',
+                marginBottom: '4px',
+                fontSize: '14px'
+            };
+
+            const buttonStyle = {
+                padding: '8px 16px',
+                backgroundColor: '#9945FF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginTop: '8px',
+                marginRight: '8px'
+            };
+
+            const clearButtonStyle = {
+                ...buttonStyle,
+                backgroundColor: '#444'
+            };
+
+            return (
+                <div style={containerStyle}>
+                    <h3 style={{ marginBottom: '12px' }}>DateTime Filters</h3>
+                    
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Minimum Date & Time</label>
+                        <DatePicker
+                            selected={minDateTime}
+                            onChange={(date) => setMinDateTime(date)}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            timeCaption="Time"
+                            placeholderText="Select min datetime"
+                            className="bg-gray-700 text-white rounded border border-gray-600 p-2 w-full"
+                        />
+                    </div>
+                    
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Maximum Date & Time</label>
+                        <DatePicker
+                            selected={maxDateTime}
+                            onChange={(date) => setMaxDateTime(date)}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            timeCaption="Time"
+                            placeholderText="Select max datetime"
+                            className="bg-gray-700 text-white rounded border border-gray-600 p-2 w-full"
+                        />
+                    </div>
+                    
+                    <div>
+                        <button 
+                            onClick={handleApplyDateFilters}
+                            style={buttonStyle}
+                        >
+                            Apply Date Filters
+                        </button>
+                        <button 
+                            onClick={handleClearDateFilters}
+                            style={clearButtonStyle}
+                        >
+                            Clear Date Filters
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // TransferFilters component
         const TransferFilters = () => {
             // State for input values
             const [minSolAmount, setMinSolAmount] = React.useState<string>(this.minSolAmount.current.toString());
@@ -1614,6 +1769,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         return (
             <div className="strategy-panel-content">
+                <DateTimeFilters />
                 <TransferFilters />
                 {(strategyContent) ? strategyContent : ""}
             </div>
