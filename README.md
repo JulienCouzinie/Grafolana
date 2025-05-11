@@ -218,6 +218,11 @@ This is a Transfers Centric view.
 Each transaction has it's transfers mapped as Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
 Each link is a transfer and the number represents its order in the sequence.
 
+Each transaction will have its nodes grouped together.
+All transactions will appear as a grid pattern with the transactions being ordered by the timestamp starting from top left to bottom right.
+
+![transfer view grid](doc/viewtransfergrid.png)
+
 ##### Accounts View
 ![Accounts View](doc/accountsview.png)
 This is an Accounts Centric view.
