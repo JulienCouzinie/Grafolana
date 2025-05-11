@@ -150,6 +150,15 @@ You can filter transfers by time using minimum and maximum datetime.
 
 ![date filters](doc/graphdatefilter.png)
 
+
+#### Filter by Accounts Addresses
+You can filter transfers by the account addresses involved.
+Setup a list of addresses by entering them one by one in the input field and clicking "Add" or just press the Enter key.
+
+Remove addresses from the filter's list with the cross icon.
+
+![account filter](doc/graphaccountfilter.png)
+
 ##### Filter by Amounts
 
 You can filter transfers by the amounts involved.
