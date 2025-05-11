@@ -141,6 +141,25 @@ Some other usefull options to Hide/Show fees, Create & Close Accounts transfers.
 
 Fees are hidden by default to help with clarity.
 
+#### Filters
+
+The Filters section add some simple filtering options to the graph.
+
+##### Filter by Date & Time
+You can filter transfers by time using minimum and maximum datetime.
+
+![date filters](doc/graphdatefilter.png)
+
+##### Filter by Amounts
+
+You can filter transfers by the amounts involved.
+3 differents ways of filtering: 
+ - by SOL
+ - by amount of Tokens
+ - by USD value (if available)
+
+ ![amounts filters](doc/graphamountfilter.png)
+
 ##### Transactions Clusters
 
 Each transaction is mapped into a [NetworkX](https://networkx.org/) graph.
