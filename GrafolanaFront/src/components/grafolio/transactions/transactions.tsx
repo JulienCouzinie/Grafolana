@@ -1,6 +1,8 @@
 'use client'
 
 import React, { JSX, useState, useMemo, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { GraphData } from '@/types/graph';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { useMetadata } from '@/components/metadata/metadata-provider';
@@ -29,6 +31,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     const [filterMaxTransfers, setFilterMaxTransfers] = useState<string>('');
     const [filterMinSwaps, setFilterMinSwaps] = useState<string>('');
     const [filterMaxSwaps, setFilterMaxSwaps] = useState<string>('');
+    const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
+    const [filterMaxDateTime, setFilterMaxDateTime] = useState<Date | null>(null);
 
     // Create array of transactions from the object
     const transactionEntries = useMemo(() => {
@@ -45,8 +49,11 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                 const matchesSigner = txData.signers.some(signer => 
                     signer.toLowerCase().includes(lowerCaseFilter)
                 );
+                const matchesAccount = txData.accounts.some(account =>
+                    account.address.toLowerCase().includes(lowerCaseFilter)
+                );
                 
-                if (!matchesSignature && !matchesSigner) {
+                if (!matchesSignature && !matchesSigner && !matchesAccount) {
                     return false;
                 }
             }
@@ -76,9 +83,29 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                 return false;
             }
             
+            // Minimum datetime filter
+            if (filterMinDateTime && txData.timestamp < filterMinDateTime.getTime()) {
+                return false;
+            }
+            
+            // Maximum datetime filter
+            if (filterMaxDateTime && txData.timestamp > filterMaxDateTime.getTime()) {
+                return false;
+            }
+            
             return true;
         });
-    }, [transactionEntries, filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, apiGraphData.links]);
+    }, [
+        transactionEntries, 
+        filterSignatureOrSigner, 
+        filterMinTransfers, 
+        filterMaxTransfers, 
+        filterMinSwaps, 
+        filterMaxSwaps, 
+        filterMinDateTime,
+        filterMaxDateTime,
+        apiGraphData.links
+    ]);
     
     // Calculate paginated transactions
     const paginatedTransactions = useMemo(() => {
@@ -92,7 +119,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps]);
+    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, filterMinDateTime, filterMaxDateTime]);
     
     // Handle page navigation
     const goToPage = (page: number): void => {
@@ -113,6 +140,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         setFilterMaxTransfers('');
         setFilterMinSwaps('');
         setFilterMaxSwaps('');
+        setFilterMinDateTime(null);
+        setFilterMaxDateTime(null);
     };
 
     // Render transaction content based on data availability
@@ -224,13 +253,44 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                 <div className="text-lg font-semibold mb-3">Filters</div>
                 <div className="flex flex-wrap items-end gap-4">
                     <div className="flex-1 min-w-[200px]">
-                        <label className="block text-gray-400 mb-1">Signature or Signer Address</label>
+                        <label className="block text-gray-400 mb-1">Transaction Signature or Account Address</label>
                         <input
                             type="text"
-                            placeholder="Search by signature or signer address..."
+                            placeholder="Search by transaction signature or account address"
                             className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
                             value={filterSignatureOrSigner}
                             onChange={(e) => setFilterSignatureOrSigner(e.target.value)}
+                        />
+                    </div>
+                    {/* Add datetime filters */}
+                    <div className="w-64">
+                        <label className="block text-gray-400 mb-1">Min. Date & Time</label>
+                        <DatePicker
+                            selected={filterMinDateTime}
+                            onChange={(date) => setFilterMinDateTime(date)}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            timeCaption="Time"
+                            placeholderText="Select min datetime"
+                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                            calendarClassName="bg-gray-800 text-white"
+                        />
+                    </div>
+                    <div className="w-64">
+                        <label className="block text-gray-400 mb-1">Max. Date & Time</label>
+                        <DatePicker
+                            selected={filterMaxDateTime}
+                            onChange={(date) => setFilterMaxDateTime(date)}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            timeCaption="Time"
+                            placeholderText="Select max datetime"
+                            className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                            calendarClassName="bg-gray-800 text-white"
                         />
                     </div>
                     <div className="w-24">

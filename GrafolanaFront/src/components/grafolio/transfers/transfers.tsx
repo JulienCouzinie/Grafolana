@@ -1,5 +1,7 @@
 'use client'
 import React, { useState, useMemo, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { AddressLabel } from '@/components/metadata/address-label';
 import { AddressType } from '@/types/metadata';
@@ -31,7 +33,9 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterFrom, setFilterFrom] = useState<string>(''); // New filter for source address
   const [filterTo, setFilterTo] = useState<string>(''); // New filter for destination address
-  
+  const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
+  const [filterMaxDateTime, setFilterMaxDateTime] = useState<Date | null>(null);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(25);
@@ -116,6 +120,22 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         transfer.target_account_vertex.address.toLowerCase().includes(filterTo.toLowerCase())
       );
     }
+
+    // Minimum datetime filter
+    if (filterMinDateTime) {
+      result = result.filter(transfer => {
+        const transaction = apiGraphData.transactions[transfer.transaction_signature];
+        return transaction && transaction.timestamp >= filterMinDateTime.getTime();
+      });
+    }
+    
+    // Maximum datetime filter
+    if (filterMaxDateTime) {
+      result = result.filter(transfer => {
+        const transaction = apiGraphData.transactions[transfer.transaction_signature];
+        return transaction && transaction.timestamp <= filterMaxDateTime.getTime();
+      });
+    }
     
     // Then sort
     result.sort((a, b) => {
@@ -177,8 +197,20 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     });
     
     return result;
-  }, [transfers, filterText, filterType, filterFrom, filterTo, sortField, sortDirection, calculateUSDValue, apiGraphData.transactions]);
-  
+  }, [
+    transfers, 
+    filterText, 
+    filterType, 
+    filterFrom, 
+    filterTo, 
+    filterMinDateTime,
+    filterMaxDateTime,
+    sortField, 
+    sortDirection, 
+    calculateUSDValue, 
+    apiGraphData.transactions
+  ]);
+
   // Get only transfers for current page
   const paginatedTransfers = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -191,8 +223,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, filterType, filterFrom, filterTo, sortField, sortDirection]);
-
+  }, [filterText, filterType, filterFrom, filterTo, filterMinDateTime, filterMaxDateTime, sortField, sortDirection]);
+  
   // Handle sort change
   const handleSortChange = (field: string) => {
     if (sortField === field) {
@@ -215,6 +247,16 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     setPageSize(Number(event.target.value));
     setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  // Clear all filters
+  const clearFilters = (): void => {
+    setFilterText('');
+    setFilterType('all');
+    setFilterFrom('');
+    setFilterTo('');
+    setFilterMinDateTime(null);
+    setFilterMaxDateTime(null);
   };
 
   // Get unique transfer types for filter dropdown
@@ -330,7 +372,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         <div className="search flex-1 min-w-[200px]">
           <input
             type="text"
-            placeholder="Search transfers by account address, program address, transaction signature or mint address"
+            placeholder="Search by account, program, mint address or transaction signature"
             className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -368,6 +410,46 @@ export function Transfers({ apiGraphData }: TransfersProps) {
             value={filterTo}
             onChange={(e) => setFilterTo(e.target.value)}
           />
+        </div>
+        
+        {/* Add datetime filters */}
+        <div className="w-36">
+          <DatePicker
+            selected={filterMinDateTime}
+            onChange={(date) => setFilterMinDateTime(date)}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="yyyy-MM-dd HH:mm"
+            timeCaption="Time"
+            placeholderText="Min Date & Time"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+            calendarClassName="bg-gray-800 text-white"
+          />
+        </div>
+        
+        <div className="w-36">
+          <DatePicker
+            selected={filterMaxDateTime}
+            onChange={(date) => setFilterMaxDateTime(date)}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="yyyy-MM-dd HH:mm"
+            timeCaption="Time"
+            placeholderText="Max Date & Time"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+            calendarClassName="bg-gray-800 text-white"
+          />
+        </div>
+        
+        <div>
+          <button 
+            onClick={clearFilters}
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded border border-gray-600"
+          >
+            Clear Filters
+          </button>
         </div>
         
         {/* Page size selector */}
