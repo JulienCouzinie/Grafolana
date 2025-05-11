@@ -89,7 +89,9 @@ class FlowViewStrategy extends BaseViewStrategy {
    * Aligns the positions of nodes that share the same transaction signature in a grid-like structure.
    * So each transaction will have its node rendered in the same position.
    * This is useful for visualizing graph with multiple transactions
-   * The grid has a size x by x with x equals rootsquare(rootsquare) the total number of nodes
+   * The grid has a size x by x with x equals rootsquare the total number of nodes
+   * 
+   * The transaction are ordered by their block time before being assigned to the grid
    * @param nodes A
    * @returns 
    */
@@ -107,10 +109,15 @@ class FlowViewStrategy extends BaseViewStrategy {
     let xOffset = 0;
     let yOffset = 0;
 
-    console.log('Grid size:', gridSize);
-    console.log('Transaction map:', transactionMap);
+    // Order the transaction map by transaction block time
+    const orderedTransactionMap = Array.from(transactionMap.entries()).sort((a, b) => {
+      const aBlockTime = this.processedData.current.transactions[a[0]].timestamp;
+      const bBlockTime = this.processedData.current.transactions[b[0]].timestamp;
+      return aBlockTime - bBlockTime;
+    });
 
-    transactionMap.forEach((nodes, transactionSignature) => {
+    // Iterate over the ordered transaction map and assign positions
+    orderedTransactionMap.forEach(([transactionSignature, nodes]) => {
       // Calculate the position for each node in the grid
       // Each node of the same transaction will be rendered in the same position
       const x = xOffset * 2000;
