@@ -1571,8 +1571,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             );
         };
 
-        // TransferFilters component
-        const TransferFilters = () => {
+        // AmountsFilters component
+        const AmountsFilters = () => {
             // State for input values
             const [minSolAmount, setMinSolAmount] = React.useState<string>(this.minSolAmount.current.toString());
             const [maxSolAmount, setMaxSolAmount] = React.useState<string>(this.maxSolAmount.current?.toString() || '');
@@ -1648,7 +1648,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
             return (
                 <div style={containerStyle}>
-                    <h3 style={{ marginBottom: '12px' }}>Transfer Filters</h3>
+                    <h3 style={{ marginBottom: '12px' }}>Amounts Filters</h3>
                     
                     {/* SOL Amounts */}
                     <div style={fieldStyle}>
@@ -1770,7 +1770,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         return (
             <div className="strategy-panel-content">
                 <DateTimeFilters />
-                <TransferFilters />
+                <AmountsFilters />
                 {(strategyContent) ? strategyContent : ""}
             </div>
         );
