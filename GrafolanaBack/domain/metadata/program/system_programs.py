@@ -39,8 +39,8 @@ This program is particularly valuable for anyone interacting with SPL tokens, as
     "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s": {
         PROGRAM_ADDRESS: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
         LABEL: "Metaplex Token Metadata Program",
-        ICON: "https://solana.com/favicon.png",
-        WEBSITE: "https://solana.com/en",
+        ICON: "https://www.metaplex.com/images/favicon.png",
+        WEBSITE: "https://www.metaplex.com/",
         DESCRIPTION: 
 """The Metaplex Token Metadata Program is the Metaplex Token Metadata Program, which is one of the core programs in the Solana ecosystem. 
 It's the central program that manages metadata for Solana-based tokens and NFTs. 
