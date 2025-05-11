@@ -44,11 +44,11 @@ export function UiLayout({ children }: { children: ReactNode }) {
             <a href="https://github.com/JulienCouzinie/Grafolana" target="_blank" rel="noopener noreferrer" title="GitHub Repository">
               <img src="/github.png" alt="GitHub Repository" className="h-6 w-6" />
             </a>
-            <a href="https://github.com/JulienCouzinie/Grafolana/blob/master/README.md" target="_blank" rel="noopener noreferrer" title="Documentation">
-              <img src="/documentation.svg" alt="Readme" className="h-6 w-6" />
-            </a>
             <a href="https://t.me/Grafolana" target="_blank" rel="noopener noreferrer" title="Telegram Account">
               <img src="/telegram.png" alt="Telegram Account" className="h-6 w-6" />
+            </a>
+            <a href="https://github.com/JulienCouzinie/Grafolana/blob/master/README.md" target="_blank" rel="noopener noreferrer" title="Documentation">
+              <img src="/help.svg" alt="Readme" className="h-6 w-6" />
             </a>
           </div>
         </aside>
