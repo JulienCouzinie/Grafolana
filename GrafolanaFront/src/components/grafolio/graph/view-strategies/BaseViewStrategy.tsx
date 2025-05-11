@@ -65,6 +65,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     minDateTime: React.RefObject<Date|null>;
     maxDateTime: React.RefObject<Date|null>;
 
+    accountAddressesFilter: React.RefObject<Set<string>>;
+
     publicKey: PublicKey | null = null; // Public key of the connected wallet
 
     private processGraphDataCallBack: React.RefObject<((data:GraphData) => void) | null>;
@@ -117,8 +119,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         this.minDateTime = useRef<Date|null>(null);
         this.maxDateTime = useRef<Date|null>(null);
 
-        this.publicKey = publicKey;
+        this.accountAddressesFilter = useRef<Set<string>>(new Set());
 
+        this.publicKey = publicKey;
     }
 
     /**
@@ -212,6 +215,61 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 link.key = index + 1; // Reassign keys starting from 1
             });
         });
+    }
+
+    /**
+     * Add an account address to the filter list
+     * @param address - Account address to add
+     */
+    protected addAccountToFilter(address: string): void {
+        if (!address.trim()) return;
+        
+        // Convert to lowercase for case-insensitive matching
+        const normalizedAddress = address.trim();
+        
+        // Create a new Set to ensure reference changes for React
+        const updatedAddresses = new Set(this.accountAddressesFilter.current);
+        updatedAddresses.add(normalizedAddress);
+        this.accountAddressesFilter.current = updatedAddresses;
+    }
+
+    /**
+     * Remove an account address from the filter list
+     * @param address - Account address to remove
+     */
+    protected removeAccountFromFilter(address: string): void {
+        const updatedAddresses = new Set(this.accountAddressesFilter.current);
+        updatedAddresses.delete(address);
+        this.accountAddressesFilter.current = updatedAddresses;
+    }
+
+    /**
+     * Apply filter to show only links that involve specified accounts
+     * @param data - graph data to filter
+     */
+    protected ApplyAccountAddressesFilter(data: GraphData): void {
+        // If no account addresses specified, don't filter anything
+        if (this.accountAddressesFilter.current.size === 0) {
+            return;
+        }
+
+        // Filter links based on whether source or target account is in our filter list
+        data.links = data.links.filter((link) => {
+            const sourceAddress = link.source_account_vertex.address;
+            const targetAddress = link.target_account_vertex.address;
+            
+            return this.accountAddressesFilter.current.has(sourceAddress) || 
+                this.accountAddressesFilter.current.has(targetAddress);
+        });
+
+        this.pruneIsolatedNodes(data); // Remove isolated nodes after filtering links
+    }
+
+    /**
+     * Clear all account addresses from the filter
+     */
+    protected clearAccountsFilter(): void {
+        this.accountAddressesFilter.current.clear();
     }
 
     protected setMinDateTime(date: Date|null): void {
@@ -645,6 +703,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         // Apply TransactionClusterGroup filter
         this.ApplyTransactionClusterGroup(data);
+
+        // Apply account addresses filter
+        this.ApplyAccountAddressesFilter(data);
 
         // Apply date range filters
         this.ApplyDateFilters(data);
@@ -1767,9 +1828,162 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             );
         };
 
+        // New AccountsFilter component
+        const AccountsFilter = () => {
+            // Local state for the input field
+            const [newAccount, setNewAccount] = React.useState<string>('');
+            // Local state to track all accounts in the filter (for rendering)
+            const [accountsList, setAccountsList] = React.useState<string[]>(
+                Array.from(this.accountAddressesFilter.current)
+            );
+            
+            // Add an account to the filter
+            const handleAddAccount = (): void => {
+                if (!newAccount.trim()) return;
+                
+                this.addAccountToFilter(newAccount);
+                setAccountsList(Array.from(this.accountAddressesFilter.current));
+                setNewAccount(''); // Clear input
+                this.applyFilters(); // Apply the updated filter
+            };
+            
+            // Handle key press for input field (add on Enter)
+            const handleKeyPress = (e: React.KeyboardEvent): void => {
+                if (e.key === 'Enter') {
+                    handleAddAccount();
+                }
+            };
+            
+            // Remove an account from the filter
+            const handleRemoveAccount = (account: string): void => {
+                this.removeAccountFromFilter(account);
+                setAccountsList(Array.from(this.accountAddressesFilter.current));
+                this.applyFilters(); // Apply the updated filter
+            };
+            
+            // Clear all accounts from the filter
+            const handleClearAccounts = (): void => {
+                this.clearAccountsFilter();
+                setAccountsList([]);
+                this.applyFilters(); // Apply the updated filter
+            };
+            
+            // Common styles
+            const containerStyle = {
+                marginBottom: '16px'
+            };
+            
+            const buttonStyle = {
+                padding: '8px 16px',
+                backgroundColor: '#9945FF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '8px'
+            };
+            
+            const clearButtonStyle = {
+                ...buttonStyle,
+                backgroundColor: '#444'
+            };
+            
+            return (
+                <div style={containerStyle}>
+                    <h3 style={{ marginBottom: '12px' }}>Accounts Filter</h3>
+                    
+                    <div style={{ display: 'flex', marginBottom: '8px' }}>
+                        <input
+                            type="text"
+                            value={newAccount}
+                            onChange={(e) => setNewAccount(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Enter account address"
+                            className="bg-gray-700 text-white rounded border border-gray-600 p-2 flex-grow"
+                        />
+                        <button
+                            onClick={handleAddAccount}
+                            style={buttonStyle}
+                        >
+                            Add
+                        </button>
+                        
+                        {accountsList.length > 0 && (
+                            <button
+                                onClick={handleClearAccounts}
+                                style={clearButtonStyle}
+                            >
+                                Clear All
+                            </button>
+                        )}
+                    </div>
+                    
+                    {accountsList.length > 0 && (
+                        <div>
+                            <div style={{ marginBottom: '8px' }}>
+                                Filtering by these accounts ({accountsList.length}):
+                            </div>
+                            <div style={{
+                                maxHeight: '200px',
+                                overflowY: 'auto',
+                                backgroundColor: '#2A2A2A',
+                                border: '1px solid #444',
+                                borderRadius: '4px',
+                                padding: '8px'
+                            }}>
+                                {accountsList.map((account, index) => (
+                                    <div key={index} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '4px 0',
+                                        borderBottom: index < accountsList.length - 1 ? '1px solid #444' : 'none'
+                                    }}>
+                                        <div style={{ wordBreak: 'break-all', paddingRight: '8px' }}>
+                                            <AddressLabel
+                                                address={account}
+                                                data={this.originalData.current}
+                                                shortened={true}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => handleRemoveAccount(account)}
+                                            style={{
+                                                backgroundColor: 'transparent',
+                                                border: 'none',
+                                                color: '#FF6B6B',
+                                                cursor: 'pointer',
+                                                fontSize: '16px',
+                                                padding: '4px 8px'
+                                            }}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         return (
             <div className="strategy-panel-content">
                 <DateTimeFilters />
+                <div style={{
+                    height: 1,
+                    backgroundColor: '#444444',
+                    margin: '12px 0',
+                    width: '100%'
+                }} />
+                <AccountsFilter />
+                <div style={{
+                    height: 1,
+                    backgroundColor: '#444444',
+                    margin: '12px 0',
+                    width: '100%'
+                }} />
                 <AmountsFilters />
                 {(strategyContent) ? strategyContent : ""}
             </div>
