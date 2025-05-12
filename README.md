@@ -86,12 +86,14 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - List of Transfers
 
 
+
 ## Guide
 ### The Graph 
 #### Legend
 Legend of the differents colors used for drawing nodes:
 
 ![LEGEND](doc/legend.png)
+
 
 #### Indicators
 Some little icons serves as indicator for some contextual node's info.
@@ -100,6 +102,7 @@ A pool icon to showcase the swap's liquidity pools.
 A stake icon for .. stake accounts !
 
 ![Indicators](doc/indicators.png)
+
 
 #### Design Choices: Virtual Links & Nodes
 ##### Swaps
@@ -118,6 +121,8 @@ Swap will appear on the graph as a link with dotted style like the image above. 
 
 Note that you first need to expand the Swap Routers and/or Swap programs in the "General" section of the "Graph Controls" panel to be able to see the virtual swaps transfers.
 
+
+
 ##### Burn & MintTo
 ![Burn & MintTo](doc/burnminto.png)
 Burn & Minto will appear as actual transfer leading or pointing to a virtual account that represents either its destination: burn or its source: mintto.
@@ -125,6 +130,7 @@ Burn & Minto will appear as actual transfer leading or pointing to a virtual acc
 These nodes don't represents actual accounts and are just used to get a better view of what's happening while sticking to the graph's nodes/links concepts.
 
 As detailed in the screenshot here, a virtual burn account might be used as a swap source account when the swap requires burning some token: here its a Sanctum's PrefundWithdrawStake.
+
 
 ##### Fees
 ![Fees](doc/fees.png)
@@ -134,14 +140,18 @@ Hovering a fee account will show the total fee.
 In Transfer View, each fee account is tied to a transaction and will only show total fees for that transaction.
 In Accounts and Wallets Views: If multiple transaction are loaded in the graph the fee account will show the total fees of all the transactions.
 
+
 #### Interacting with the Graph
 There are many ways to interact with the graph with your mouse and keyboard.
+
 
 ##### Zoom IN/OUT
 You can zoom in and out off the graph by scrolling up or down using your mouse.
 
+
 ##### Move the graph
 Simply move the graph around by left click and drag with your mouse in the Graph's background.
+
 
 ##### Select Nodes/Links
 You can select Nodes and Links by simply clicking on them. 
@@ -149,17 +159,23 @@ Select multiple Nodes/Links by holding your keyboard's CTRL key.
 
 Contextual informations of the selected Nodes/Links will be available in the related section within "Graph Controls".
 
+
 ##### Fix the position of a Node
 You can fix the position of a Node by Drag&Dropping it while holding your keyboard's ALT key.
 You can also fix a Node's position by right clicking on it and selecting "Fix Position"
+
 
 ##### Node's contextual menu
 A contextual menu will offer you some options if you right click a Node.
 ![Node's contextual menu](doc/nodecontextmenu.png)
 
+
+
 #### Graph Controls
 ![Graph Controls](doc/graphcontrols.png)
+
 The left panels offers contextual informations and some options to control the graph.
+
 
 ##### Informations
 In this section you'll be able to see the current entities that have been loaded and analyzed.
@@ -167,9 +183,12 @@ Every time you "Add" a Transaction/Address/Block to the graph, its address will 
 
 ![infos](doc/infosection.png)
 
+
 ##### General Options
 ![General](doc/general.png)
+
 The General section offers some general options to hide/show certain types of Nodes/Links in the graph.
+
 
 ###### Hide Spam
 By default the system Hides spam transaction.
@@ -178,16 +197,18 @@ Hiding spam may result in an empty graph if all transactions are spam !
 Here is the difference for the same wallet:
 ![showhidespam](doc/hideshowspam.png)
 
+
 ###### Swap Routers
 Swaps Routing operation can sometimes represents complex graph structure.
 While being interesting they might not be always relevant for forensic analysis.
-Swap routing operating are collapsed by default, offering a better view of what's happening without encombering the view.
+Swap routing operations are collapsed by default, offering a better view of what's happening without encombering the view.
 
-It's possible to expand a swap router by right-clicking on the program's node with the "Expand Swap Program" option.
+It's possible to expand a swap route by right-clicking on the program's node with the "Expand Swap Program" option.
 Or Collapse/Expand all swaps router using the controls in the left panel.
 
 Here is the same transaction (3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu) with swap routers collapsed and expanded.
 ![routerexpandedcollapse](doc/routerexpandcollapse.png)
+
 
 ###### Swap Programs
 The same way as swap router "Collapse/Expand", you can control normal swap operation too using either right-clicking a node then "Expand Swap Program" or by using the left panel controls.
@@ -201,9 +222,11 @@ Some other usefull options to Hide/Show fees, Create & Close Accounts transfers.
 
 Fees are hidden by default to help with clarity.
 
-#### Filters
 
+
+#### Filters
 The Filters section add some simple filtering options to the graph.
+
 
 ##### Filter by Date & Time
 You can filter transfers by time using minimum and maximum datetime.
@@ -211,7 +234,7 @@ You can filter transfers by time using minimum and maximum datetime.
 ![date filters](doc/graphdatefilter.png)
 
 
-#### Filter by Accounts Addresses
+##### Filter by Accounts Addresses
 You can filter transfers by the account addresses involved.
 Setup a list of addresses by entering them one by one in the input field and clicking "Add" or just press the Enter key.
 
@@ -219,8 +242,8 @@ Remove addresses from the filter's list with the cross icon.
 
 ![account filter](doc/graphaccountfilter.png)
 
-##### Filter by Amounts
 
+##### Filter by Amounts
 You can filter transfers by the amounts involved.
 3 differents ways of filtering: 
  - by SOL
@@ -229,8 +252,8 @@ You can filter transfers by the amounts involved.
 
  ![amounts filters](doc/graphamountfilter.png)
 
-##### Transactions Clusters
 
+##### Transactions Clusters
 Each transaction is mapped into a [NetworkX](https://networkx.org/) graph.
 When fetching graph data for an account address, the engine is going to compare all the generated graph of each transactions together using an [isomorphism algorithm](https://networkx.org/documentation/stable/reference/algorithms/isomorphism.html).
 Two graph are considered isomorphic if they share the same shape of nodes and link.
@@ -244,6 +267,7 @@ These are actual spam transactions.
 Be carefull of the other filters activated as you might get an empty graph. Here I had to disable "Hide Spam" to actually see them.
 ![cluster](doc/cluster.png)
 
+
 ##### Selected Contextual Infos
 It's possible to select one or many Nodes / Links in the graph by clicking on them.
 Multiple selecting is done while holding CTRL key.
@@ -254,6 +278,7 @@ Informations related to the selected entities will show up in the control panel 
 Here the central node of this little cluster of spam transfers has been selected:
 
 ![selectednode](doc/selectednode.png)
+
 
 
 #### The View System
@@ -273,51 +298,52 @@ It's an arbitrage WSOL->WSOL :
 
 ##### Transfers View
 ![Transfers View](doc/transfersview.png)
+
 This is a Transfers Centric view.
 
-Each transaction has it's transfers mapped as Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
+Each transaction has it's transfers mapped using a Directed Acyclic Graph by versionning accounts to avoid cycles and offers a clear sequential view of the transfers executed by the transaction.
 Each link is a transfer and the number represents its order in the sequence.
 
 Each transaction will have its nodes grouped together.
-All transactions will appear as a grid pattern with the transactions being ordered by the timestamp starting from top left to bottom right.
+All transactions will appear as a grid pattern with the transactions being ordered by their timestamp starting from top left to bottom right.
 
 ![transfer view grid](doc/viewtransfergrid.png)
 
+
 ##### Accounts View
 ![Accounts View](doc/accountsview.png)
+
 This is an Accounts Centric view.
 
-Contrary to the Transfers View where accounts can appear multiple time in one graph here each node is unique. So cycles appear and we can clearly recognize an arbitrage here.
+Contrary to the Transfers View where accounts can appear multiple time in one graph, here each node is unique. So cycles appear and we can clearly recognize an arbitrage here.
 
 As mutliples transfer between the same two accounts can happen, they are aggretated but still appear while hovering a link in the "composites" section.
 Example here with a transfer fee aggreting both the FEE and PRIORITY FEE transfers:
 
 ![Fees Composite](doc/accountviewcompositelinks.png)
 
+
 ##### Wallets View
 ![Wallets View](doc/walletsview.png)
 This is a Wallet Centric View.
 
 Here Token accounts are aggregated behind the wallet's they belongs to.
-This allow for an even more simplified view best for showcasing the relation between the actual wallets owning these accounts.
+This allow for an even more simplified view best for showcasing the relationships between the actual wallets owning these accounts.
 
-As many token accounts can be "hidden" behing a wallet in this view, we can still see them by hoving a node :
+As many token accounts can be "hidden" behing a wallet in this view, we can still see them by hoving a node, or selecting the wallet by clicking on it and looking in the "Selected Nodes" panel:
 
 ![Composite Accounts](doc/walletviewcompositeacounts.png)
 
 
 
-
-
 ### Transfers Detection
-
 The transaction parser is able to detect a variety of transfers types by [parsing its instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py).
 In Solana, it's possible to transfer tokens using multiple different instructions.
 
 In this section we cover all the possible transfers you'll be able to find using this app.
 
-#### Normal Transfers
 
+#### Normal Transfers
 These are the "goto" instructions to transfer SOL or SPL Tokens.
 
 System Program's instructions:
@@ -327,8 +353,8 @@ Token Program's instructions:
     - transfer
     - transferChecked
 
-#### Creating accounts
 
+#### Creating accounts
 In solana, it's possible to transfer SOL by creating accounts.
 
 System Program's instructions:
@@ -339,8 +365,8 @@ Associated Token Account Program's instructions:
     - create
     - createIdempotent
 
-#### Closing Accounts
 
+#### Closing Accounts
 Closing an account allows to collect its rent-exempt. It's also classically used to unwrap WrappedSOL. In both cases Grafolana considers this instruction as an actual transfer.
 Closing an account is quite a difficult instruction to analyze as the getTransaction RPC API unfortunatly won't provide with the amount of lamports transfered.
 The only way is to track the account's balance throughout the transaction.
@@ -349,30 +375,30 @@ It's only an estimate as Solana Programs can natively send SOL without the need 
 Token Program's Instruction:
     - closeAccount
 
-#### Withdraw from Stake Accounts
 
+#### Withdraw from Stake Accounts
 Grafolana detects withdraws from stake accounts.
 
 Stake Program's instruction:
     - withdraw
 
-#### Splitting Stake Accounts
 
+#### Splitting Stake Accounts
 Grafolana detects stake accounts splitting as transfers too.
 
 Stake Program's instruction:
     - split
 
-#### Stake Account Ownership reassigments
 
+#### Stake Account Ownership reassigments
 Changing an account's owner is an actual way of transfering the balance to someone else. So Grafolana considers stake accounts ownership reassigments as actual transfers.
 It's done by granting the "Withdrawer" authorization to a wallet.
 
 Stake Program's instruction:
     - authorize
 
-#### Native Solana Transfer
 
+#### Native Solana Transfer
 As said previously, Solana allows programs to directly write data into accounts. Which means that Programs wan natively send SOL without needing to invoke the System Program. 
 It's quite an effective way to obfuscate SOL transfers.
 The only way to detect these in a transaction is by carefully tracking the balance changes of all involved accounts and infering possible Native Sol transfer by comparing the end result to the actual "post_balances" provided by the GetTransaction RPC API.
@@ -383,12 +409,8 @@ The Pump.fun program is one of them: the SELL instruction will actually send SOL
 
 
 
-
-
 ### Swap Detection Mechanisms
-
 #### Recognizing Swap Operations
-
 Grafolana uses different ways to properly recognize Swap Operations.
 It does so using data from a [config file](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py).
 
@@ -400,8 +422,8 @@ Then recognizes its different instructions by different indicators:
     - The value of a certain byte in the instruction's data
     - The last byte of the instruction's data
 
-#### Fetching The Details of a Swap Operation
 
+#### Fetching The Details of a Swap Operation
 Grafolana uses an heuristic approach to detect Swap operations and the amounts involved.
 
 Relying on the classic IDL and instruction's data parsing is costly and require a lot of reverse engineering as DEXes usually don't provide with their own IDL and data structures.
@@ -415,9 +437,7 @@ Then the [Swap Resolver Service](GrafolanaBack/domain/transaction/services/swap_
 
 
 
-
 ### Price Derivation System
-
 Estimating the USD price of any given SPL token at any given timestamp is quite a hard problem. Especially without paying for a reliable data source.
 In order to give an estimate USD price for SPL token transfers, the app uses a derivation mechanism.
 This derivation mechanism is based on the price's ratio of swap operations.
@@ -426,15 +446,16 @@ Reference coins are SOL, WSOL, USDC and USDT.
 The app fetches and stores SOL prices from binance API and stores them in the DB.
 Storing SOL prices in the DB is a necessity for obvious performances issues. Otherwise each transaction processed would necessitate one Binance API call which was proven to be highly inefficient.
 
-#### Price Updater Background Task
 
+#### Price Updater Background Task
 When deployed the app will run a background task that will constantly updates the SOL prices DB.
 It stores SOL prices down to the minute level for the past 4 years.
 On the first deployment the price updater background task will have to populate the DB with the entire SOL price's history for the past 4 years so it takes between 5-10 minutes for the app to be ready.
 Each subsequent deployments will just have to catch up which will just takes a couple of seconds.
 
-### Labelling entities
 
+
+### Labelling entities
 Grafolana offers an extended labelling system.
 
 Grafolana will always tries its best to label addresses.
@@ -450,8 +471,8 @@ Or by righ-clicking on any node in the Graph and selecting the "Rename Account" 
 
 User defined labels will only show up to that specific user.
 
-### Spam detection
 
+### Spam detection
 Grafolana maintains a list of known Spam addresses.
 We also call this "Account dusting".
 
@@ -469,6 +490,7 @@ You can decide to show this transactions by unchecking the "Hide spam" option in
 Spam addresses and transactions recognized as spam will have a "SPAM" marker next to them:
 ![spam mark](doc/spammark.png)
 
+
 #### Mark address as spam
 If you're connected to Grafolana using your wallet, you'll be able to mark addresses as spam.
 
@@ -482,23 +504,21 @@ Or by using the 3 dots menu on any addresses in the app:
 
 
 ## FAQ
-
 #### How do I add multiples transactions signatures/address to the graph?
-
 1. First load the graph with an address/signature
 2. Paste the second address in the field
 3. A new Button will appear: "ADD TO GRAPH"
 4. Click on "ADD TO GRAPH"
 
-#### The graph is empty, why ?
 
+#### The graph is empty, why ?
 An empty graph is a graph that has no transfers to show.
 Some transactions don't have any transfers associated to them and as such won't appear on the graph.
 
 Verify your Filter's settings and Hide/Show options in the "General" control panel.
 
-#### It takes very long to load a graph
 
+#### It takes very long to load a graph
 Yes, Solana Blockchain by nature makes it difficult to analyse transactions flow.
 Each transactions has to be fetched individually. Which takes time and is dependent on the RPC API endpoints rates limits you're using.
 Processing the transactions data to convert them to a graph takes time too.
@@ -507,8 +527,8 @@ The current live demo (https://grafolana.vercel.app/) uses 8 differents free tie
 
 Once a transaction has been fetched, it's save to the DB for faster retrieval
 
-#### I've found a bug
 
+#### I've found a bug
 YES !
 
 Please let me know by : [filling an issue](https://github.com/JulienCouzinie/Grafolana/issues/new)
@@ -516,7 +536,6 @@ Please let me know by : [filling an issue](https://github.com/JulienCouzinie/Gra
 
 
 ## Authors
-
 - [@JulienCouzinie](https://www.github.com/JulienCouzinie)
 
 
@@ -530,13 +549,12 @@ The app is accessible here
 
 
 ## Setup and Deployment
-
 ### Prerequisites
-
 #### Database
 - PostgreSQL
 
 You can use the [docker compose file](docker-compose.yml) to quickly spin up a PostgreSQL container.
+
 
 #### Backend
 - Python 3.10+
@@ -558,14 +576,17 @@ You can use the [docker compose file](docker-compose.yml) to quickly spin up a P
    - Flask-Compress==1.17
    - portalocker==3.1.1
 
+
+
 ### Front:
 - Node.js 18+
 - pnpm
 
-## SETUP
-#### Backend
-##### Environment Variables
 
+
+## SETUP
+### Backend
+#### Environment Variables
 Database Environment Variables :
 ```
 DB_USER=
@@ -628,7 +649,7 @@ You can define the vars in a .env file located at the root of the backend folder
 A .env example file is shared [here](GrafolanaBack/.env.example).
 
 
-##### Installation
+#### Installation
     First set PYTHONPATH to correct Path.
     The PYTHONPATH should be set to the root folder of the Grafolana Project.
     ```export PYTHONPATH=/f/path/to/root-folder-of-grafolana```
@@ -660,8 +681,8 @@ A .env example file is shared [here](GrafolanaBack/.env.example).
     python -m alembic upgrade head
     ```
 
-#### Frontend
-##### Environment Variables
+### Frontend
+#### Environment Variables
 Define your API route to your backend server.
 Ex for a local install:
 ```
@@ -672,7 +693,7 @@ You can define your Frontend env var with a .env.local file located in the Grafo
 
 You have an example [here](GrafolanaFront/.env.local.example): 
 
-##### Installation
+#### Installation
 
     1. Open frontend folder
     cd GrafolanaFront
@@ -687,9 +708,8 @@ You have an example [here](GrafolanaFront/.env.local.example):
 
 
 
-
-#### Deployment
-##### Backend
+## Deployment
+#### Backend
 On the first deployment the price updater background task will need to populate the DB with SOL prices for the past 4 years down to the minute level. It takes usually between 5-10 minutes to complete. So it's recommended to wait for the task to finish before starting using the app.
 On the next deployment the price updater will just have to catch up and it's going to be way faster.
 ```
@@ -697,15 +717,15 @@ cd GrafolanaBack
 flask run --host=0.0.0.0 --no-reload --no-debug
 ```
 
-##### Frontend:
+#### Frontend:
 ```
 cd GrafolanaFront
 pnpm start
 ```
 
 
-## Unit Tests & Integration Test
 
+## Unit Tests & Integration Test
 No.
 
 There are no tests for now. Didn't have time given the one month limit for the hackaton.
@@ -720,15 +740,14 @@ The actual tests files in the backend folders are actually just sandboxes I used
 
 
 ## Screenshots
-
 ![Graph](/doc/screenshot.png)
 ![Transations](doc/image.png)
 ![Accounts](doc/image02.png)
 ![Transfers](doc/image03.png)
 
 
-## Acknowledgements
 
+## Acknowledgements
  - [Solscan](https://solscan.io/) For providing the best Solana block explorer available. I spent hundreds hours lookings at transactions on their website. They are the best ! =)
  - [NetworkX](https://networkx.org/) Brilliant Python library for handling graph.
  - [React Force Graph](https://github.com/vasturiano/react-force-graph) Amazing React UI library to showcase graph using [D3 Force engine](https://d3js.org/) 
