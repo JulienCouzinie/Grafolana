@@ -1,3 +1,10 @@
+from dotenv import load_dotenv
+from GrafolanaBack.utils.path_utils import find_backend_root
+# Find the backend root directory and load .env file from there
+backend_root = find_backend_root()
+env_path = backend_root / '.env'
+load_dotenv(dotenv_path=env_path)
+
 import os
 from typing import List, Dict, Any, Optional
 from flask import Flask, request, jsonify
@@ -11,18 +18,13 @@ from GrafolanaBack.domain.spam.model import Creator
 from GrafolanaBack.domain.infrastructure.db.migration_service import check_and_run_migrations
 from solders.signature import Signature
 from solders.pubkey import Pubkey
-from dotenv import load_dotenv
 
-load_dotenv()
 CORS_DOMAIN = os.getenv("CORS_DOMAIN")
 PORT = int(os.getenv("PORT", 5000))
 
 app = Flask(__name__)
 application = app  # For WSGI compatibility
 handler = app  # For Vercel compatibility
-
-# Configure Flask to listen on all interfaces (0.0.0.0) - critical for Render deployment
-# app.config['SERVER_NAME'] = f"0.0.0.0:{PORT}"
 
 # Run database migrations if needed
 check_and_run_migrations()
@@ -44,7 +46,6 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
-
 
 compress = Compress()
 compress.init_app(app)

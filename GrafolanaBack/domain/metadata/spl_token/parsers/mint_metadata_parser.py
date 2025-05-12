@@ -18,7 +18,6 @@ from dotenv import load_dotenv
 # Constants
 METAPLEX_PROGRAM_ID = Pubkey.from_string("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
-load_dotenv()
 SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL")
 
 class SolanaTokenFetcher:

@@ -126,7 +126,6 @@ class SolanaTransactionFetcher:
     
     def _load_rpc_endpoints_from_env(self) -> List[EndpointConfig]:
         """Loads and parses RPC endpoints and their RPS limits from .env file."""
-        load_dotenv()
         endpoints_str = os.getenv("SOLANA_RPC_ENDPOINTS")
         if not endpoints_str:
             logger.error("SOLANA_RPC_ENDPOINTS not found in .env file or environment variables.")
