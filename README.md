@@ -507,11 +507,33 @@ Or by using the 3 dots menu on any addresses in the app:
 
 
 ## FAQ
-#### How do I add multiples transactions signatures/address to the graph?
+#### How do I add multiples transactions signatures or multiple accounts addresses to the graph?
+3 ways of doing so:
+
+
+##### From the input field
 1. First load the graph with an address/signature
 2. Paste the second address in the field
 3. A new Button will appear: "ADD TO GRAPH"
 4. Click on "ADD TO GRAPH"
+
+In this example screenshot I added a transaction first, then pasted an account address in the input field.
+![alt text](doc/addtograph.png)
+
+
+##### From the Draph
+Or you can expand the graph by right-clicking on a node in the graph and clicking "Expand Graph with Address". 
+This will load and analyze all transactions for this account and add the data to the actual Graph:
+
+![alt text](doc/Expandgraphwithaddress.png)
+
+You can also use the 3 dots menu on any address in the app and clicking on "Add Account Transactions to the Graph".
+
+
+#### From the 3 addresses contextual menu
+Or use the "3 dots" contextual menu on any addresses in the app.
+
+![alt text](doc/addaccounttograph.png)
 
 
 #### The graph is empty, why ?
