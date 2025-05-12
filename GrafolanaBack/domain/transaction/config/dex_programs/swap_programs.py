@@ -1464,7 +1464,6 @@ swap_programs_data = {
             # Transaction: 3mjjRUL7iydGqfq6jXtrGYyAUwBbKwujRYYQe9nuM5Q4bkb9XdpRrP5gZPHosCNkbnycTfuMAvZwhQMP1buC2dhD
             {
                 INSTRUCTION_NAME: "buy",
-                ACCOUNTS_LENGTH: 17,
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
@@ -1473,7 +1472,6 @@ swap_programs_data = {
             # Transaction: 5u8MgCn3rd9EJLGQDLej3tTEvZD1fgjR4ca3iS4ykC6Xdr2mMKa1VbsxHk4CPiCVRFFbvH9EwA2HdYLRM6mxGeZ7
             {
                 INSTRUCTION_NAME: "sell",
-                ACCOUNTS_LENGTH: 17,
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 8,
