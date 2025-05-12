@@ -125,6 +125,7 @@ Note that you first need to expand the Swap Routers and/or Swap programs in the 
 
 ##### Burn & MintTo
 ![Burn & MintTo](doc/burnminto.png)
+
 Burn & Minto will appear as actual transfer leading or pointing to a virtual account that represents either its destination: burn or its source: mintto.
 
 These nodes don't represents actual accounts and are just used to get a better view of what's happening while sticking to the graph's nodes/links concepts.
@@ -134,6 +135,7 @@ As detailed in the screenshot here, a virtual burn account might be used as a sw
 
 ##### Fees
 ![Fees](doc/fees.png)
+
 Fees paid during a transaction are shown as actual transfers, both regular and priority fees.
 To be able to stay consistent with the graph Node/Link pattern I decided to create virtual Fee accounts.
 Hovering a fee account will show the total fee. 
