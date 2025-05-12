@@ -1211,17 +1211,24 @@ export abstract class BaseViewStrategy implements ViewStrategy {
     getInfoContent(strategyContent:React.ReactNode=null): React.ReactNode {
 
         const Informations = () => {
-            const walletsAnalysedList = [...this.transactionProvider.fetchedWallets.values()];
-            const walletsAnalysed = walletsAnalysedList.map((wallet, index) => {
+            const accountsAnalysedList = [...this.transactionProvider.fetchedWalletsRef.current.values()];
+            const accountsAnalysed = accountsAnalysedList.map((account, index) => {
                 return <React.Fragment key={index}>
-                    <AddressLabel data={this.originalData.current}  address={wallet} shortened={true} /><br/>
+                    <AddressLabel data={this.originalData.current}  address={account} shortened={true} /><br/>
                 </React.Fragment>
             });
 
-            const transactionsAnalysedList = [...this.transactionProvider.fetchedTransactions.values()];
+            const transactionsAnalysedList = [...this.transactionProvider.fetchedTransactionsRef.current.values()];
             const transactionsAnalysed = transactionsAnalysedList.map((transaction, index) => {
                 return <React.Fragment key={index}>
                     <AddressLabel data={this.originalData.current}  address={transaction} shortened={true} /><br/>
+                </React.Fragment>
+            });
+
+            const blocksAnalysedList = [...this.transactionProvider.fetchedBlocksRef.current.values()];
+            const blocksAnalysed = blocksAnalysedList.map((block, index) => {
+                return <React.Fragment key={index}>
+                   {block}<br/>
                 </React.Fragment>
             });
 
@@ -1250,22 +1257,24 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 <div className="informations" style={{ marginTop: '16px' }}>
                     <h3>Entities analysed :</h3>
                     <div style={{ marginLeft: '8px' }}>
-                        Wallets ({walletsAnalysedList.length}):<br/>
-                        {walletsAnalysed}
-                        Transactions ({transactionsAnalysedList.length}):
-                        {transactionsAnalysed}
-                    </div>
-                    <br/><br/>
-                    <h3>Entities shown:</h3>
-                    <div style={{ marginLeft: '8px' }}>
-                        Transactions: {[...transactionsShown].length}/{transactionsOriginal.length}<br/>
-                        Nodes: {this.processedData.current.nodes.length}/{this.originalData.current.nodes.length}<br/>
-                        Links: {this.processedData.current.links.length}/{this.originalData.current.links.length}<br/>
+                        Accounts ({accountsAnalysedList.length}):<br/>
+                        {accountsAnalysed}<br/>
+                        Transactions ({transactionsAnalysedList.length}):<br/>
+                        {transactionsAnalysed}<br/>
+                        Blocks ({blocksAnalysedList.length}):<br/>
+                        {blocksAnalysed}<br/>
                     </div>
                 </div>
             );
-
         }
+        /**
+        <br/><br/>
+        <h3>Entities shown:</h3>
+        <div style={{ marginLeft: '8px' }}>
+            Transactions: {[...transactionsShown].length}/{transactionsOriginal.length}<br/>
+            Nodes: {this.processedData.current.nodes.length}/{this.originalData.current.nodes.length}<br/>
+            Links: {this.processedData.current.links.length}/{this.originalData.current.links.length}<br/>
+        </div> */
 
         return (
             <div className="strategy-panel-content">

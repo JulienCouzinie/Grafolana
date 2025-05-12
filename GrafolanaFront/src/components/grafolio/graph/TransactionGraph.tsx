@@ -12,6 +12,7 @@ import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 import { useMetadata } from '@/components/metadata/metadata-provider';
+import { useTransactions } from '@/components/transactions/transactions-provider';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -208,6 +209,13 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     }
   }, [viewMode]);
 
+  // Add effect to update Info content when new entities are fetched
+  useEffect(() => {
+    if (strategy) {
+      setInfoContent(strategy.getInfoContent())
+    }
+  }, [useTransactions().fetchedBlocks, useTransactions().fetchedWallets, useTransactions().fetchedTransactions]); 
+
   // Add effect to update Nodes info when selection changes
   useEffect(() => {
     if (strategy) {
@@ -396,6 +404,11 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
             <div className={`panel-content ${isPanelCollapsed ? 'hidden' : ''}`}>
               <h2 className="panel-title">Graph Controls</h2>
               <Accordion className="custom-accordion">
+                <AccordionItem title="Informations" defaultOpen={false}>
+                  <div className="accordion-content">
+                    {infoContent || <p>No informations available for this view</p>}
+                  </div>
+                </AccordionItem>
                 <AccordionItem title="General" defaultOpen={false}>
                   <div className="accordion-content">
                     {generalContent || <p>No general options available for this view</p>}
