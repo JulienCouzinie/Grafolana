@@ -103,9 +103,38 @@ Hovering a fee account will show the total fee.
 In Transfer View, each fee account is tied to a transaction and will only show total fees for that transaction.
 In Accounts and Wallets Views: If multiple transaction are loaded in the graph the fee account will show the total fees of all the transactions.
 
+#### Interacting with the Graph
+There are many ways to interact with the graph with your mouse and keyboard.
+
+##### Zoom IN/OUT
+You can zoom in and out off the graph by scrolling up or down using your mouse.
+
+##### Move the graph
+Simply move the graph around by left click and drag with your mouse in the Graph's background.
+
+##### Select Nodes/Links
+You can select Nodes and Links by simply clicking on them. 
+Select multiple Nodes/Links by holding your keyboard's CTRL key.
+
+Contextual informations of the selected Nodes/Links will be available in the related section within "Graph Controls".
+
+##### Fix the position of a Node
+You can fix the position of a Node by Drag&Dropping it while holding your keyboard's ALT key.
+You can also fix a Node's position by right clicking on it and selecting "Fix Position"
+
+##### Node's contextual menu
+A contextual menu will offer you some options if you right click a Node.
+![Node's contextual menu](doc/nodecontextmenu.png)
+
 #### Graph Controls
 ![Graph Controls](doc/graphcontrols.png)
 The left panels offers contextual informations and some options to control the graph.
+
+##### Informations
+In this section you'll be able to see the current entities that have been loaded and analyzed.
+Every time you "Add" a Transaction/Address/Block to the graph, its address will be show here.
+
+![infos](doc/infosection.png)
 
 ##### General Options
 ![General](doc/general.png)
@@ -372,6 +401,53 @@ When deployed the app will run a background task that will constantly updates th
 It stores SOL prices down to the minute level for the past 4 years.
 On the first deployment the price updater background task will have to populate the DB with the entire SOL price's history for the past 4 years so it takes between 5-10 minutes for the app to be ready.
 Each subsequent deployments will just have to catch up which will just takes a couple of seconds.
+
+### Labelling entities
+
+Grafolana offers an extended labelling system.
+
+Grafolana will always tries its best to label addresses.
+It will do so depending on its type: Mint, Wallet, Program,..
+
+System Programs and most DEXes are already defined and their label will show up instead of their address.
+Example here with Jupiter Aggregator program address:
+![Jup](doc/labelJup.png)
+
+Connected users are able to define their own label by renaming any addresses they want in the app.
+They can do so either by using the 3 dots menu on any addresses and selecting the "Rename Address" menu option.
+Or by righ-clicking on any node in the Graph and selecting the "Rename Account" menu option.
+
+User defined labels will only show up to that specific user.
+
+### Spam detection
+
+Grafolana maintains a list of known Spam addresses.
+We also call this "Account dusting".
+
+Some entities will spam your wallet by sending very small amounts of SOL/Token to your wallet.
+These transfers will then show up in your wallet's transactions. 
+The signers of these transactions often use a SOL Domain Name which will appear along with the transaction. 
+This is the blockchain equivalent of e-mail spam.
+
+They often clutter the user's wallet by adding a lot of useless transactions..
+
+Grafolana will hide these transactions by default using its maintained list of know spam addresses.
+
+You can decide to show this transactions by unchecking the "Hide spam" option in the "General" section of the "Graph Controls" left panel.
+
+Spam addresses and transactions recognized as spam will have a "SPAM" marker next to them:
+![spam mark](doc/spammark.png)
+
+#### Mark address as spam
+If you're connected to Grafolana using your wallet, you'll be able to mark addresses as spam.
+
+There are two ways of doing so:
+Either by right-clicking on a node in the graph and selecting the "Mark as spam" menu option.
+![markspammenu](doc/markasspammenu.png)
+
+Or by using the 3 dots menu on any addresses in the app:
+![markspam3dot](doc/markspamaddresslabel.png)
+
 
 
 ## FAQ

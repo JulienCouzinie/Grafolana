@@ -299,7 +299,7 @@ export function AddressLabel({
         action: "copy"
       },
       {
-        label: "Edit Label",
+        label: "Rename Address",
         action: "edit"
       }      
     ];
