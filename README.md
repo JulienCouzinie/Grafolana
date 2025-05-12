@@ -9,6 +9,37 @@ Designed with two core principles: simplicity and independence. Our forensic ana
 
 Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackathon/redacted/) in the [Solana Forensic Analysis Tool Category](https://earn.superteam.fun/listing/solana-forensic-analysis-tool/)
 
+## Table of Contents
+- [Features](#features)
+  - [Backend](#backend)
+  - [UI Graph](#ui-graph)
+  - [UI Lists](#ui-lists)
+- [Guide](#guide)
+  - [The Graph](#the-graph)
+    - [Legend](#legend)
+    - [Indicators](#indicators)
+    - [Design Choices: Virtual Links & Nodes](#design-choices-virtual-links--nodes)
+    - [Interacting with the Graph](#interacting-with-the-graph)
+    - [Graph Controls](#graph-controls)
+    - [Filters](#filters)
+    - [The View System](#the-view-system)
+  - [Transfers Detection](#transfers-detection)
+  - [Swap Detection Mechanisms](#swap-detection-mechanisms)
+  - [Price Derivation System](#price-derivation-system)
+  - [Labelling entities](#labelling-entities)
+  - [Spam detection](#spam-detection)
+- [FAQ](#faq)
+- [Authors](#authors)
+- [Demo](#demo)
+- [Setup and Deployment](#setup-and-deployment)
+  - [Prerequisites](#prerequisites)
+  - [SETUP](#setup)
+  - [Deployment](#deployment)
+- [Unit Tests & Integration Test](#unit-tests--integration-test)
+- [License](#license)
+- [Screenshots](#screenshots)
+- [Acknowledgements](#acknowledgements)
+- [Buy Me A Coffee](#buy-me-a-coffee-)
 
 ## Features
 
