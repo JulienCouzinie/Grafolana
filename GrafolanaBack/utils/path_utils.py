@@ -19,8 +19,7 @@ def find_backend_root() -> Path:
         if spec and spec.origin:
             # spec.origin points to a file within the package, get its parent directory
             package_path = Path(spec.origin).parent
-            # Go up one more level to get to the root that contains the GrafolanaBack folder
-            return package_path.parent
+            return package_path
     except (ImportError, AttributeError):
         pass
     
@@ -30,7 +29,7 @@ def find_backend_root() -> Path:
     # Look for a directory that contains "GrafolanaBack" in the path hierarchy
     for parent in current_path.parents:
         if parent.name == "GrafolanaBack":
-            return parent.parent
+            return parent
     
     # If we couldn't find the root directory, raise an exception
     raise RuntimeError("Could not locate the GrafolanaBack root directory. Please ensure "
