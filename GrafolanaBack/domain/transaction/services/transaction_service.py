@@ -4,6 +4,7 @@ import time
 from typing import Dict, List, Optional, Union, Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
+from solders.pubkey import Pubkey
 from solders.signature import Signature
 from solders.transaction_status import EncodedConfirmedTransactionWithStatusMeta
 from sqlalchemy.exc import SQLAlchemyError
@@ -110,11 +111,11 @@ class TransactionService:
         # Dictionary to store results
         results: Dict[str, Optional[EncodedConfirmedTransactionWithStatusMeta]] = {}
         
-        now = int(time.monotonic() * 1000)
+        #now = int(time.monotonic() * 1000)
         # First, check which transactions are already in the database
         db_transactions = self.transaction_repository.get_transactions_by_signatures(signature_strs)
-        timeittook = int(time.monotonic() * 1000) - now
-        logger.info(f"Time taken to fetch transactions: {timeittook} ms")
+        #timeittook = int(time.monotonic() * 1000) - now
+        #logger.info(f"Time taken to fetch transactions: {timeittook} ms")
 
 
         # Keep track of signatures that need to be fetched from RPC
@@ -206,6 +207,32 @@ class TransactionService:
             
         # Return the original results if no callback was provided
         return results
+    
+    def get_transactions_for_address(self, account_address: str, limit: int=1000) -> Dict[str, EncodedConfirmedTransactionWithStatusMeta | None]:
+        """
+        Get all transactions for a given address.
+        
+        Args:
+            address: The address to fetch transactions for
+            
+        Returns:
+            List of EncodedConfirmedTransactionWithStatusMeta objects
+        """
+        account_pubkey = Pubkey.from_string(account_address)
+        all_signatures = []
+        try:
+            all_signatures = client.get_signatures_for_address(account_pubkey, limit=limit).value
+        except Exception as e:
+            print(f"Error fetching signatures for {account_address}: {e}")
+            return None
+        
+        signatures = []
+        for sig in all_signatures:
+            signatures.append(sig.signature)
+        
+        transactions = self.get_transactions(signatures)
+
+        return transactions
     
     def _transform_db_transaction_to_encoded(
         self, 

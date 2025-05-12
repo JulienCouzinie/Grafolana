@@ -16,6 +16,7 @@ from GrafolanaBack.domain.transaction.services.transaction_parser_service import
 from GrafolanaBack.domain.spam.service import SpamService
 from GrafolanaBack.domain.spam.model import Creator
 from GrafolanaBack.domain.infrastructure.db.migration_service import check_and_run_migrations
+from GrafolanaBack.domain.transaction.services.transaction_service import TransactionService
 from solders.signature import Signature
 from solders.pubkey import Pubkey
 
@@ -52,6 +53,7 @@ compress.init_app(app)
 
 start_price_updater()  # Start the price updater in a separate thread
 
+transaction_service = TransactionService()
 transaction_parser_service = TransactionParserService()
 spam_service = SpamService()
 
@@ -62,6 +64,26 @@ def hello():
     Flask is working
 
   """
+
+@app.route('/api/get_transaction_json_from_address', methods=['POST'])
+def get_transaction_json_from_address():
+    account_address = request.json.get('account_address')
+    limit = request.json.get('limit', 1000)
+
+    if not account_address:
+        return jsonify({"error": "No account address provided"}), 400
+
+    try:
+        Pubkey.from_string(account_address)
+    except ValueError:
+        return jsonify({"error": "Invalid account address"}), 400
+    
+    transactions = transaction_service.get_transactions_for_address(account_address, limit)
+    transactions_json = {}
+    for sig,tx in transactions.items():
+        transactions_json[sig] = tx.to_json()
+        
+    return transactions_json
 
 @app.route('/api/get_transaction_from_signature', methods=['POST'])
 def get_transaction_from_signature():
