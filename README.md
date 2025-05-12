@@ -503,7 +503,7 @@ Yes, Solana Blockchain by nature makes it difficult to analyse transactions flow
 Each transactions has to be fetched individually. Which takes time and is dependent on the RPC API endpoints rates limits you're using.
 Processing the transactions data to convert them to a graph takes time too.
 
-The current live demo (https://grafolana.vercel.app/) uses 8 differents free tiers endpoints giving an average processing rate of 30 transactions per seconds.
+The current live demo (https://grafolana.vercel.app/) uses 8 differents free tiers endpoints, together with only 0.1 CPU using Render's free tiers, it achieves an average processing rate of 30 transactions per seconds.
 
 Once a transaction has been fetched, it's save to the DB for faster retrieval
 
