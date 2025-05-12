@@ -343,19 +343,16 @@ export function AddressLabel({
 
     // Add graph operation options based on address type and state
     if (isTransaction || isWallet) {
-      if (hasGraphData) {
-        // If graph already has data and address is not already fetched, show "Add to Graph"
-        if (!isAlreadyFetched) {
-          menuItems.push({
-            label: isTransaction ? "Add Transaction to Graph" : "Add Account Transactions to Graph",
-            action: "addToGraph"
-          });
-        }
-      } else {
-        // If graph is empty, show "Get Graph"
+      menuItems.push({
+        label: isTransaction ? "Get Transaction Graph" : "Get Account Graph",
+        action: "getGraph"
+      });
+
+      // If graph already has data and address is not already fetched, show "Add to Graph"
+      if (!isAlreadyFetched) {
         menuItems.push({
-          label: isTransaction ? "Get Transaction Graph" : "Get Account Graph",
-          action: "getGraph"
+          label: isTransaction ? "Add Transaction to Graph" : "Add Account to Graph",
+          action: "addToGraph"
         });
       }
     }
