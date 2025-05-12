@@ -616,8 +616,9 @@ SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},
 ```
 
 ##### Installation
-    First set PYTHONPATH to correct Path
-    ```export PYTHONPATH=/f/Développement/Python/Grafolana```
+    First set PYTHONPATH to correct Path.
+    The PYTHONPATH should be set to the root folder of the Grafolana Project.
+    ```export PYTHONPATH=/f/path/to/root-folder-of-grafolana```
 
     1. Open backend folder
 
