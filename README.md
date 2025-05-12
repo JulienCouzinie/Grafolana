@@ -498,6 +498,7 @@ If you're connected to Grafolana using your wallet, you'll be able to mark addre
 
 There are two ways of doing so:
 Either by right-clicking on a node in the graph and selecting the "Mark as spam" menu option.
+
 ![markspammenu](doc/markasspammenu.png)
 
 Or by using the 3 dots menu on any addresses in the app:
