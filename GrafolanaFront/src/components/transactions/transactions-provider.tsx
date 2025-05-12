@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, ReactNode, useState } from 'react';
 import { AccountVertex, GraphData, ForceGraphNode, ForceGraphLink, TransactionData } from '@/types/graph';
+import { useImmediateState } from '@/hooks/useImmediateState';
 
 // Define the context type that exposes both the graph data and getter methods
 export interface TransactionsContextType {
@@ -11,11 +12,15 @@ export interface TransactionsContextType {
     fetchedWallets: Set<string>;      // Expose the list of fetched wallet addresses
     fetchedBlocks: Set<number>;      // Expose the list of fetched blocks
 
+    fetchedTransactionsRef: React.RefObject<Set<string>>; // Expose the list of fetched transaction signatures
+    fetchedWalletsRef: React.RefObject<Set<string>>;      // Expose the list of fetched wallet addresses
+    fetchedBlocksRef: React.RefObject<Set<number>>;       // Expose the list of fetched blocks
+
+    getAccountGraphData: (account_address: string) => Promise<void>;
     getTransactionGraphData: (tx_signature: string) => Promise<void>;
-    getWalletGraphData: (wallet_signature: string) => Promise<void>;
     getBlockGraphData: (block_number: number) => Promise<void>;
 
-    addWalletGraphData: (tx_signature: string) => Promise<void>;
+    addAccountGraphData: (account_address: string) => Promise<void>;
     addTransactionGraphData: (tx_signature: string) => Promise<void>;
     addBlockGraphData: (block_number: number) => Promise<void>;
 
@@ -47,9 +52,9 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   });
 
   // Add state to track fetched transaction signatures and wallet addresses
-  const [fetchedTransactions, setFetchedTransactions] = useState<Set<string>>(new Set());
-  const [fetchedWallets, setFetchedWallets] = useState<Set<string>>(new Set());
-  const [fetchedBlocks, setFetchedBlocks] = useState<Set<number>>(new Set());
+  const [fetchedTransactions, fetchedTransactionsRef, setFetchedTransactions] = useImmediateState<Set<string>>(new Set());
+  const [fetchedWallets, fetchedWalletsRef, setFetchedWallets] = useImmediateState<Set<string>>(new Set());
+  const [fetchedBlocks, fetchedBlocksRef, setFetchedBlocks] = useImmediateState<Set<number>>(new Set());
   
   // Add loading state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -107,15 +112,15 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
   };
 
-  const getWalletGraphData = async (wallet_signature: string): Promise<void> => {
+  const getAccountGraphData = async (account_address: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ wallet_signature }),
+        body: JSON.stringify({ account_address: account_address }),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       let data: GraphData = await response.json();
@@ -123,7 +128,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setGraphData(data);
 
       // Reset tracking and add this wallet
-      setFetchedWallets(new Set([wallet_signature]));
+      setFetchedWallets(new Set([account_address]));
       setFetchedTransactions(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
@@ -168,21 +173,21 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
   };
 
-  const addWalletGraphData = async (wallet_signature: string): Promise<void> => {
+  const addAccountGraphData = async (account_address: string): Promise<void> => {
     // Skip if already fetched
-    if (fetchedWallets.has(wallet_signature)) {
-      console.log(`Wallet ${wallet_signature} already fetched, skipping`);
+    if (fetchedWallets.has(account_address)) {
+      console.log(`Account ${account_address} already fetched, skipping`);
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_wallet_graph_data', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ wallet_signature }),
+        body: JSON.stringify({ account_address: account_address }),
       });
       
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -225,7 +230,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       // Add this wallet to the fetched list
       setFetchedWallets(prev => {
         const updated = new Set(prev);
-        updated.add(wallet_signature);
+        updated.add(account_address);
         return updated;
       });
     } catch (error) {
@@ -380,11 +385,15 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     fetchedWallets,
     fetchedBlocks,
 
+    fetchedTransactionsRef,
+    fetchedWalletsRef,
+    fetchedBlocksRef,
+
     getTransactionGraphData,
-    getWalletGraphData,
+    getAccountGraphData,
     getBlockGraphData,
 
-    addWalletGraphData,
+    addAccountGraphData,
     addTransactionGraphData,
     addBlockGraphData,
 

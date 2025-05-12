@@ -50,11 +50,11 @@ class TransactionService:
         # Convert signature to string if it's a Signature object
         signature_str = str(signature)
 
-        now = int(time.monotonic() * 1000)
+        #now = int(time.monotonic() * 1000)
         # First, try to get from database
         db_transaction = self.transaction_repository.get_transaction(signature_str)
-        timeittook = int(time.monotonic() * 1000) - now
-        logger.info(f"Time taken to fetch transactions: {timeittook} ms")
+        #timeittook = int(time.monotonic() * 1000) - now
+        #logger.info(f"Time taken to fetch transactions: {timeittook} ms")
 
         if db_transaction:
             logger.debug(f"Transaction {signature_str[:10]}... found in database")

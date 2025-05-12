@@ -90,20 +90,20 @@ def get_transaction_graph_data_from_signature():
     
     return jsonify(graph_data)
 
-@app.route('/api/get_wallet_graph_data', methods=['POST'])
+@app.route('/api/get_account_graph_data', methods=['POST'])
 def get_wallet_graph_data_from_address():
-    wallet_signature = request.json.get('wallet_signature')
+    account_address = request.json.get('account_address')
 
-    if not wallet_signature:
-        return jsonify({"error": "No wallet address provided"}), 400
+    if not account_address:
+        return jsonify({"error": "No account address provided"}), 400
 
     try:
-        Pubkey.from_string(wallet_signature)
+        Pubkey.from_string(account_address)
     except ValueError:
-        return jsonify({"error": "Invalid wallet address"}), 400
+        return jsonify({"error": "Invalid account address"}), 400
 
     # Get the graph data
-    graph_data = transaction_parser_service.get_wallet_graph_data(wallet_signature)
+    graph_data = transaction_parser_service.get_account_graph_data(account_address)
     
     return jsonify(graph_data)
 

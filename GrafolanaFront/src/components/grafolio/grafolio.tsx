@@ -34,11 +34,11 @@ export default function Grafolio() {
     fetchedBlocks,
 
     getTransactionGraphData, 
-    getWalletGraphData, 
+    getAccountGraphData, 
     getBlockGraphData,
 
     addTransactionGraphData, 
-    addWalletGraphData,
+    addAccountGraphData,
     addBlockGraphData,
 
     isLoading // Add isLoading state from the TransactionsProvider
@@ -62,7 +62,7 @@ export default function Grafolio() {
       getTransactionGraphData(address);
     } else if (address.length == 44 || address.length == 43) {
       // It's likely a wallet address.current
-      getWalletGraphData(address);
+      getAccountGraphData(address);
     } else if (!isNaN(slot) && slot > 0) {
       // It's likely a block slot number
       getBlockGraphData(slot);
@@ -80,7 +80,7 @@ export default function Grafolio() {
       addTransactionGraphData(address);
     } else if (address.length == 44 || address.length == 43) {
       // It's likely a wallet address.current
-      addWalletGraphData(address);
+      addAccountGraphData(address);
     } else if (!isNaN(slot) && slot > 0) {
       // It's likely a block slot number
       addBlockGraphData(slot);

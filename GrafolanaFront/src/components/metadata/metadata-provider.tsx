@@ -4,7 +4,7 @@ import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spa
 import { createContext, useContext, useCallback, useState, useMemo, ReactNode, useEffect, useRef } from "react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos, fetchSpamAddresses } from "./fetchers";
-import { useImmediateState } from "@/hooks/useImmediateState";
+import { useImmediateMapState } from "@/hooks/useImmediateState";
 import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
 import { AccountType, ForceGraphNode } from "@/types/graph";
@@ -52,7 +52,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     setMints,            // for multiple updates
     deleteFromMints, 
     clearMints
-  ] = useImmediateState<string, MintDTO | null>(new Map());
+  ] = useImmediateMapState<string, MintDTO | null>(new Map());
   const [
     labelsState, 
     labelsRef, 
@@ -60,9 +60,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     setLabels,            // for multiple updates
     deleteFromLabels, 
     clearLabels
-  ] = useImmediateState<string, Label | null>(new Map());
+  ] = useImmediateMapState<string, Label | null>(new Map());
 
-  const [computedLabelsState, ComputedLabelsRef, setComputedLabel, setComputedLabels, deleteFromComputedLabels, clearComputedLabels] = useImmediateState(new Map<string, SimpleLabel>(new Map()));
+  const [computedLabelsState, ComputedLabelsRef, setComputedLabel, setComputedLabels, deleteFromComputedLabels, clearComputedLabels] = useImmediateMapState(new Map<string, SimpleLabel>(new Map()));
   const [
     programsState, 
     programsRef, 
@@ -70,7 +70,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     setPrograms,            // for multiple updates
     deleteFromPrograms, 
     clearPrograms
-  ] = useImmediateState<string, Program | null>(new Map());
+  ] = useImmediateMapState<string, Program | null>(new Map());
   
   const images = useRef(new Map<string, HTMLImageElement>());
   const canvas = useRef(new Map<string, HTMLCanvasElement>());

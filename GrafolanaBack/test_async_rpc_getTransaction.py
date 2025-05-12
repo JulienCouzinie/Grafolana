@@ -314,14 +314,14 @@ class Test_Get_Graph_Data(NoCacheUnitTest):
     def test_get_wallet_graph_data(self):
         transaction_service = TransactionParserService()
 
-        data = transaction_service.get_wallet_graph_data("CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX")
+        data = transaction_service.get_account_graph_data("CiW6tXBaqtStvuPfV2aYgMe6FjnzGSQcXwfiHEEG4iiX")
 
         print("Graph data:", data)
 
     def test_get_wallet_graph_data_thebenbig(self):
             transaction_service = TransactionParserService()
 
-            data = transaction_service.get_wallet_graph_data("7WcpfvZsfZzFUKx4enU4Qv7WNCU3Kv8TvJkHbxvYCgfR")
+            data = transaction_service.get_account_graph_data("7WcpfvZsfZzFUKx4enU4Qv7WNCU3Kv8TvJkHbxvYCgfR")
 
             print("Graph data:", data)
 

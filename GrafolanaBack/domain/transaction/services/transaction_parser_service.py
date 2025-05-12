@@ -196,19 +196,19 @@ class TransactionParserService:
         
         return graphdata
     
-    def get_wallet_graph_data(self, wallet_signature: str) -> Dict[str, Any]:
+    def get_account_graph_data(self, account_address: str) -> Dict[str, Any]:
         """
-        Get graph data for a wallet address.
+        Get graph data for an account address.
         
         Args:
-            wallet_signature: The wallet address
+            account_address: The account address
         
         Returns:
-            Dictionary containing the graph data for the wallet
+            Dictionary containing the graph data for the account
         """
         # now = int(time.monotonic() * 1000)
-        # Fetch the transaction signatures for the wallet
-        transaction_signatures = self.get_wallet_signatures(wallet_signature)
+        # Fetch the transaction signatures for the address
+        transaction_signatures = self.get_account_signatures(account_address)
         # timeittook = int(time.monotonic() * 1000) - now
         # logger.info(f"Time taken to get_wallet_signatures: {timeittook} ms")
         
@@ -218,15 +218,15 @@ class TransactionParserService:
         return all_graph_data
 
     
-    def get_wallet_signatures(self, user_wallet: str, start_time: int = None, end_time: int = None) -> List[str]:
+    def get_account_signatures(self, account_address: str, start_time: int = None, end_time: int = None) -> List[str]:
         """Scan a wallet for trade transactions within a time range."""
-        user_wallet_pubkey = Pubkey.from_string(user_wallet)
+        account_pubkey = Pubkey.from_string(account_address)
 
         all_signatures = []
         try:
-            all_signatures = client.get_signatures_for_address(user_wallet_pubkey, limit=1000).value
+            all_signatures = client.get_signatures_for_address(account_pubkey, limit=1000).value
         except Exception as e:
-            print(f"Error fetching signatures for {user_wallet}: {e}")
+            print(f"Error fetching signatures for {account_address}: {e}")
             return all_signatures
         
         if start_time is None or end_time is None:

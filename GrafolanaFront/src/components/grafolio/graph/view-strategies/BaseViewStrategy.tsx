@@ -1066,6 +1066,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         // Check if the node is currently fixed (has fx and fy properties)
         const isFixed = node.fx !== undefined && node.fy !== undefined;
 
+        // Check if this address is already in fetchedWallets
+        const addressAlreadyFetched = this.transactionProvider.fetchedWalletsRef.current.has(node.account_vertex.address);
+
         // Default context menu items available for all strategies
         const menuItems = [
             {
@@ -1079,8 +1082,31 @@ export abstract class BaseViewStrategy implements ViewStrategy {
             {
                 label: isFixed ? "Unfix Position" : "Fix Position",
                 action: "toggle_fix_position"
+            },
+            {
+                label: "View in Explorer",
+                action: "view_in_explorer"
             }
         ];
+
+        // Add address graph options - change the logic for showing options
+        if (addressAlreadyFetched) {
+            // If already fetched, only show the "Get Graph for Address" option
+            menuItems.push({
+                label: "Get Graph for Address",
+                action: "get_address_graph"
+            });
+        } else {
+            // If not fetched yet, show both options
+            menuItems.push({
+                label: "Get Graph for Address",
+                action: "get_address_graph"
+            });
+            menuItems.push({
+                label: "Expand Graph with Address",
+                action: "expand_address_graph"
+            });
+        }
         
         // Add "Collapse Swap Program" option only for program accounts
         if (node.type === AccountType.PROGRAM_ACCOUNT) {
@@ -1150,6 +1176,18 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                 if (node.type === AccountType.PROGRAM_ACCOUNT) {
                     this.ExpandSwapProgram(node);
                 }
+                break;
+            case "view_in_explorer":
+                // Open the account in Solscan
+                window.open(`https://solscan.io/account/${node.account_vertex.address}`, '_blank');
+                break;
+            case "get_address_graph":
+                // Get new graph data for this address
+                this.transactionProvider.getAccountGraphData(node.account_vertex.address);
+                break;
+            case "expand_address_graph":
+                // Add this address's transactions to existing graph
+                this.transactionProvider.addAccountGraphData(node.account_vertex.address);
                 break;
             case "mark_spam":
                     this.metadataServices.addToSpam(node.account_vertex.address).then((spam) => {

@@ -136,14 +136,11 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     if (strategy) {
       graphDataCache.current[viewMode] = graphData;
     }
-    
   }, [graphData]); // Re-run when data changes
 
-  
   // Add an effect to reposition the graph
   // so that it fits the new data
   useEffect(() => {
-    
     if (strategy) {
       strategy.positionNodes();
       if (graphData.nodes.length != 0) {
@@ -151,10 +148,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
           fgRef.current?.zoomToFit(400);
           fgRef.current?.zoomToFit(400);
         }, 1000);
-        
       }
     }
-    
   }, [graphData]); // Re-run when data changes
 
   // Add an effect to properly initialize and configure the force simulation

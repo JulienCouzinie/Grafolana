@@ -77,9 +77,9 @@ export function AddressLabel({
     fetchedTransactions, 
     fetchedWallets, 
     getTransactionGraphData, 
-    getWalletGraphData, 
+    getAccountGraphData, 
     addTransactionGraphData, 
-    addWalletGraphData 
+    addAccountGraphData 
   } = useTransactions();
 
   // Function to determine address type and if it's already fetched
@@ -275,7 +275,7 @@ export function AddressLabel({
     if (isTransaction) {
       getTransactionGraphData(address);
     } else if (isWallet) {
-      getWalletGraphData(address);
+      getAccountGraphData(address);
     }
     closeContextMenu();
   };
@@ -286,7 +286,7 @@ export function AddressLabel({
     if (isTransaction) {
       addTransactionGraphData(address);
     } else if (isWallet) {
-      addWalletGraphData(address);
+      addAccountGraphData(address);
     }
     closeContextMenu();
   };
@@ -347,7 +347,7 @@ export function AddressLabel({
         // If graph already has data and address is not already fetched, show "Add to Graph"
         if (!isAlreadyFetched) {
           menuItems.push({
-            label: isTransaction ? "Add Transaction to Graph" : "Add Account to Graph",
+            label: isTransaction ? "Add Transaction to Graph" : "Add Account Transactions to Graph",
             action: "addToGraph"
           });
         }
