@@ -19,6 +19,7 @@ var/
 .installed.cfg
 *.egg
 .env*.local
+.env
 .venv
 venv/
 ENV/
