@@ -594,6 +594,15 @@ Ex:
 PORT=1234
 ```
 
+
+For the CORS to work properly you need to define the accepted CORS DOMAIN.
+This is the domain name and port where the front-end will be running.NEXT_PUBLIC_BACKEND_URL
+Example if running on local machine:
+
+```
+CORS_DOMAIN=http://localhost:3000
+```
+
 Some RPC calls uses single rpc endpoint, define here your main rpc endpoint
 ```
 SOLANA_RPC_URL=https://your.rpc-endpoint.com
@@ -604,7 +613,7 @@ Each RPC endpoint should follow the format [URL]:[MAX-RATE-LIMIT-PER-SECOND]
 Ex: 
 ```
 HELIUS=https://mainnet.helius-rpc.com/?YOUR-HELIUS-API-KEY:5
-QUICKNODE=https://YOUR-QUICKNODE-API-KEY.solana-mainnet.quiknode.pro/237ced2cfac7e190db7119d5536660c71b57de48:15
+QUICKNODE=https://YOUR-QUICKNODE-API-KEY.solana-mainnet.quiknode.pro/YOUR-QUICKNODE-API-KEY:15
 ALCHEMY=https://solana-mainnet.g.alchemy.com/v2/YOUR-ALCHEMY-API-KEY:25
 SYNDICA=https://solana-mainnet.api.syndica.io/api-key/YOUR-SYNDICA-API-KEY:15
 CHAINSTACK=https://solana-mainnet.core.chainstack.com/YOUR-CHAINSTACK-API-KEY:2
@@ -614,6 +623,10 @@ SHYFT=https://rpc.shyft.to?api_key=YOUR-PUBLICNODE-API-KEY:25
 
 SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},${W3NODE},${PUBLICNODE},${SHYFT}
 ```
+
+You can define the vars in a .env file located at the root of the backend folder GrafolanaBack.
+A .env example file is shared [here](GrafolanaBack/.env.example).
+
 
 ##### Installation
     First set PYTHONPATH to correct Path.
@@ -654,6 +667,10 @@ Ex for a local install:
 ```
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
 ```
+
+You can define your Frontend env var with a .env.local file located in the GrafolanaFront folder.
+
+You have an example [here](GrafolanaFront/.env.local.example): 
 
 ##### Installation
 
