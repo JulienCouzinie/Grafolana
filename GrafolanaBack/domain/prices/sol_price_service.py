@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Optional, Tuple, Union
 import requests
 from sqlalchemy.orm import Session
@@ -11,6 +12,7 @@ from GrafolanaBack.domain.logging.logging import logger
 # Create a persistent session for reuse to avoid connection overhead
 _session = requests.Session()
 
+BINANCE_API_URL = os.getenv("BINANCE_API_URL")
 
 class SOLPriceService:
     """
@@ -139,7 +141,7 @@ class SOLPriceService:
         Returns:
             The SOL price or None if not available
         """
-        url: str = f"https://api.binance.com/api/v3/klines?symbol=SOLUSDT&interval=1m&startTime={timestamp}&limit=1"
+        url: str = f"{BINANCE_API_URL}/v3/klines?symbol=SOLUSDT&interval=1m&startTime={timestamp}&limit=1"
         headers: Dict[str, str] = {"accept": "application/json"}
         
         try:

@@ -13,6 +13,8 @@ from GrafolanaBack.domain.prices.repository import SOLPriceRepository
 from GrafolanaBack.domain.infrastructure.db.session import get_session
 from GrafolanaBack.domain.logging.logging import logger
 
+BINANCE_API_URL = os.getenv("BINANCE_API_URL")
+
 # Create a persistent session for reuse
 _session = requests.Session()
 
@@ -45,7 +47,7 @@ def fetch_sol_price_batch(start_time: int, end_time: int) -> List[Tuple[int, flo
     Returns:
         List of tuples containing (timestamp, price)
     """
-    url = f"https://api.binance.com/api/v3/klines?symbol=SOLUSDT&interval=1m&startTime={start_time}&endTime={end_time}&limit=1000"
+    url = f"{BINANCE_API_URL}/v3/klines?symbol=SOLUSDT&interval=1m&startTime={start_time}&endTime={end_time}&limit=1000"
     headers = {"accept": "application/json"}
     
     try:

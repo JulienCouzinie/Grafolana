@@ -643,6 +643,8 @@ PORT=1234
 
 For the CORS to work properly you need to define the accepted CORS DOMAIN.
 This is the domain name and port where the front-end will be running.NEXT_PUBLIC_BACKEND_URL
+Be sure to NOT include a slash '/' at the end of the URL as this could cause CORS to refuse your requests.
+
 Example if running on local machine:
 
 ```
@@ -668,6 +670,15 @@ PUBLICNODE=https://solana-rpc.publicnode.com:10
 SHYFT=https://rpc.shyft.to?api_key=YOUR-PUBLICNODE-API-KEY:25
 
 SOLANA_RPC_ENDPOINTS=${HELIUS},${QUICKNODE},${ALCHEMY},${SYNDICA},${CHAINSTACK},${W3NODE},${PUBLICNODE},${SHYFT}
+```
+
+Binance API URL.
+The pricing system uses Binance's Kline API.
+Servers located in the USA need to use the URL with ".us" domain (https://api.binance.us/api)
+If you have some restrictions with the .us domain, you can use the URL with ".com" domain (https://api.binance.com/api) 
+Ex:
+```
+BINANCE_API_URL=https://api.binance.us/api
 ```
 
 You can define the vars in a .env file located at the root of the backend folder GrafolanaBack.
