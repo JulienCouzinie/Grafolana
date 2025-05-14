@@ -33,7 +33,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     const [filterMaxSwaps, setFilterMaxSwaps] = useState<string>('');
     const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
     const [filterMaxDateTime, setFilterMaxDateTime] = useState<Date | null>(null);
-    const [hideSpam, setHideSpam] = useState<boolean>(false); 
+    const [hideSpam, setHideSpam] = useState<boolean>(false);
+    const [hideFailedTransactions, setHideFailedTransactions] = useState<boolean>(false);
 
     // Check if the transaction is spam by checking if one of its signers is a known spam address
     const isTransactionSpamCheck = useCallback((signature: string): boolean => { 
@@ -55,6 +56,11 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         return transactionEntries.filter(([signature, txData]) => {
             // Hide spam transactions if toggle is active
             if (hideSpam && isTransactionSpamCheck(signature)) {
+                return false;
+            }
+
+            // Hide failed transactions if toggle is active
+            if (hideFailedTransactions && txData.err) {
                 return false;
             }
             
@@ -122,7 +128,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         filterMaxDateTime,
         apiGraphData.links,
         hideSpam,
-        isTransactionSpamCheck 
+        isTransactionSpamCheck,
+        hideFailedTransactions
     ]);
     
     // Calculate paginated transactions
@@ -137,7 +144,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, filterMinDateTime, filterMaxDateTime, hideSpam]);
+    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, filterMinDateTime, filterMaxDateTime, hideSpam, hideFailedTransactions]);
 
     // Handle page navigation
     const goToPage = (page: number): void => {
@@ -161,6 +168,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         setFilterMinDateTime(null);
         setFilterMaxDateTime(null);
         setHideSpam(false);
+        setHideFailedTransactions(false);
     };
 
     // Render transaction content based on data availability
@@ -375,18 +383,34 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                         </button>
                     </div>
                 </div>
-                {/* Add spam filter toggle */}
-                <div className="flex items-center">
-                    <input
-                        id="hideSpamToggle"
-                        type="checkbox"
-                        className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
-                        checked={hideSpam}
-                        onChange={(e) => setHideSpam(e.target.checked)}
-                    />
-                    <label htmlFor="hideSpamToggle" className="text-gray-400">
-                        Hide spam transactions
-                    </label>
+                {/* Container for the filter toggles */}
+                <div className="flex flex-row mt-4">
+                    {/* Add spam filter toggle */}
+                    <div className="flex items-center">
+                        <input
+                            id="hideSpamToggle"
+                            type="checkbox"
+                            className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                            checked={hideSpam}
+                            onChange={(e) => setHideSpam(e.target.checked)}
+                        />
+                        <label htmlFor="hideSpamToggle" className="text-gray-400">
+                            Hide spam transactions
+                        </label>
+                    </div>
+                    {/* Add failed transactions filter toggle */}
+                    <div className="flex items-center ml-6">
+                        <input
+                            id="hideFailedToggle"
+                            type="checkbox"
+                            className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                            checked={hideFailedTransactions}
+                            onChange={(e) => setHideFailedTransactions(e.target.checked)}
+                        />
+                        <label htmlFor="hideFailedToggle" className="text-gray-400">
+                            Hide failed transactions
+                        </label>
+                    </div>
                 </div>
             </div>
 
