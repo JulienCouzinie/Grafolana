@@ -106,7 +106,7 @@ A stake icon for .. stake accounts !
 
 #### Design Choices: Virtual Links & Nodes
 ##### Swaps
-![Swaps](GrafolanaFront/public/swap.png)
+![Swaps](GrafolanaFront/doc/swap.png)
 
 When swaps are recognized by the system a virtual swap transfer representing the swap is added to the graph.
 It allows to connect accounts together by this programmatic relationship.
@@ -295,7 +295,7 @@ The 3 differents views offer different use cases depending on your needs.
 Let's take an example with this transaction that covers a lot of use cases.
 It's an arbitrage WSOL->WSOL :
 ```
-3vzGCmAaLkCBMm2Yk6jNyyWeApcd7YBevTRwWKEUeRZG2KeVYw3NE3pmMBbzY7CMqEZf9MgPJG8qXbHzdqC5A8iu
+39RqjuEJ4FebTht5zwiEG1qabTfFYmb9axMKUX9PpwvMpdZDJDq5CjejYSBHdSdzYhfJeBpNzhaWNCYNKPW9RTxE
 ```
 
 ##### Transfers View
