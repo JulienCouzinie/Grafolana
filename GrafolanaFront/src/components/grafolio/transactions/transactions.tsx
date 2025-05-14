@@ -1,6 +1,6 @@
 'use client'
 
-import React, { JSX, useState, useMemo, useEffect } from 'react';
+import React, { JSX, useState, useMemo, useEffect, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { GraphData } from '@/types/graph';
@@ -33,6 +33,17 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     const [filterMaxSwaps, setFilterMaxSwaps] = useState<string>('');
     const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
     const [filterMaxDateTime, setFilterMaxDateTime] = useState<Date | null>(null);
+    const [hideSpam, setHideSpam] = useState<boolean>(false); 
+
+    // Check if the transaction is spam by checking if one of its signers is a known spam address
+    const isTransactionSpamCheck = useCallback((signature: string): boolean => { 
+        const txData = apiGraphData.transactions[signature];
+        if (!txData || !txData.signers || txData.signers.length === 0) {
+            return false;
+        }
+        // Check if any signer is in the spam list
+        return txData.signers.some(signer => metadataServices.isSpam(signer));
+    }, [apiGraphData, metadataServices.isSpam]);
 
     // Create array of transactions from the object
     const transactionEntries = useMemo(() => {
@@ -42,6 +53,11 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Apply filters to transactions
     const filteredTransactions = useMemo(() => {
         return transactionEntries.filter(([signature, txData]) => {
+            // Hide spam transactions if toggle is active
+            if (hideSpam && isTransactionSpamCheck(signature)) {
+                return false;
+            }
+            
             // Signature or Signer filter
             if (filterSignatureOrSigner) {
                 const lowerCaseFilter = filterSignatureOrSigner.toLowerCase();
@@ -104,7 +120,9 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         filterMaxSwaps, 
         filterMinDateTime,
         filterMaxDateTime,
-        apiGraphData.links
+        apiGraphData.links,
+        hideSpam,
+        isTransactionSpamCheck 
     ]);
     
     // Calculate paginated transactions
@@ -119,8 +137,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, filterMinDateTime, filterMaxDateTime]);
-    
+    }, [filterSignatureOrSigner, filterMinTransfers, filterMaxTransfers, filterMinSwaps, filterMaxSwaps, filterMinDateTime, filterMaxDateTime, hideSpam]);
+
     // Handle page navigation
     const goToPage = (page: number): void => {
         const validPage = Math.max(1, Math.min(page, totalPages));
@@ -142,6 +160,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         setFilterMaxSwaps('');
         setFilterMinDateTime(null);
         setFilterMaxDateTime(null);
+        setHideSpam(false);
     };
 
     // Render transaction content based on data availability
@@ -345,6 +364,19 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             Clear Filters
                         </button>
                     </div>
+                </div>
+                {/* Add spam filter toggle */}
+                <div className="flex items-center">
+                    <input
+                        id="hideSpamToggle"
+                        type="checkbox"
+                        className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                        checked={hideSpam}
+                        onChange={(e) => setHideSpam(e.target.checked)}
+                    />
+                    <label htmlFor="hideSpamToggle" className="text-gray-400">
+                        Hide spam transactions
+                    </label>
                 </div>
             </div>
 
