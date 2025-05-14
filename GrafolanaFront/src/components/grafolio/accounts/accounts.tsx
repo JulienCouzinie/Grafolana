@@ -58,8 +58,8 @@ export function Accounts({ apiGraphData }: AccountsProps) {
         // Get most specific type for the account
         // Some accounts will have different types in different transactions
         // This is because the type is inferred heuristically in backend
-        // We keep anything different from SOL_ACCOUNT
-        } else if (accountsMap.get(account.address)?.type === AccountType.SOL_ACCOUNT && accountsMap.get(account.address)?.type !== account.type) {
+        // We keep anything different from WALLET_ACCOUNT
+        } else if (accountsMap.get(account.address)?.type === AccountType.WALLET_ACCOUNT && accountsMap.get(account.address)?.type !== account.type) {
           accountsMap.get(account.address)!.type = account.type;
         }
       });
@@ -172,7 +172,7 @@ export function Accounts({ apiGraphData }: AccountsProps) {
             onChange={(e) => setFilterType(e.target.value)}
           >
             <option value="all">All Types</option>
-            <option value={AccountType.SOL_ACCOUNT}>SOL</option>
+            <option value={AccountType.WALLET_ACCOUNT}>SOL</option>
             <option value={AccountType.TOKEN_ACCOUNT}>Token</option>
             <option value={AccountType.TOKEN_MINT_ACCOUNT}>Mint</option>
             <option value={AccountType.PROGRAM_ACCOUNT}>Program</option>

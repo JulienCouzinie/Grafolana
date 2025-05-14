@@ -842,7 +842,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         const nodeSize = isHovered ? 14 : 8;
 
         let nodeColor;
-        if (node.type == AccountType.SOL_ACCOUNT) {
+        if (node.type == AccountType.WALLET_ACCOUNT) {
             nodeColor = COLORS.lightgray;
         } else if (node.type == AccountType.PROGRAM_ACCOUNT) {
             nodeColor = COLORS.blue;

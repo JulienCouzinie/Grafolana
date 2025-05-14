@@ -182,7 +182,7 @@ class FlowViewStrategy extends BaseViewStrategy {
       : '';
 
     let ownerInfo = '';
-    if (node.type !== AccountType.SOL_ACCOUNT 
+    if (node.type !== AccountType.WALLET_ACCOUNT 
       && node.type !== AccountType.PROGRAM_ACCOUNT
       && node.type !== AccountType.FEE_ACCOUNT
       && node.type !== AccountType.BURN_ACCOUNT
@@ -332,7 +332,7 @@ class FlowViewStrategy extends BaseViewStrategy {
 
         const OwnerInfo = () => {
           // Only render owner info for specific account types
-          if (node.type === AccountType.SOL_ACCOUNT 
+          if (node.type === AccountType.WALLET_ACCOUNT 
             || node.type === AccountType.PROGRAM_ACCOUNT
             || node.type === AccountType.FEE_ACCOUNT
             || node.type === AccountType.BURN_ACCOUNT

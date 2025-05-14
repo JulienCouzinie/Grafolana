@@ -14,7 +14,7 @@ class AccountType(str, Enum):
     TOKEN_MINT_ACCOUNT = "TOKEN_MINT_ACCOUNT"
     STAKE_ACCOUNT = "STAKE_ACCOUNT"
     TOKEN_ACCOUNT = "TOKEN_ACCOUNT" 
-    SOL_ACCOUNT = "SOL_ACCOUNT"
+    WALLET_ACCOUNT = "WALLET_ACCOUNT"
     FEE_ACCOUNT = "FEE_ACCOUNT"
     PROGRAM_ACCOUNT = "PROGRAM_ACCOUNT"
     UNKNOWN = "UNKNOWN"
@@ -40,9 +40,9 @@ class Account:
         return self.type == AccountType.TOKEN_ACCOUNT
     
     @property
-    def is_sol_account(self) -> bool:
-        """Check if this is a native SOL account"""
-        return self.type == AccountType.SOL_ACCOUNT and self.mint_address == SOL
+    def is_wallet_account(self) -> bool:
+        """Check if this is a native Wallet account"""
+        return self.type == AccountType.WALLET_ACCOUNT and self.mint_address == SOL
     
     @property
     def is_system_account(self) -> bool:

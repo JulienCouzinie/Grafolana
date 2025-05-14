@@ -491,7 +491,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       nodeGraphic = {image: programImg, canvas: programCanvas};
     } else if (type === AccountType.FEE_ACCOUNT) {
       nodeGraphic = staticGraphic.fee;
-    } else if (type == AccountType.SOL_ACCOUNT || type == AccountType.STAKE_ACCOUNT) {
+    } else if (type == AccountType.WALLET_ACCOUNT || type == AccountType.STAKE_ACCOUNT) {
       nodeGraphic = staticGraphic.wallet;
     } else {
       const img = getMintImage(mintInfo?.image);

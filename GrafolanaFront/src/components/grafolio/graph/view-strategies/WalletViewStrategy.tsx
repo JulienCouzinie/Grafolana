@@ -87,7 +87,7 @@ class WalletViewStrategy extends BaseViewStrategy {
   private getWalletAddress(node: ForceGraphNode): string {
     let address;
     
-    if (node.type==AccountType.SOL_ACCOUNT || node.type==AccountType.STAKE_ACCOUNT || node.type==AccountType.PROGRAM_ACCOUNT) {
+    if (node.type==AccountType.WALLET_ACCOUNT || node.type==AccountType.STAKE_ACCOUNT || node.type==AccountType.PROGRAM_ACCOUNT) {
       address = node.account_vertex.address;
     } else {
       address = node.owner || node.account_vertex.address;
@@ -96,7 +96,7 @@ class WalletViewStrategy extends BaseViewStrategy {
   }
 
   // Aggregate accounts by wallet 
-  // SOL accounts are aggregated by their address
+  // Wallet accounts are aggregated by their address
   // Token accounts are aggregated by their wallet owner
   // if the owner is not present, the address is used
   private aggregateAccounts(nodes: ForceGraphNode[]): ForceGraphNode[] {
@@ -108,7 +108,7 @@ class WalletViewStrategy extends BaseViewStrategy {
       if (!seen.has(address)) {
         let type = node.type
         if (node.type==AccountType.TOKEN_ACCOUNT) {
-          type = AccountType.SOL_ACCOUNT;
+          type = AccountType.WALLET_ACCOUNT;
         } 
 
         let mint = "SOL";
@@ -142,7 +142,7 @@ class WalletViewStrategy extends BaseViewStrategy {
         composite_seen_per_address.set(address, []);
         
         // If the node is not a SOL/Fee/Stake/Program/Mint/MINTTO_ACCOUNT/BURN_ACCOUNT, add it to the composite array
-        if (node.type !== AccountType.SOL_ACCOUNT 
+        if (node.type !== AccountType.WALLET_ACCOUNT 
           && node.type !== AccountType.FEE_ACCOUNT 
           && node.type !== AccountType.STAKE_ACCOUNT 
           && node.type !== AccountType.PROGRAM_ACCOUNT 
@@ -154,14 +154,14 @@ class WalletViewStrategy extends BaseViewStrategy {
         }
 
         // Update node type
-        if (seen.get(address)?.type===AccountType.SOL_ACCOUNT && (node.type === AccountType.STAKE_ACCOUNT || node.type === AccountType.PROGRAM_ACCOUNT) ) {
+        if (seen.get(address)?.type===AccountType.WALLET_ACCOUNT && (node.type === AccountType.STAKE_ACCOUNT || node.type === AccountType.PROGRAM_ACCOUNT) ) {
           seen.get(address)!.type = node.type;
         }
 
         seen.set(address, aggregatedNode);
       } else {
         if (node.type!==AccountType.FEE_ACCOUNT) {
-          if (node.type !== AccountType.SOL_ACCOUNT && node.type !== AccountType.PROGRAM_ACCOUNT) {
+          if (node.type !== AccountType.WALLET_ACCOUNT && node.type !== AccountType.PROGRAM_ACCOUNT) {
             // Check if the node is already in the composite array
             // If not, add it to the composite array of the existing node
             if (!composite_seen_per_address.get(address)!.includes(node.account_vertex.address)) {

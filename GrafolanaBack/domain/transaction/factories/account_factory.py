@@ -97,7 +97,7 @@ class AccountFactory:
         for index, address in enumerate(account_addresses):
             if not repo.get_account(address):
                 is_signer = address in signer_wallets
-                account_type = AccountType.SOL_ACCOUNT
+                account_type = AccountType.WALLET_ACCOUNT
                 lamport_balance = pre_balances[index] if index < len(pre_balances) else 0
                 
                 # For SOL accounts, use SOL as the mint address
