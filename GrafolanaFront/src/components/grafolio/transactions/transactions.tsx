@@ -227,6 +227,16 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             <div>
                                 <AddressLabel type={AddressType.TRANSACTION} address={signature} data={apiGraphData} />
                             </div>
+
+                            <div className="font-bold">Result:</div>
+                            <div className={txData.err ? "text-red-500" : "text-green-500"}>
+                                {txData.err ? "Fail" : "Success"}
+                                {/**txData.err && (
+                                    <span className="block text-white">
+                                        {txData.err}
+                                    </span>
+                                )*/}
+                            </div>
                             
                             <div className="font-bold">Transfers:</div>
                             <div>{linkCount}</div>

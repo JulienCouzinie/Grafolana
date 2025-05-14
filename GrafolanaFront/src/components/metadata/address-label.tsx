@@ -60,7 +60,10 @@ export function AddressLabel({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
   const [isTransactionSpam, setisTransactionSpam] = useState(false); // Track if the label is a transaction span
+  const [isTransactionSuccess, setisTransactionSuccess] = useState(true); // Track if the label is a transaction success
   const spamImg = useStaticGraphics().spam.image;
+  const warningImg = useStaticGraphics().warning.image;
+
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
   
@@ -120,6 +123,18 @@ export function AddressLabel({
     // Check if any signer is in the spam list
     return txData.signers.some(signer => isSpam(signer));
   }, [data, isSpam]);
+
+  useEffect(() => {
+    let success = false;
+    const txData = data.transactions[address];
+    if (!txData) {
+        return;
+    }
+    // Check if the transaction was successful
+    success = !txData.err;
+    setisTransactionSuccess(success); 
+  }
+  , [data, address]);
 
   useEffect(() => {
     setisTransactionSpam(isTransactionSpamCheck(address));
@@ -466,6 +481,7 @@ export function AddressLabel({
         onMouseLeave={() => setShowTooltip(false)}
       >
         {(isTransactionSpam || isSpam(address)) && <img src={spamImg?.src} alt="Spam" className="w-6 h-6 inline" title='SPAM'/>}
+        {(!isTransactionSuccess) && <img src={warningImg?.src} alt="Failed" className="w-6 h-6 inline" title='Failed'/>}
         {displayLabel}
       </span>
       

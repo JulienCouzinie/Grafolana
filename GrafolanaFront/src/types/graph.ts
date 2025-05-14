@@ -122,6 +122,7 @@ export interface TransactionData {
     mint_usd_price_ratio: Record<string,PriceReference>
     timestamp: number;
     isomorphic_group: number | null; // Group of transactions that are isomorphic (i.e., have the same structure)
+    err: string | null; // Error message if the transaction failed
 }
 
 // Clean up duplicate interface

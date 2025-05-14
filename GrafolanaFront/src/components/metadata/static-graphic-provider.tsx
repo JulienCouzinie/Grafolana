@@ -16,6 +16,7 @@ export type StaticGraphicsContextType = {
   mintTo: StaticGraphic;
   defaultProgram: StaticGraphic;
   spam: StaticGraphic;
+  warning: StaticGraphic;
 };
 
 const StaticGraphicsContext = createContext<StaticGraphicsContextType | undefined>(undefined);
@@ -60,6 +61,7 @@ export function StaticGraphicsProvider({ children }: { children: ReactNode }) {
   const mintTo = useStaticGraphic('/mintto.png');
   const defaultProgram = useStaticGraphic('/program/default.png');
   const spam = useStaticGraphic('/logo/spam.png');
+  const warning = useStaticGraphic('/warning.png');
 
   const staticGraphics: StaticGraphicsContextType = {
     defaultMint,
@@ -68,7 +70,8 @@ export function StaticGraphicsProvider({ children }: { children: ReactNode }) {
     burn,
     mintTo,
     defaultProgram,
-    spam
+    spam,
+    warning
   };
 
   return (
