@@ -520,13 +520,13 @@ export function Transfers({ apiGraphData }: TransfersProps) {
       <div className="flex flex-row mb-4">
         <div className="flex items-center">
           <input
-            id="hideSpamToggle"
+            id="transfers-hideSpamToggle"
             type="checkbox"
             checked={hideSpam}
             onChange={(e) => setHideSpam(e.target.checked)}
             className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="hideSpamToggle" className="text-gray-300">
+          <label htmlFor="transfers-hideSpamToggle" className="text-gray-300 cursor-pointer">
             Hide spam transfers ({spamTransfersCount})
           </label>
         </div>
@@ -539,7 +539,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
             onChange={(e) => setHideSwapRelated(e.target.checked)}
             className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="hideSwapRelated" className="text-gray-300">
+          <label htmlFor="hideSwapRelated" className="text-gray-300 cursor-pointer">
             Hide swap related transfers ({swapRelatedTransfersCount})
           </label>
         </div>

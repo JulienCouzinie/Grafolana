@@ -402,13 +402,13 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                     {/* Add spam filter toggle */}
                     <div className="flex items-center">
                         <input
-                            id="hideSpamToggle"
+                            id="transactions-hideSpamToggle"
                             type="checkbox"
                             className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
                             checked={hideSpam}
                             onChange={(e) => setHideSpam(e.target.checked)}
                         />
-                        <label htmlFor="hideSpamToggle" className="text-gray-400">
+                        <label htmlFor="transactions-hideSpamToggle" className="text-gray-300 cursor-pointer">
                             Hide spam transactions ({spamTransactionsCount})
                         </label>
                     </div>
@@ -421,7 +421,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             checked={hideFailedTransactions}
                             onChange={(e) => setHideFailedTransactions(e.target.checked)}
                         />
-                        <label htmlFor="hideFailedToggle" className="text-gray-400">
+                        <label htmlFor="hideFailedToggle" className="text-gray-300 cursor-pointer">
                             Hide failed transactions ({failedTransactionsCount})
                         </label>
                     </div>
