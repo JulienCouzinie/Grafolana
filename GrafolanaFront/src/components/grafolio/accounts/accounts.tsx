@@ -44,8 +44,6 @@ export function Accounts({ apiGraphData }: AccountsProps) {
     Object.values(apiGraphData.transactions).forEach(transaction => {
       if (!transaction.accounts) return;
 
-
-
       const filteredAccount = transaction.accounts.filter(
         account => !EXCLUDED_ACCOUNT_TYPES.includes(account.type)
       );
@@ -57,6 +55,12 @@ export function Accounts({ apiGraphData }: AccountsProps) {
             ...account,
             displayName: shortenAddress(account.address)
           });
+        // Get most specific type for the account
+        // Some accounts will have different types in different transactions
+        // This is because the type is inferred heuristically in backend
+        // We keep anything different from SOL_ACCOUNT
+        } else if (accountsMap.get(account.address)?.type === AccountType.SOL_ACCOUNT && accountsMap.get(account.address)?.type !== account.type) {
+          accountsMap.get(account.address)!.type = account.type;
         }
       });
     });
