@@ -51,6 +51,20 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
         return Object.entries(apiGraphData.transactions);
     }, [apiGraphData.transactions]);
 
+    // Count spam transactions
+    const spamTransactionsCount = useMemo(() => {
+        return transactionEntries.filter(([signature]) => 
+            isTransactionSpamCheck(signature)
+        ).length;
+    }, [transactionEntries, isTransactionSpamCheck]);
+
+    // Count failed transactions
+    const failedTransactionsCount = useMemo(() => {
+        return transactionEntries.filter(([, txData]) => 
+            txData.err !== null && txData.err !== undefined
+        ).length;
+    }, [transactionEntries]);
+
     // Apply filters to transactions
     const filteredTransactions = useMemo(() => {
         return transactionEntries.filter(([signature, txData]) => {
@@ -395,7 +409,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             onChange={(e) => setHideSpam(e.target.checked)}
                         />
                         <label htmlFor="hideSpamToggle" className="text-gray-400">
-                            Hide spam transactions
+                            Hide spam transactions ({spamTransactionsCount})
                         </label>
                     </div>
                     {/* Add failed transactions filter toggle */}
@@ -408,7 +422,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                             onChange={(e) => setHideFailedTransactions(e.target.checked)}
                         />
                         <label htmlFor="hideFailedToggle" className="text-gray-400">
-                            Hide failed transactions
+                            Hide failed transactions ({failedTransactionsCount})
                         </label>
                     </div>
                 </div>

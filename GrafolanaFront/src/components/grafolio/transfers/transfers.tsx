@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { useMetadata } from '@/components/metadata/metadata-provider';
@@ -23,17 +23,19 @@ const EXCLUDED_TRANSFER_TYPES = [
 ];
 
 export function Transfers({ apiGraphData }: TransfersProps) {
-  const { getProgramInfo, getMintInfo, getMintImage } = useMetadata();
-  const { calculateUSDValue } = useUSDValue(); // Get the calculateUSDValue function
+  const { getProgramInfo, getMintInfo, getMintImage, isSpam } = useMetadata();
+  const { calculateUSDValue } = useUSDValue();
   const [transfers, setTransfers] = useState<ForceGraphLink[]>([]);
   const [sortField, setSortField] = useState<string>('type');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterText, setFilterText] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [filterFrom, setFilterFrom] = useState<string>(''); // New filter for source address
-  const [filterTo, setFilterTo] = useState<string>(''); // New filter for destination address
+  const [filterFrom, setFilterFrom] = useState<string>('');
+  const [filterTo, setFilterTo] = useState<string>('');
   const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
   const [filterMaxDateTime, setFilterMaxDateTime] = useState<Date | null>(null);
+  const [hideSwapRelated, setHideSwapRelated] = useState<boolean>(false);
+  const [hideSpam, setHideSpam] = useState<boolean>(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -51,6 +53,31 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     setTransfers(filteredTransfers);
     setCurrentPage(1); // Reset to first page when data changes
   }, [apiGraphData]);
+
+  // Helper function to check if a transaction is spam
+  const isTransactionSpam = useCallback((signature: string): boolean => {
+    const txData = apiGraphData.transactions[signature];
+    if (!txData || !txData.signers || txData.signers.length === 0) {
+      return false;
+    }
+    // Check if any signer is in the spam list
+    return txData.signers.some(signer => isSpam(signer));
+  }, [apiGraphData.transactions, isSpam]);
+
+  // Add a useMemo to count swap-related transfers
+  const swapRelatedTransfersCount = useMemo(() => {
+    return transfers.filter(transfer => 
+      transfer.swap_parent_id !== undefined || 
+      transfer.parent_router_swap_id !== undefined
+    ).length;
+  }, [transfers]);
+
+  // Count transfers associated with spam transactions
+  const spamTransfersCount = useMemo(() => {
+    return transfers.filter(transfer => 
+      isTransactionSpam(transfer.transaction_signature)
+    ).length;
+  }, [transfers, isTransactionSpam]);
 
   // Helper function to get the correct node based on transfer type
   const getRelevantNode = (transfer: ForceGraphLink) => {
@@ -135,6 +162,21 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         return transaction && transaction.timestamp <= filterMaxDateTime.getTime();
       });
     }
+
+    // Hide swap related transfers filter
+    if (hideSwapRelated) {
+      result = result.filter(transfer => 
+        transfer.swap_parent_id === undefined && 
+        transfer.parent_router_swap_id === undefined
+      );
+    }
+
+    // Hide spam-related transfers filter
+    if (hideSpam) {
+      result = result.filter(transfer => 
+        !isTransactionSpam(transfer.transaction_signature)
+      );
+    }
     
     // Then sort
     result.sort((a, b) => {
@@ -204,6 +246,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     filterTo, 
     filterMinDateTime,
     filterMaxDateTime,
+    hideSwapRelated,
+    hideSpam,
     sortField, 
     sortDirection, 
     calculateUSDValue, 
@@ -222,8 +266,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, filterType, filterFrom, filterTo, filterMinDateTime, filterMaxDateTime, sortField, sortDirection]);
-  
+  }, [filterText, filterType, filterFrom, filterTo, filterMinDateTime, filterMaxDateTime, hideSwapRelated, hideSpam, sortField, sortDirection]);
+
   // Handle sort change
   const handleSortChange = (field: string) => {
     if (sortField === field) {
@@ -256,6 +300,8 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     setFilterTo('');
     setFilterMinDateTime(null);
     setFilterMaxDateTime(null);
+    setHideSwapRelated(false);
+    setHideSpam(false);
   };
 
   // Get unique transfer types for filter dropdown
@@ -464,6 +510,35 @@ export function Transfers({ apiGraphData }: TransfersProps) {
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
+        </div>
+      </div>
+
+      {/* Container for the filter toggles - Added as a separate row */}
+      <div className="flex flex-row mb-4">
+        <div className="flex items-center">
+          <input
+            id="hideSpamToggle"
+            type="checkbox"
+            checked={hideSpam}
+            onChange={(e) => setHideSpam(e.target.checked)}
+            className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="hideSpamToggle" className="text-gray-300">
+            Hide spam transfers ({spamTransfersCount})
+          </label>
+        </div>
+
+        <div className="flex items-center ml-6">
+          <input
+            id="hideSwapRelated"
+            type="checkbox"
+            checked={hideSwapRelated}
+            onChange={(e) => setHideSwapRelated(e.target.checked)}
+            className="mr-2 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="hideSwapRelated" className="text-gray-300">
+            Hide swap related transfers ({swapRelatedTransfersCount})
+          </label>
         </div>
       </div>
       
