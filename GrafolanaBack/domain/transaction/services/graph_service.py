@@ -328,14 +328,15 @@ class GraphService:
             Dictionary containing all transaction data for frontend visualization
         """
         graph_data["transactions"][context.transaction_signature] = {
-                "fees": {"fee": context.fee, "priority_fee": context.priority_fee},
-                "signers": list(context.signer_wallets),
-                "swaps": GraphService._get_swaps_data(context),
-                "accounts" : context.account_repository.get_all_accountTransactions(),
-                "mint_usd_price_ratio": {},
-                "isomorphic_group": context.isomorphic_group,
-                "timestamp": context.blocktime*1000,
-            }
+            "fees": {"fee": context.fee, "priority_fee": context.priority_fee},
+            "signers": list(context.signer_wallets),
+            "swaps": GraphService._get_swaps_data(context),
+            "accounts" : context.account_repository.get_all_accountTransactions(),
+            "mint_usd_price_ratio": {},
+            "isomorphic_group": context.isomorphic_group,
+            "timestamp": context.blocktime*1000,
+            "err": context.err,
+        }
 
         # Process nodes from account_version_mapping & graph
         nodes = GraphService._get_nodes_data(context)
