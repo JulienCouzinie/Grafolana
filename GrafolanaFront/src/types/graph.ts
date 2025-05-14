@@ -24,7 +24,6 @@ export class AccountVertex {
  * Enum representing all possible account types in the system
  */
 export enum AccountType {
-    WALLET_ACCOUNT = "WALLET_ACCOUNT", // Type added for the wallet view
     BURN_ACCOUNT = "BURN_ACCOUNT",
     MINTTO_ACCOUNT = "MINTTO_ACCOUNT",
     STAKE_ACCOUNT = "STAKE_ACCOUNT", 

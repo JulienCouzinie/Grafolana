@@ -1,14 +1,14 @@
 'use client'
 
 import { MintDTO, Label, Program, SimpleLabel, AddressWithType, AddressType, Spam, SpamType } from "@/types/metadata";
-import { createContext, useContext, useCallback, useState, useMemo, ReactNode, useEffect, useRef } from "react";
+import { createContext, useContext, useCallback, useState, ReactNode, useEffect, useRef } from "react";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { fetchMissingMintInfos, fetchMissingLabels, fetchMissingProgramInfos, fetchSpamAddresses } from "./fetchers";
 import { useImmediateMapState } from "@/hooks/useImmediateState";
-import { cropLogoToSquare, getCanvas } from "@/utils/imageUtils";
+import { getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
 import { AccountType, ForceGraphNode } from "@/types/graph";
-import { StaticGraphicsProvider, useStaticGraphics, StaticGraphicsContextType, StaticGraphic } from "./static-graphic-provider";
+import { StaticGraphicsProvider, useStaticGraphics, StaticGraphic } from "./static-graphic-provider";
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
@@ -491,7 +491,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       nodeGraphic = {image: programImg, canvas: programCanvas};
     } else if (type === AccountType.FEE_ACCOUNT) {
       nodeGraphic = staticGraphic.fee;
-    } else if (type == AccountType.WALLET_ACCOUNT){
+    } else if (type == AccountType.SOL_ACCOUNT || type == AccountType.STAKE_ACCOUNT) {
       nodeGraphic = staticGraphic.wallet;
     } else {
       const img = getMintImage(mintInfo?.image);

@@ -843,11 +843,9 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         let nodeColor;
         if (node.type == AccountType.SOL_ACCOUNT) {
-            nodeColor = SOLANA_COLORS.green;
+            nodeColor = COLORS.lightgray;
         } else if (node.type == AccountType.PROGRAM_ACCOUNT) {
             nodeColor = COLORS.blue;
-        } else if (node.type == AccountType.WALLET_ACCOUNT) {
-            nodeColor = COLORS.lightgray;
         } else if (node.type == AccountType.FEE_ACCOUNT) {
             nodeColor = COLORS.yellow;
         } else if (node.type == AccountType.BURN_ACCOUNT) {
@@ -855,6 +853,8 @@ export abstract class BaseViewStrategy implements ViewStrategy {
         } else if (node.type == AccountType.MINTTO_ACCOUNT) {
             nodeColor = COLORS.darkgreen;
         } else if (node.type == AccountType.STAKE_ACCOUNT) {
+            nodeColor = COLORS.lightgray;
+        } else if (node.type == AccountType.TOKEN_MINT_ACCOUNT) {
             nodeColor = SOLANA_COLORS.green;
         } else {
             nodeColor = COLORS.mango;
