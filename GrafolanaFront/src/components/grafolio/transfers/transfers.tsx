@@ -8,6 +8,7 @@ import { AddressType } from '@/types/metadata';
 import { ForceGraphLink, GraphData, TransferType } from '@/types/graph';
 import { calculateTokenAmount } from '@/utils/tokenUtils'; // Import the token utility
 import { useUSDValue } from '@/hooks/useUSDValue'; // Import the useUSDValue hook
+import { MultiSelectDropdown, Option } from '@/components/common/multi-select-dropdown';
 
 interface TransfersProps {
   apiGraphData: GraphData;
@@ -29,7 +30,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   const [sortField, setSortField] = useState<string>('type');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterText, setFilterText] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('all');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [filterFrom, setFilterFrom] = useState<string>('');
   const [filterTo, setFilterTo] = useState<string>('');
   const [filterMinDateTime, setFilterMinDateTime] = useState<Date | null>(null);
@@ -128,9 +129,9 @@ export function Transfers({ apiGraphData }: TransfersProps) {
       });
     }
     
-    // Type filter
-    if (filterType !== 'all') {
-      result = result.filter(transfer => transfer.type === filterType);
+    // Type filter - now handles multiple types
+    if (selectedTypes.length > 0) {
+      result = result.filter(transfer => selectedTypes.includes(transfer.type));
     }
 
     // From address filter
@@ -241,7 +242,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   }, [
     transfers, 
     filterText, 
-    filterType, 
+    selectedTypes, 
     filterFrom, 
     filterTo, 
     filterMinDateTime,
@@ -266,7 +267,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, filterType, filterFrom, filterTo, filterMinDateTime, filterMaxDateTime, hideSwapRelated, hideSpam, sortField, sortDirection]);
+  }, [filterText, selectedTypes, filterFrom, filterTo, filterMinDateTime, filterMaxDateTime, hideSwapRelated, hideSpam, sortField, sortDirection]);
 
   // Handle sort change
   const handleSortChange = (field: string) => {
@@ -295,7 +296,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
   // Clear all filters
   const clearFilters = (): void => {
     setFilterText('');
-    setFilterType('all');
+    setSelectedTypes([]); // Clear selected types
     setFilterFrom('');
     setFilterTo('');
     setFilterMinDateTime(null);
@@ -304,11 +305,16 @@ export function Transfers({ apiGraphData }: TransfersProps) {
     setHideSpam(false);
   };
 
-  // Get unique transfer types for filter dropdown
-  const transferTypes = useMemo(() => {
+  // Update the transferTypes useMemo to create Option objects for the dropdown
+  const transferTypeOptions = useMemo(() => {
     const types = new Set<string>();
     transfers.forEach(transfer => types.add(transfer.type));
-    return Array.from(types).sort();
+    return Array.from(types)
+      .sort()
+      .map(type => ({ 
+        value: type, 
+        label: type.replace(/_/g, ' ')
+      }));
   }, [transfers]);
 
   // Format transfer amount with appropriate decimals
@@ -425,16 +431,13 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         </div>
         
         <div className="type-filter">
-          <select
-            className="p-2 bg-gray-800 text-white rounded border border-gray-700"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="all">All Types</option>
-            {transferTypes.map(type => (
-              <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
+          <MultiSelectDropdown
+            options={transferTypeOptions}
+            selectedValues={selectedTypes}
+            onChange={setSelectedTypes}
+            placeholder="All Types"
+            className="min-w-[250px]"
+          />
         </div>
 
         <div className="from-filter flex-1 min-w-[200px]">
