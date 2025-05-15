@@ -361,7 +361,7 @@ export function AddressLabel({
       });
     } else if (isWallet) {
       menuItems.push({
-        label: "View in Explorer",
+        label: "View Account in Explorer",
         action: "viewAccount"
       });
     } else if (isBlock) {
