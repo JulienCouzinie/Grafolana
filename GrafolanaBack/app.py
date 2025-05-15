@@ -98,7 +98,6 @@ def get_transaction_from_signature():
 @app.route('/api/get_transaction_graph_data', methods=['POST'])
 def get_transaction_graph_data_from_signature():
     tx_signature = request.json.get('tx_signature')
-    user_wallet = request.json.get('user_wallet', "EQyYgCnwwZxuh3SfnrFBEiFqDUUSfpqiDorf66eqdEcz")
 
     if not tx_signature:
         return jsonify({"error": "No transaction signature provided"}), 400
