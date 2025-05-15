@@ -37,7 +37,7 @@ export const Toast: React.FC<ToastProps> = ({
 
   return (
     <div 
-      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] px-6 py-3 rounded-md shadow-lg ${bgColor} text-white font-medium`}
+      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-[99999] px-6 py-3 rounded-md shadow-lg ${bgColor} text-white font-medium`}
       role="alert"
       aria-live="assertive"
     >
