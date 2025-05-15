@@ -2170,8 +2170,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                             {transactions.map((signature, txIndex) => (
                                 <li key={txIndex} style={{ margin: '4px 0', wordBreak: 'break-all' }}>
                                     <AddressLabel 
-                                        address={signature} 
-                                        type={AddressType.TRANSACTION}
+                                        address={signature}
                                         shortened={true} 
                                         data={this.originalData.current} 
                                     />
@@ -2272,8 +2271,7 @@ export abstract class BaseViewStrategy implements ViewStrategy {
                                                 {getClusterTransactions(clusterId).map((signature, txIndex) => (
                                                     <li key={txIndex} style={{ margin: '4px 0', wordBreak: 'break-all' }}>
                                                         <AddressLabel 
-                                                            address={signature} 
-                                                            type={AddressType.TRANSACTION}
+                                                            address={signature}
                                                             shortened={true} 
                                                             data={this.originalData.current} 
                                                         />

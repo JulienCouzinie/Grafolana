@@ -386,8 +386,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                   {transactions.map((signature, txIndex) => (
                     <li key={txIndex} style={{ margin: '4px 0' }}>
                       <AddressLabel 
-                        address={signature} 
-                        type={AddressType.TRANSACTION}
+                        address={signature}
                         shortened={true} 
                         data={this.originalData.current} 
                       />
@@ -433,7 +432,7 @@ class FlowViewStrategy extends BaseViewStrategy {
               <NodeImage node={node} maxWidth={50} maxHeight={50} />
               <b>Account:</b> <AddressLabel address={node.account_vertex.address!} shortened={true} data={this.originalData.current} /><br/>
               <b>Version:</b> {node.account_vertex.version}<br/>
-              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} type={AddressType.TRANSACTION} shortened={true} data={this.originalData.current} /><br/>
+              <b>Transaction:</b> <AddressLabel address={node.account_vertex.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
               {mintAddress ? (
                 <React.Fragment>
                   <b>Mint:</b> <AddressLabel address={mintAddress} type={AddressType.TOKEN} shortened={true} data={this.originalData.current} /><br/>
@@ -508,7 +507,7 @@ class FlowViewStrategy extends BaseViewStrategy {
                           <b>Program:</b> <AddressLabel address={link.program_address} type={AddressType.PROGRAM} shortened={true}data={this.originalData.current}  /><br/>
                           <b>From:</b> <AddressLabel address={link.source_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
                           <b>To:</b> <AddressLabel address={link.target_account_vertex.address} shortened={true} data={this.originalData.current} /><br/>
-                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} type={AddressType.TRANSACTION} shortened={true} data={this.originalData.current} /><br/>
+                          <b>Transaction:</b> <AddressLabel address={link.transaction_signature} shortened={true} data={this.originalData.current} /><br/>
                           <div dangerouslySetInnerHTML={{ __html: this.getTransferDetailsHTML(link) }} />
                       </div>
                   </React.Fragment>

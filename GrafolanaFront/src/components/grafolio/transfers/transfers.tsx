@@ -660,7 +660,6 @@ export function Transfers({ apiGraphData }: TransfersProps) {
                   <td className="py-2 px-4">
                     <AddressLabel 
                       address={transfer.transaction_signature}
-                      type={AddressType.TRANSACTION}
                       shortened={true}
                       data={apiGraphData}
                     />

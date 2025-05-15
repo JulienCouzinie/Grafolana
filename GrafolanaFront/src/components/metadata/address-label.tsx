@@ -5,9 +5,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType, Label } from '@/types/metadata';
 import { createPortal } from 'react-dom';
 import { useLabelEditDialog } from './label-edit-dialog-provider';
-import { shortenAddress } from '@/utils/addressUtils';
+import { isBlockAddress, isTransactionSignature, isWalletAddress, shortenAddress } from '@/utils/addressUtils';
 import { GraphData } from '@/types/graph';
-// Import useTransactions hook
 import { useTransactions } from '@/components/transactions/transactions-provider';
 
 interface AddressLabelProps {
@@ -79,22 +78,27 @@ export function AddressLabel({
     graphData: txGraphData, 
     fetchedTransactions, 
     fetchedWallets, 
+    fetchedBlocks,
     getTransactionGraphData, 
     getAccountGraphData, 
+    getBlockGraphData,
     addTransactionGraphData, 
-    addAccountGraphData 
+    addAccountGraphData,
+    addBlockGraphData
   } = useTransactions();
 
   // Function to determine address type and if it's already fetched
   const getAddressDetails = useCallback((): {
     isTransaction: boolean;
     isWallet: boolean;
+    isBlock: boolean;
     isAlreadyFetched: boolean;
     hasGraphData: boolean;
   } => {
     // Determine type based on length (same logic as in Grafolio)
-    const isTransaction = address.length === 88 || address.length === 87;
-    const isWallet = address.length === 44 || address.length === 43;
+    const isTransaction = isTransactionSignature(address);
+    const isWallet = isWalletAddress(address);
+    const isBlock = isBlockAddress(address);
     
     // Check if already fetched based on type
     const isAlreadyFetched = isTransaction 
@@ -109,6 +113,7 @@ export function AddressLabel({
     return {
       isTransaction,
       isWallet,
+      isBlock,
       isAlreadyFetched,
       hasGraphData
     };
@@ -285,23 +290,29 @@ export function AddressLabel({
 
   // Handle graph operations (new methods for graph actions)
   const handleGetGraph = (): void => {
-    const { isTransaction, isWallet } = getAddressDetails();
+    const { isTransaction, isWallet, isBlock } = getAddressDetails();
 
     if (isTransaction) {
       getTransactionGraphData(address);
     } else if (isWallet) {
       getAccountGraphData(address);
+    } else if (isBlock) {
+      const slot = parseInt(address, 10);
+      getBlockGraphData(slot);
     }
     closeContextMenu();
   };
-
+  
   const handleAddToGraph = (): void => {
-    const { isTransaction, isWallet } = getAddressDetails();
+    const { isTransaction, isWallet, isBlock } = getAddressDetails();
 
     if (isTransaction) {
       addTransactionGraphData(address);
     } else if (isWallet) {
       addAccountGraphData(address);
+    } else if (isBlock) {
+      const slot = parseInt(address, 10);
+      addBlockGraphData(slot);
     }
     closeContextMenu();
   };
@@ -321,8 +332,10 @@ export function AddressLabel({
 
     // Check if address is already marked as spam
     const isItSpam = isSpam(address);
+    // Get address details for graph-related operations
+    const { isTransaction, isWallet, isBlock, isAlreadyFetched, hasGraphData } = getAddressDetails();
           
-    if (type !== AddressType.TRANSACTION) {
+    if (isTransaction) {
       if (isItSpam) {
           // Only allow unmarking spam if user has permission
           if (canUnMarkSpam(address)) {
@@ -341,36 +354,61 @@ export function AddressLabel({
     }
 
     // Add transaction-specific options
-    if (data.transactions[address]) {
+    if (isTransaction) {
       menuItems.push({
-        label: "View Transaction Details",
+        label: "View Transaction in Explorer",
         action: "viewTransaction"
       });
-    } else {
+    } else if (isWallet) {
       menuItems.push({
         label: "View in Explorer",
         action: "viewExplorer"
       });
+    } else if (isBlock) {
+      menuItems.push({
+        label: "View Block in Explorer",
+        action: "viewBlock"
+      });
     }
 
-    // Get address details for graph-related operations
-    const { isTransaction, isWallet, isAlreadyFetched, hasGraphData } = getAddressDetails();
-
     // Add graph operation options based on address type and state
-    if (isTransaction || isWallet) {
+    if (isTransaction) {
       menuItems.push({
-        label: isTransaction ? "Get Transaction Graph" : "Get Account Graph",
+        label: "Get Transaction Graph",
         action: "getGraph"
       });
+    } else if (isWallet) {
+      menuItems.push({
+        label: "Get Account Graph",
+        action: "getGraph"
+      });
+    } else if (isBlock) {
+      menuItems.push({
+        label: "Get Block Graph",
+        action: "getGraph"
+      });
+    }
 
-      // If graph already has data and address is not already fetched, show "Add to Graph"
-      if (!isAlreadyFetched) {
+    // If graph already has data and address is not already fetched, show "Add to Graph"
+    if (!isAlreadyFetched) {
+      if (isTransaction) {
         menuItems.push({
-          label: isTransaction ? "Add Transaction to Graph" : "Add Account to Graph",
+          label: "Add Transaction to Graph",
+          action: "addToGraph"
+        });
+      } else if (isWallet) {
+        menuItems.push({
+          label: "Add Account to Graph",
+          action: "addToGraph"
+        });
+      } else if (isBlock) {
+        menuItems.push({
+          label: "Add Block to Graph",
           action: "addToGraph"
         });
       }
     }
+    
 
     return menuItems;
   };
@@ -403,8 +441,6 @@ export function AddressLabel({
         } else {
           // Show message to user that they need to connect their wallet first
           alert("Please connect your wallet to mark addresses as spam.");
-          // Alternatively, you could use a more elegant notification system if available in your app
-          // For example: showNotification("Please connect your wallet to mark addresses as spam.", "warning");
         }
         break;
       case 'unmarkSpam':

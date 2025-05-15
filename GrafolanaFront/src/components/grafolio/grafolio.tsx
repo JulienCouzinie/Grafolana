@@ -9,6 +9,7 @@ import { Transfers } from './transfers/transfers';
 import { MetadataPreloader } from './graph/MetadataPreloader';
 import { useTransactions } from '@/components/transactions/transactions-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { isBlockAddress, isTransactionSignature, isWalletAddress as isAccountAddress } from '@/utils/addressUtils';
 
 export default function Grafolio() {
   const { publicKey } = useWallet();
@@ -50,57 +51,53 @@ export default function Grafolio() {
     console.log("Address changed to:", e.target.value);
   };
 
-  // Function to handle fetching graph data based on address length
+  // Function to handle fetching graph data based on address type
   const handleGetGraphData = (): void => {
-    if (!address.trim()) return;
-    const slot = parseInt(address, 10);
+    if (!address || !address.trim()) return;
     
-    // Determine the type of address.current based on its length
-    // Solana address.currentes are typically 44 characters, transaction signatures are 88 characters
-    if (address.length == 88 || address.length == 87) {
+    if (isTransactionSignature(address)) {
       // It's likely a transaction signature
       getTransactionGraphData(address);
-    } else if (address.length == 44 || address.length == 43) {
+    } else if (isAccountAddress(address)) {
       // It's likely a wallet address.current
       getAccountGraphData(address);
-    } else if (!isNaN(slot) && slot > 0) {
+    } else if (isBlockAddress(address)) {
       // It's likely a block slot number
+      const slot = parseInt(address, 10);
       getBlockGraphData(slot);
     }
   };
 
   // Function to handle adding data to existing graph
   const handleAddToGraph = (): void => {
-    if (!address.trim()) return;
-    const slot = parseInt(address, 10);
+    if (!address || !address.trim()) return;
     
-    // Handle both transaction signatures and wallet address.currentes
-    if (address.length == 88 || address.length == 87) {
+    if (isTransactionSignature(address)) {
       // It's likely a transaction signature
       addTransactionGraphData(address);
-    } else if (address.length == 44 || address.length == 43) {
-      // It's likely a wallet address.current
+    } else if (isAccountAddress(address)) {
+      // It's likely an account address
       addAccountGraphData(address);
-    } else if (!isNaN(slot) && slot > 0) {
+    } else if (isBlockAddress(address)) {
       // It's likely a block slot number
+      const slot = parseInt(address, 10);
       addBlockGraphData(slot);
     }
   };
 
-  // Function to check if the current address.current is already fetched
+  // Function to check if the current address is already fetched
   const isAddressFetched = (): boolean => {
-    if (!address.trim()) return false;
-    const slot = parseInt(address, 10);
-    
-    // Check the appropriate list based on address.current length
-    if (address.length == 88 || address.length == 87) {
+    if (!address || !address.trim()) return false;
+
+    if (isTransactionSignature(address)) {
       // It's likely a transaction signature
       return fetchedTransactions.has(address);
-    } else if (address.length == 44 || address.length == 43) {
+    } else if (isAccountAddress(address)) {
       // It's likely a wallet address.current
       return fetchedWallets.has(address);
-    } else if (!isNaN(slot) && slot > 0) {
+    } else if (isBlockAddress(address)) {
       // It's likely a block slot number
+      const slot = parseInt(address, 10);
       return fetchedBlocks.has(slot);
     }
     return false;
@@ -166,7 +163,6 @@ export default function Grafolio() {
           style={{ width: '1000px', margin: '2px' }} 
           value={address}
           onChange={handleAddressChange}
-          //defaultValue={default_address} // Set default value to the current address
         />
         <button 
           onClick={handleGetGraphData}

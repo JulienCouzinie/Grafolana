@@ -248,7 +248,9 @@ class TransactionParserService:
             logger.error(f"Block {slot_number} not found")
             return None
         
-        
+        if block.get("error"):
+            logger.error(f"Error fetching block {slot_number}: {block['error']}")
+            return {"Error": block["error"]["message"]}
         
         all_transaction_contex = {}
         transaction_json: Dict

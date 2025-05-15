@@ -247,7 +247,7 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                         <div className="grid grid-cols-[minmax(100px,300px)_1fr] gap-2">
                             <div className="font-bold">Signature:</div>
                             <div>
-                                <AddressLabel type={AddressType.TRANSACTION} address={signature} data={apiGraphData} />
+                                <AddressLabel address={signature} data={apiGraphData} />
                             </div>
 
                             <div className="font-bold">Result:</div>
@@ -279,8 +279,8 @@ export default function Transactions({ apiGraphData }: TransactionsProps) {
                                 ))}
                             </div>
                             
-                            <div className="font-bold">Blocktime:</div>
-                            <div>{txData.timestamp/1000}</div>
+                            <div className="font-bold">Block:</div>
+                            <div><AddressLabel address={String(txData.timestamp/1000)} data={apiGraphData} /></div>
                             
                             <div className="font-bold">Date:</div>
                             <div>{new Date(txData.timestamp).toLocaleString()}</div>

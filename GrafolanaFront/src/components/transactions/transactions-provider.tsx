@@ -25,6 +25,8 @@ export interface TransactionsContextType {
     addBlockGraphData: (block_number: number) => Promise<void>;
 
     isLoading: boolean; // Loading state indicator
+    errorMessage: string | null; // Error message to display to user
+    clearError: () => void; // Function to clear the error message
   }
 
 // Create the context
@@ -58,6 +60,12 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   
   // Add loading state
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Add error state
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Clear error function
+  const clearError = () => setErrorMessage(null);
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
@@ -84,6 +92,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getTransactionGraphData = async (tx_signature: string): Promise<void> => {
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -92,7 +101,14 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
         },
         body: JSON.stringify({ tx_signature }),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
+      
       let data: GraphData = await response.json();
       data = mapAccountVertexToClass(data);
       setGraphData(data);
@@ -102,6 +118,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedWallets(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch transaction data');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
@@ -114,6 +132,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getAccountGraphData = async (account_address: string): Promise<void> => {
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
@@ -122,7 +141,14 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
         },
         body: JSON.stringify({ account_address: account_address }),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
+      
       let data: GraphData = await response.json();
       data = mapAccountVertexToClass(data);
       setGraphData(data);
@@ -132,6 +158,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedTransactions(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch account data');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
@@ -144,6 +172,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getBlockGraphData = async (block_number: number): Promise<void> => {
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
         method: 'POST',
@@ -152,7 +181,14 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
         },
         body: JSON.stringify({ slot_number: block_number }),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
+      
       let data: GraphData = await response.json();
       data = mapAccountVertexToClass(data);
       setGraphData(data);
@@ -163,11 +199,14 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedBlocks(new Set([block_number]));
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch block data');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
       setFetchedTransactions(new Set());
       setFetchedWallets(new Set());
+      setFetchedBlocks(new Set());
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +220,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
@@ -190,7 +230,12 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
         body: JSON.stringify({ account_address: account_address }),
       });
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
       
       let newData: GraphData = await response.json();
       newData = mapAccountVertexToClass(newData);
@@ -235,6 +280,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional account data');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
@@ -249,6 +296,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -258,7 +306,12 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
         body: JSON.stringify({ tx_signature }),
       });
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
       
       let newData: GraphData = await response.json();
       newData = mapAccountVertexToClass(newData);
@@ -303,6 +356,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional transaction data');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
@@ -317,16 +372,22 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
+    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ block_number }),
+        body: JSON.stringify({ slot_number: block_number }),
       });
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        // Try to extract error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      }
       
       let newData: GraphData = await response.json();
       newData = mapAccountVertexToClass(newData);
@@ -371,11 +432,13 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
+      // Set error message for user
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional block data');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   // Create the context value with both the graph data and getter methods
   const value = {
@@ -397,7 +460,9 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     addTransactionGraphData,
     addBlockGraphData,
 
-    isLoading, // Add loading state to the context value
+    isLoading,
+    errorMessage,
+    clearError,
   };
 
   return (

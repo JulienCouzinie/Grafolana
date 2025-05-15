@@ -144,6 +144,9 @@ def get_block_graph_data_from_slot():
 
     # Get the graph data
     graph_data = transaction_parser_service.get_block_graph(slot_number)
+
+    if graph_data.get('error'):
+        return jsonify({"error": graph_data['error']}), 400
     
     return jsonify(graph_data)
 
