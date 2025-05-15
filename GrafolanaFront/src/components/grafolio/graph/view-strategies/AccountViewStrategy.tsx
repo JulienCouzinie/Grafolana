@@ -94,6 +94,8 @@ class AccountViewStrategy extends BaseViewStrategy {
       if (!seen.has(node.account_vertex.address)) {
         seen.add(node.account_vertex.address);
         node.id = node.account_vertex.address;
+        // The signature is not relevant in this view as nodes are aggregated
+        node.account_vertex.transaction_signature = "";
         deduplicatedNodes.push(node);
       } else {
         if (node.type === AccountType.FEE_ACCOUNT) {
