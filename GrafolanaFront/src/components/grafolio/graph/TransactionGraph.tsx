@@ -670,6 +670,8 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
         .fullscreen-toggle-button:hover {
           opacity: 1;
           background-color: ${SOLANA_COLORS.purple};
+          font-size: 20px;
+          transition: font-size 0.1s ease;
         }
         
         /* Context Menu Styles */
