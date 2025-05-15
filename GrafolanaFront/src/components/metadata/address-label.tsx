@@ -8,6 +8,7 @@ import { useLabelEditDialog } from './label-edit-dialog-provider';
 import { isBlockAddress, isTransactionSignature, isWalletAddress, shortenAddress } from '@/utils/addressUtils';
 import { GraphData } from '@/types/graph';
 import { useTransactions } from '@/components/transactions/transactions-provider';
+import { useToast } from '@/components/ui/toast-provider';
 
 interface AddressLabelProps {
   address: string;
@@ -62,6 +63,8 @@ export function AddressLabel({
   const [isTransactionSuccess, setisTransactionSuccess] = useState(true); // Track if the label is a transaction success
   const spamImg = useStaticGraphics().spam.image;
   const warningImg = useStaticGraphics().warning.image;
+
+  const { showToast } = useToast();
 
   // Use our new label edit dialog context
   const { openLabelEditor } = useLabelEditDialog();
@@ -335,7 +338,7 @@ export function AddressLabel({
     // Get address details for graph-related operations
     const { isTransaction, isWallet, isBlock, isAlreadyFetched, hasGraphData } = getAddressDetails();
           
-    if (isTransaction) {
+    if (isWallet) {
       if (isItSpam) {
           // Only allow unmarking spam if user has permission
           if (canUnMarkSpam(address)) {
@@ -353,7 +356,6 @@ export function AddressLabel({
       }
     }
 
-    // Add transaction-specific options
     if (isTransaction) {
       menuItems.push({
         label: "View Transaction in Explorer",
@@ -408,7 +410,6 @@ export function AddressLabel({
         });
       }
     }
-    
 
     return menuItems;
   };
@@ -446,7 +447,7 @@ export function AddressLabel({
           addToSpam(address);
         } else {
           // Show message to user that they need to connect their wallet first
-          alert("Please connect your wallet to mark addresses as spam.");
+          showToast("Please connect your wallet to mark addresses as spam.", "info");
         }
         break;
       case 'unmarkSpam':

@@ -9,6 +9,7 @@ import { getCanvas } from "@/utils/imageUtils";
 import { shortenAddress } from "@/utils/addressUtils";
 import { AccountType, ForceGraphNode } from "@/types/graph";
 import { StaticGraphicsProvider, useStaticGraphics, StaticGraphic } from "./static-graphic-provider";
+import { useToast } from '@/components/ui/toast-provider';
 
 interface MetadataContextType {
   FetchMintInfosAndCache: (mintAddresses: string[]) => Promise<void>;
@@ -43,6 +44,7 @@ const MetadataContext = createContext<MetadataContextType | undefined>(undefined
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const { publicKey } = useWallet();
   const staticGraphic = useStaticGraphics();
+  const { showToast } = useToast();
 
   // Caches
   const [
@@ -551,7 +553,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   // Add an address to spam
   const addToSpam = useCallback(async (address: string): Promise<Spam> => {
     if (!publicKey) {
-      throw new Error("User must be connected to add addresses to spam list");
+      showToast("Please connect your wallet to add addresses to your spam list", "info");
+      return {} as Spam;
     }
     
     const userId = publicKey.toBase58();

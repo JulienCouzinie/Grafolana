@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMetadata } from './metadata-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { AddressType } from '@/types/metadata';
+import { useToast } from '@/components/ui/toast-provider';
 
 interface LabelEditDialogProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function LabelEditDialog({
   const [labelInput, setLabelInput] = useState(initialLabel);
   const [descriptionInput, setDescriptionInput] = useState(initialDescription);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const { showToast } = useToast();
 
   // Update state when props change
   useEffect(() => {
@@ -40,7 +42,7 @@ export function LabelEditDialog({
 
   const handleSaveLabel = async (): Promise<void> => {
     if (!publicKey) {
-      alert('Please connect your wallet to create labels');
+      showToast('Please connect your wallet to create labels', 'info');
       return;
     }
 
