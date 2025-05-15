@@ -7,6 +7,7 @@ import { MetadataProvider } from '@/components/metadata/metadata-provider'
 import { LabelEditDialogProvider } from '@/components/metadata/label-edit-dialog-provider'
 import { StaticGraphicsProvider } from '@/components/metadata/static-graphic-provider'
 import type { Metadata } from 'next'
+import { ToastProvider } from '@/components/ui/toast-provider'
 
 // Define metadata including the favicon
 export const metadata: Metadata = {
@@ -31,13 +32,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ReactQueryProvider>
           <SolanaProvider>
-            <StaticGraphicsProvider>
-              <MetadataProvider>
-                <LabelEditDialogProvider>
-                  <UiLayout>{children}</UiLayout>
-                </LabelEditDialogProvider>
-              </MetadataProvider>
-            </StaticGraphicsProvider>
+            <ToastProvider>
+              <StaticGraphicsProvider>
+                <MetadataProvider>
+                  <LabelEditDialogProvider>
+                    <UiLayout>{children}</UiLayout>
+                  </LabelEditDialogProvider>
+                </MetadataProvider>
+              </StaticGraphicsProvider>
+            </ToastProvider>
           </SolanaProvider>
         </ReactQueryProvider>
       </body>

@@ -42,7 +42,7 @@ export default function Grafolio() {
     addAccountGraphData,
     addBlockGraphData,
 
-    isLoading // Add isLoading state from the TransactionsProvider
+    isLoading
   } = useTransactions();
 
   // Function to handle address input change

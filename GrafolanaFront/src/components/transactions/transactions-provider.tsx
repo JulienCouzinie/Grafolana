@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, ReactNode, useState } from 'react';
 import { AccountVertex, GraphData, ForceGraphNode, ForceGraphLink, TransactionData } from '@/types/graph';
 import { useImmediateState } from '@/hooks/useImmediateState';
+import { useToast } from '@/components/ui/toast-provider';
 
 // Define the context type that exposes both the graph data and getter methods
 export interface TransactionsContextType {
@@ -25,8 +26,6 @@ export interface TransactionsContextType {
     addBlockGraphData: (block_number: number) => Promise<void>;
 
     isLoading: boolean; // Loading state indicator
-    errorMessage: string | null; // Error message to display to user
-    clearError: () => void; // Function to clear the error message
   }
 
 // Create the context
@@ -61,11 +60,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   // Add loading state
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Add error state
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  // Clear error function
-  const clearError = () => setErrorMessage(null);
+  const { showToast } = useToast();
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
     data.nodes = data.nodes.map((node) => {
@@ -92,7 +87,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getTransactionGraphData = async (tx_signature: string): Promise<void> => {
     setIsLoading(true);
-    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -118,8 +112,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedWallets(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch transaction data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
@@ -132,7 +126,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getAccountGraphData = async (account_address: string): Promise<void> => {
     setIsLoading(true);
-    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
@@ -158,8 +151,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedTransactions(new Set());
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch account data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
@@ -172,7 +165,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 
   const getBlockGraphData = async (block_number: number): Promise<void> => {
     setIsLoading(true);
-    clearError(); // Clear previous errors
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
         method: 'POST',
@@ -199,8 +191,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       setFetchedBlocks(new Set([block_number]));
     } catch (error) {
       console.error('Failed to fetch graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch block data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Set empty graph data on error
       setGraphData({ nodes: [], links: [], transactions: {} });
       // Clear tracking on error
@@ -220,7 +212,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
-    clearError(); // Clear previous errors
+
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_account_graph_data', {
         method: 'POST',
@@ -280,8 +272,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional account data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
@@ -296,7 +288,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
-    clearError(); // Clear previous errors
+
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_transaction_graph_data', {
         method: 'POST',
@@ -356,8 +348,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional transaction data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
@@ -372,7 +364,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     }
 
     setIsLoading(true);
-    clearError(); // Clear previous errors
+
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL+'/get_block_graph_data', {
         method: 'POST',
@@ -432,8 +424,8 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       });
     } catch (error) {
       console.error('Failed to fetch additional graph data:', error);
-      // Set error message for user
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch additional block data');
+      // Show error message via toast
+      showToast(error instanceof Error ? error.message : 'Failed to fetch account data', 'error');
       // Don't change the existing graph data on error
     } finally {
       setIsLoading(false);
@@ -461,8 +453,6 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     addBlockGraphData,
 
     isLoading,
-    errorMessage,
-    clearError,
   };
 
   return (

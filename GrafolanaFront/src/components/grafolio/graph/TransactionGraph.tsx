@@ -13,6 +13,7 @@ import { useGraphInteractions } from './hooks/useGraphInteractions';
 import { ForceGraphMethods } from 'react-force-graph-2d';
 import { useMetadata } from '@/components/metadata/metadata-provider';
 import { useTransactions } from '@/components/transactions/transactions-provider';
+import { useToast } from '@/components/ui/toast-provider';
 
 /**
  * IMPORTANT: NoSSRForceGraph Component Usage Guidelines
@@ -65,6 +66,7 @@ interface GraphDataCache {
 }
 
 export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
+  const { setToastContainer } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('flow');
   const [graphData, setGraphData] = useState<GraphData>({ 
     nodes: [], 
@@ -323,6 +325,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       // Enter fullscreen
       containerRef.current.requestFullscreen().then(() => {
         setIsFullscreen(true);
+        setToastContainer(containerRef.current);
       }).catch(err => {
         console.error(`Error attempting to enable fullscreen: ${err.message}`);
       });
@@ -330,6 +333,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
       // Exit fullscreen
       document.exitFullscreen().then(() => {
         setIsFullscreen(false);
+        setToastContainer(null);
       }).catch(err => {
         console.error(`Error attempting to exit fullscreen: ${err.message}`);
       });
@@ -339,7 +343,13 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
   // Listen for fullscreen changes from other sources (like Esc key)
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isInFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isInFullscreen);
+      
+      // Update toast container based on fullscreen state
+      if (!isInFullscreen) {
+        setToastContainer(null);
+      }
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -347,7 +357,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, []);
+  }, [setToastContainer]);
 
   return (
     // Apply the ref to the top-level container
