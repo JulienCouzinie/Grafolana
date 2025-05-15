@@ -362,7 +362,7 @@ export function AddressLabel({
     } else if (isWallet) {
       menuItems.push({
         label: "View in Explorer",
-        action: "viewExplorer"
+        action: "viewAccount"
       });
     } else if (isBlock) {
       menuItems.push({
@@ -431,8 +431,14 @@ export function AddressLabel({
           onSaveSuccess: handleSaveSuccess
         });
         break;
-      case 'viewExplorer':
+      case 'viewTransaction':
+        window.open(`https://solscan.io/tx/${address}`, '_blank');
+        break;
+      case 'viewAccount':
         window.open(`https://solscan.io/account/${address}`, '_blank');
+        break;
+      case 'viewBlock':
+        window.open(`https://solscan.io/block/${address}`, '_blank');
         break;
       case 'markSpam':
         // Add to spam list logic
@@ -451,10 +457,6 @@ export function AddressLabel({
             deleteFromSpam(spam.id);
           }
         }
-        break;
-      case 'viewTransaction':
-        // Add transaction viewing logic
-        window.open(`https://solscan.io/tx/${address}`, '_blank');
         break;
       case 'getGraph':
         handleGetGraph();
