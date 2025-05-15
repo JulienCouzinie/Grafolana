@@ -74,3 +74,8 @@ input[type="text"]  {
 .react-datepicker-wrapper {
     width: 100%;
 }
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

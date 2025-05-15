@@ -493,7 +493,7 @@ export function TransactionGraph({ apiGraphData }: TransactionGraphProps) {
                 <button 
                   className={`view-button ${viewMode === 'program' ? 'active' : ''}`} 
                   onClick={() => setViewMode('program')}
-                  title="Programs View - Focus on program interactions"
+                  title="Programs View - Focus on program interactions - SOON"
                   disabled={true} // Disabled until implemented
                 >
                   Programs

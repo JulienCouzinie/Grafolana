@@ -223,6 +223,20 @@ export default function Grafolio() {
           >
             Transfers ({transfersCount})
           </button>
+          <button 
+            disabled={true}
+            className={`px-4 py-2 rounded-md transition-colors ${isActive('transfers') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
+            title="Coming soon..."
+          >
+            Defi
+          </button>
+          <button 
+            disabled={true}
+            className={`px-4 py-2 rounded-md transition-colors ${isActive('transfers') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
+            title="Coming soon..."
+          >
+            Dashboard
+          </button>
         </div>
       </div>
       
