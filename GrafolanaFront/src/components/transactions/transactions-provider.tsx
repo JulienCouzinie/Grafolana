@@ -63,6 +63,10 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
   const { showToast } = useToast();
 
   const mapAccountVertexToClass = useCallback((data: GraphData): GraphData => {
+    if (!data || !data.nodes || !data.links) {
+      console.error('Invalid graph data:', data);
+      return { nodes: [], links: [], transactions: {} };
+    }
     data.nodes = data.nodes.map((node) => {
       node.account_vertex = new AccountVertex(node.account_vertex.address, node.account_vertex.version, node.account_vertex.transaction_signature);
       return node;
