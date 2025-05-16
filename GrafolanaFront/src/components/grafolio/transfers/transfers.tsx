@@ -423,7 +423,7 @@ export function Transfers({ apiGraphData }: TransfersProps) {
         <div className="search flex-1 min-w-[200px]">
           <input
             type="text"
-            placeholder="Search by account, program, mint address or transaction signature"
+            placeholder="Search by all columns..."
             className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -562,13 +562,13 @@ export function Transfers({ apiGraphData }: TransfersProps) {
               <th className="py-2 px-4">From</th>
               <th className="py-2 px-4">To</th>
               <th 
-                className="py-2 px-4 cursor-pointer"
+                className="py-2 px-4 cursor-pointer hover:bg-gray-800"
                 onClick={() => handleSortChange('amount')}
               >
                 Amount {sortField === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="py-2 px-4 cursor-pointer"
+                className="py-2 px-4 cursor-pointer hover:bg-gray-800"
                 onClick={() => handleSortChange('usd')}
               >
                 USD Value {sortField === 'usd' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -576,14 +576,14 @@ export function Transfers({ apiGraphData }: TransfersProps) {
               <th className="py-2 px-4">Token</th>
               <th className="py-2 px-4">Mint Address</th>
               <th 
-                className="py-2 px-4 cursor-pointer"
+                className="py-2 px-4 cursor-pointer hover:bg-gray-800"
                 onClick={() => handleSortChange('program')}
               >
                 Program {sortField === 'program' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th className="py-2 px-4">Transaction</th>
               <th 
-                className="py-2 px-4 cursor-pointer"
+                className="py-2 px-4 cursor-pointer hover:bg-gray-800"
                 onClick={() => handleSortChange('date')}
               >
                 Date {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
