@@ -52,7 +52,20 @@ def upgrade() -> None:
     ('5ifyfzJLkpThxrjvCmzTPRfpvUtBBkXLNb4URD7vq7Nm', 'DEFAULT', NOW(), NOW()),
     ('pigVv65eXGHGXdcZHQCR8iDpqdAeccpEqgCifxuyGQt', 'DEFAULT', NOW(), NOW()),
     ('FLiPggWYQyKVTULFWMQjAk26JfK5XRCajfyTmD5weaZ7', 'DEFAULT', NOW(), NOW()),
-    ('9KxQy6StbkJhubAbfvfriUK6LYYJ5cSkBoS3ZhcbdUx2', 'DEFAULT', NOW(), NOW())
+    ('9KxQy6StbkJhubAbfvfriUK6LYYJ5cSkBoS3ZhcbdUx2', 'DEFAULT', NOW(), NOW()),
+    ('HQxuR2L6ZzviXAbtxLPRo9QsmVSZYHVpDF5jcoshNUvh', 'DEFAULT', NOW(), NOW()),
+    ('crnkhL22KkRwLWFH5V3Zq33MZ2kH6iJ4Uhy9HDShbU1', 'DEFAULT', NOW(), NOW()),
+    ('447rKjHU4LZ2vU6DtXsK565YgBPeatRsP2fdeuKdRSFL', 'DEFAULT', NOW(), NOW()),
+    ('6Y7RMcDVouLePL5svWzAbsBGaZs7jFCFEzSH6exxJVuH', 'DEFAULT', NOW(), NOW()),
+    ('Trend2Lr6anjVwvKuLLkShFBdw7ZGHQ2RtX9apvytHQ', 'DEFAULT', NOW(), NOW()),
+    ('5sBpdPsbMdBz7SQwwUtaph1AS5MeGQTtdHCdPLatdzmq', 'DEFAULT', NOW(), NOW()),
+    ('hbf8CdtgRYN936MJD5EkyGu3TsQDLkaswkbMgrBieX3', 'DEFAULT', NOW(), NOW()),
+    ('88skwq2sLZoJ5xD1ijosp9DCtE3ckJ6GnR9Y5RYsDHjm', 'DEFAULT', NOW(), NOW()),
+    ('99NMXWTvLL9uSRYxDfsgiVi1qjo8w4ecGRVtWu5AM5Au', 'DEFAULT', NOW(), NOW()),
+    ('77uaxo9UNB4JHd7G5JcGwcM61t3BaduTwC4ecWX5YMeo', 'DEFAULT', NOW(), NOW()),
+    ('66ez2DrxtKWN2yr5PLTACxKwWHawQDVHJPHevKw3wkZJ', 'DEFAULT', NOW(), NOW()),
+    ('BACgqeSiUs8WT6Xyr8rvNxE2qkJjnmmhQBmcfm1ZdKRd', 'DEFAULT', NOW(), NOW()),
+    ('RecoWuBP1kCPABPVAABCR7f7FY513EVhQwoWcxntNT9', 'DEFAULT', NOW(), NOW()),
     """)
 
 
