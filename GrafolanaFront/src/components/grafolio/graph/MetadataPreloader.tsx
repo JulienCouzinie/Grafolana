@@ -77,9 +77,11 @@ export function MetadataPreloader({ graphData }: MetadataPreloaderProps) {
         })
       );
 
-      // Get transaction signatures
+      // Get transaction signatures & block
       Object.keys(graphData.transactions).forEach(signature => {
         addressesWithTypes.push({ address: signature, type: AddressType.UNKNOWN });
+        let block = (graphData.transactions[signature].timestamp / 1000).toString();
+        addressesWithTypes.push({ address: block, type: AddressType.UNKNOWN });
       });
 
       await FetchLabelsInfosAndCache(addressesWithTypes, publicKey?.toBase58());
