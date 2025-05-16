@@ -49,8 +49,8 @@ Developed for the [Helius REDACTED hackaton](https://earn.superteam.fun/hackatho
 - Retrieve graph data for the last 1000 transactions of an account address
 - Retrieve graph data for a block using its slot number
 - Create Directed Acyclic Graph of each transaction by versionning accounts to avoid cycles and offers graphic sequential view of transfers
-- Recognizes 144 differents swap instructions from 59 differents [DEX programs](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py)
-- Map transfers by parsing 20 differents [instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py) from Solana's Built in programs
+- Recognizes 149 differents swap instructions from 62 differents [DEX programs](GrafolanaBack/domain/transaction/config/dex_programs/swap_programs.py)
+- Map transfers by parsing 22 differents [instructions](GrafolanaBack/domain/transaction/parsers/instruction_parsers.py) from Solana's Built in programs
 - Native SOL transfer inference (Ex: Pumpfun Sell operations)
 - Offers [3 differents graph's views](GrafolanaFront/src/components/grafolio/graph/view-strategies): Transers, Accounts and Wallets
 - Stores minimum 4 years worth of SOL prices in DB for quick lookup and updates every minutes
@@ -193,7 +193,7 @@ The General section offers some general options to hide/show certain types of No
 
 
 ###### Hide Spam
-By default the system Hides spam transaction.
+By default the system doesn't hide spam transaction.
 Hiding spam may result in an empty graph if all transactions are spam !
 
 Here is the difference for the same wallet:
@@ -221,8 +221,6 @@ Here is the same transaction with both Swap Routers and Swap Programs Expanded
 
 ###### Other Options
 Some other usefull options to Hide/Show fees, Create & Close Accounts transfers.
-
-Fees are hidden by default to help with clarity.
 
 
 

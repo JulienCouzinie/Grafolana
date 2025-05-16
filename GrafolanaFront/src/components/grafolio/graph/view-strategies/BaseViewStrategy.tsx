@@ -100,11 +100,11 @@ export abstract class BaseViewStrategy implements ViewStrategy {
 
         this.processGraphDataCallBack = useRef(null);
 
-        this.hideFees = useRef(true);
+        this.hideFees = useRef(false);
         this.hideSwaps = useRef(false);
         this.hideCreateAccounts = useRef(false);
         this.hideCloseAccounts = useRef(false);
-        this.hideSpam = useRef(true);
+        this.hideSpam = useRef(false);
 
         this.transactionsClusterGroups = useRef<number[]>([]);
         this.selectedTransactionClusterGroup = useRef<number[]>([]);
