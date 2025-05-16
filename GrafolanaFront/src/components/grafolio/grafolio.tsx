@@ -10,6 +10,7 @@ import { MetadataPreloader } from './graph/MetadataPreloader';
 import { useTransactions } from '@/components/transactions/transactions-provider';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { isBlockAddress, isTransactionSignature, isWalletAddress as isAccountAddress } from '@/utils/addressUtils';
+import Defi from './defi/defi';
 
 export default function Grafolio() {
   const { publicKey } = useWallet();
@@ -224,9 +225,8 @@ export default function Grafolio() {
             Transfers ({transfersCount})
           </button>
           <button 
-            disabled={true}
-            className={`px-4 py-2 rounded-md transition-colors ${isActive('defis') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
-            title="Coming soon..."
+            onClick={() => handleTabChange('defi')} 
+            className={`px-4 py-2 rounded-md transition-colors ${isActive('defi') ? 'bg-purple-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
           >
             Defi
           </button>
@@ -262,6 +262,11 @@ export default function Grafolio() {
         {/* Transfers Tab */}
         <div className={getTabDisplayClass('transfers')}>
           <Transfers apiGraphData={graphData} />
+        </div>
+        
+        {/* Defi Tab */}
+        <div className={getTabDisplayClass('defi')}>
+          <Defi apiGraphData={graphData} />
         </div>
       </div>
     </div>
