@@ -1,5 +1,12 @@
 from alembic import context
 import os
+from dotenv import load_dotenv
+from GrafolanaBack.utils.path_utils import find_backend_root
+# Find the backend root directory and load .env file from there
+backend_root = find_backend_root()
+env_path = backend_root / '.env'
+load_dotenv(dotenv_path=env_path)
+
 import sys
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
