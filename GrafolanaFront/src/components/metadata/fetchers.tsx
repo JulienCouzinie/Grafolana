@@ -32,7 +32,7 @@ export const fetchMissingMintInfos = async (mintAddresses: string[]): Promise<Mi
 const processImageUrl = (imageUrl: string | undefined): string | undefined => {
     if (!imageUrl) return undefined;
     const isLocalImage = imageUrl.startsWith('/');
-    return isLocalImage ? imageUrl : `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    return isLocalImage ? imageUrl : `/img/proxy-image?url=${encodeURIComponent(imageUrl)}`;
 };
 
 export const fetchMissingProgramInfos = async (programAddresses: string[]): Promise<Program[]> => {
