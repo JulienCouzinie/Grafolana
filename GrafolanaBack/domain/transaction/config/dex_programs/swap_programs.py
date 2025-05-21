@@ -599,6 +599,33 @@ swap_programs_data = {
             }
         ]
     },
+    "GRAVEL": {
+        PROGRAM_ADDRESS: "srAMMzfVHVAtgSJc8iH6CfKzuWuUTzLHVCE81QU1rgi",
+        LABEL: "Gravel",
+        ICON: "https://www.gavel.xyz/favicon-dark.ico",
+        WEBSITE: "https://www.gavel.xyz",
+        ROUTER: False,
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 5nbk3NF92muNQMjex7vkTSoZndXYofWdX487fzQ3BMKeHtVudtVtiemze4z6ZJ3knvxLR3JwCEd5Li6tMvu4k5yU
+            {
+                DISCRIMINATOR: "0000",
+                LABEL: "BUY",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 7
+            },
+            # Transaction : PMbg8vyyKroCJfcWfcEYUa6ipEier1Sam6HpnfpcunN3uasKwzLiG2X51VhJSeXwFwoXefXf37ZVa55bccjTfnh
+            {
+                DISCRIMINATOR: "0001",
+                LABEL: "SELL",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 6
+            }
+        ]
+    },
     "GUAC_SWAP": {
         PROGRAM_ADDRESS: "Gswppe6ERWKpUTXvRPfXdzHhiCyJvLadVvXGfdpBqcE1",
         LABEL: "Guac Swap",
