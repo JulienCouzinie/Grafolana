@@ -151,6 +151,18 @@ def update_sol_prices_task() -> None:
         populate_sol_prices()
     except Exception as e:
         logger.error(f"Error in SOL price update task: {str(e)}")
+        
+        # Transaction rollback to handle any incomplete database transactions
+        try:
+            # Get a new session instance to avoid cross-thread session issues
+            cleanup_session = get_session()
+            # Rollback any pending transactions
+            cleanup_session.rollback()
+            # Close the session to release resources
+            cleanup_session.close()
+            logger.info("Successfully rolled back incomplete transactions")
+        except Exception as rollback_error:
+            logger.error(f"Failed to rollback transaction: {str(rollback_error)}")
 
 
 def start_price_updater() -> None:
