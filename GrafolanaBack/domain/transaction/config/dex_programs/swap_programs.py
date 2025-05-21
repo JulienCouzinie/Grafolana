@@ -1920,6 +1920,31 @@ swap_programs_data = {
             }
         ]
     },
+    "VERTIGO": {
+        PROGRAM_ADDRESS: "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ",
+        LABEL: "Vertigo",
+        ICON: "https://www.vertigo.sh/favicon/favicon-32x32.png",
+        WEBSITE: "https://www.vertigo.sh/",
+        ROUTER: False,
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction: 5QFRmAxZFpADwgNKDEnHbwEFoCcfP2CZxeZot9K6ZwJetjkgCaP2KHTmhxkmtHc5vwd3fQRo9ES2wa1qKHgGPXch
+            {
+                INSTRUCTION_NAME: "buy",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 5,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 8,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 7
+            },
+            # Transaction: 396CU1yX3E46EBJfHCFpNHdqiEnPW6QJG4oFEwdCtwpZwpZGSA49KHg4FTNMTHLonZZx6g6taruiods4Nvu2iHPP
+            {
+                INSTRUCTION_NAME: "sell",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 6,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 7,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 8
+            },
+        ]
+    },
     "WHIRLPOOLS": {
         PROGRAM_ADDRESS: "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
         LABEL: "Whirlpools",
