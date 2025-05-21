@@ -850,6 +850,14 @@ swap_programs_data = {
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
                 POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 2
             },
+            # Transaction: 396CU1yX3E46EBJfHCFpNHdqiEnPW6QJG4oFEwdCtwpZwpZGSA49KHg4FTNMTHLonZZx6g6taruiods4Nvu2iHPP
+            {
+                INSTRUCTION_NAME: "swap2", 
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 5,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 2
+            },
             # Transaction: 5NUCV51jJDF4DUjAYB1eeEmieWn7rhwx59Adjed5HxVLcrxtk6UxHJgWLSbt85nNJqEyfvrvTSCaFE3Q3AbpYXRK
             {
                 DISCRIMINATOR: "fa49652126cf4bb8", # swapExactOut
@@ -1255,6 +1263,48 @@ swap_programs_data = {
             },
             {
                 INSTRUCTION_NAME: "from_swap_log",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "platform_fee_sol_proxy_swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "platform_fee_sol_proxy_swap_v2",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "platform_fee_spl_proxy_swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "platform_fee_spl_proxy_swap_v2",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "us_platform_fee_sol_proxy_swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 4
+            },
+            {
+                INSTRUCTION_NAME: "us_platform_fee_spl_proxy_swap",
                 USER_SOURCE_TOKEN_ACCOUNT_INDEX: 1,
                 USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 2,
                 POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
