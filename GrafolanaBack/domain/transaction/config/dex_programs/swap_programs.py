@@ -599,9 +599,9 @@ swap_programs_data = {
             }
         ]
     },
-    "GRAVEL": {
+    "GAVEL": {
         PROGRAM_ADDRESS: "srAMMzfVHVAtgSJc8iH6CfKzuWuUTzLHVCE81QU1rgi",
-        LABEL: "Gravel",
+        LABEL: "Gavel",
         ICON: "https://www.gavel.xyz/favicon-dark.ico",
         WEBSITE: "https://www.gavel.xyz",
         ROUTER: False,
@@ -2138,6 +2138,7 @@ class SwapPrograms:
     BANANA_GUN_BOT: Optional[SwapProgram]
     BLOOM_BOT: Optional[SwapProgram]
     BONK: Optional[SwapProgram]
+    BOOPFUN: Optional[SwapProgram]
     CREMA_FINANCE: Optional[SwapProgram]
     CROPPER_FINANCE: Optional[SwapProgram]
     CROPPER_WHIRLPOOL: Optional[SwapProgram]
@@ -2146,6 +2147,7 @@ class SwapPrograms:
     FADO: Optional[SwapProgram]
     FLUX_BEAM: Optional[SwapProgram]
     GOOSEFX_GAMMA: Optional[SwapProgram]
+    GAVEL: Optional[SwapProgram]
     GUAC_SWAP: Optional[SwapProgram]
     INVARIANT: Optional[SwapProgram]
     JUPITER_AGGREGATOR_V6: Optional[SwapProgram]
@@ -2189,6 +2191,7 @@ class SwapPrograms:
     STEP_FINANCE: Optional[SwapProgram]
     STEPN_DOOAR_SWAP: Optional[SwapProgram]
     SWAP_PROGRAM: Optional[SwapProgram]
+    VERTIGO: Optional[SwapProgram]
     WHIRLPOOLS: Optional[SwapProgram]
     ZEROFI: Optional[SwapProgram]
 
