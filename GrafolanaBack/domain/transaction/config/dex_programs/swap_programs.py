@@ -939,6 +939,23 @@ swap_programs_data = {
             }
         ]
     },
+    "METEORA_DAMM_V2": {
+        # Transaction: 3ZKDX4aBMfYj8FAzoZdK4W6sqAxSKZSDjW7dQCGHa5WuxTL3Sr62rGs9UezAMXchsEXw3rgyZ5Uqukd7V1M9N6gq
+        PROGRAM_ADDRESS: "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+        LABEL: "Meteora DAMM v2",
+        ROUTER: False,
+        ICON: "https://v2.meteora.ag/brand/logo.svg",
+        WEBSITE: "https://v2.meteora.ag",
+        INSTRUCTION_PARSE_PARAM: [
+            {
+                INSTRUCTION_NAME: "swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 2,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 3,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            }
+        ]
+    },
     "MINTECH": {
         PROGRAM_ADDRESS: "minTcHYRLVPubRK8nt6sqe2ZpWrGDLQoNLipDJCGocY",
         LABEL: "Mintech",
@@ -2156,6 +2173,7 @@ class SwapPrograms:
     MAESTRO_BOT: Optional[SwapProgram]
     OASIS: Optional[SwapProgram]
     MERCURIAL_STABLE_SWAP: Optional[SwapProgram]
+    METEORA_DAMM_V2: Optional[SwapProgram]
     METEORA_DLMM: Optional[SwapProgram]
     METEORA_DYNAMIC_BONDING_CURVE: Optional[SwapProgram]
     METEORA_POOL: Optional[SwapProgram]
