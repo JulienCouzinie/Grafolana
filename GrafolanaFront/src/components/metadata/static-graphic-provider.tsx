@@ -21,47 +21,45 @@ export type StaticGraphicsContextType = {
 
 const StaticGraphicsContext = createContext<StaticGraphicsContextType | undefined>(undefined);
 
-// The useStaticGraphic hook stays the same - it's a valid custom hook
-export const useStaticGraphic = (src: string): StaticGraphic => {
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+const useStaticGraphicLoader = (src: string): StaticGraphic | null => {
+  const [graphic, setGraphic] = useState<StaticGraphic | null>(null);
 
   useEffect(() => {
     const img = new Image();
-    img.src = src;
 
     img.onload = () => {
       const imgCanvas = getCanvas(img);
-      setImage(img);
-      setCanvas(imgCanvas);
+      setGraphic({ image: img, canvas: imgCanvas });
     };
 
     img.onerror = () => {
       console.error(`Failed to load image: ${src}`);
-      setImage(null);
-      setCanvas(null);
+      setGraphic(null);
     };
 
-    return () => {
-      setImage(null);
-      setCanvas(null);
-    };
+    img.src = src;
   }, [src]);
 
-  return { image, canvas };
+  return graphic;
 };
 
-// Create a provider component that uses the hooks properly
 export function StaticGraphicsProvider({ children }: { children: ReactNode }) {
-  // Use the hooks inside this component
-  const defaultMint = useStaticGraphic('/logo/default.png');
-  const wallet = useStaticGraphic('/logo/wallet.png');
-  const fee = useStaticGraphic('/fee.png');
-  const burn = useStaticGraphic('/burn.png');
-  const mintTo = useStaticGraphic('/mintto.png');
-  const defaultProgram = useStaticGraphic('/program/default.png');
-  const spam = useStaticGraphic('/logo/spam.png');
-  const warning = useStaticGraphic('/warning.png');
+  const defaultMint = useStaticGraphicLoader('/logo/default.png');
+  const wallet = useStaticGraphicLoader('/logo/wallet.png');
+  const fee = useStaticGraphicLoader('/fee.png');
+  const burn = useStaticGraphicLoader('/burn.png');
+  const mintTo = useStaticGraphicLoader('/mintto.png');
+  const defaultProgram = useStaticGraphicLoader('/program/default.png');
+  const spam = useStaticGraphicLoader('/logo/spam.png');
+  const warning = useStaticGraphicLoader('/warning.png');
+
+  // Only provide context when ALL graphics are loaded
+  const allGraphicsLoaded = defaultMint && wallet && fee && burn && mintTo && defaultProgram && spam && warning;
+
+  if (!allGraphicsLoaded) {
+    // You can return a loading state or null here
+    return null; // or return <div>Loading graphics...</div>
+  }
 
   const staticGraphics: StaticGraphicsContextType = {
     defaultMint,
@@ -81,7 +79,6 @@ export function StaticGraphicsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook to use the static graphics
 export function useStaticGraphics(): StaticGraphicsContextType {
   const context = useContext(StaticGraphicsContext);
   if (context === undefined) {
