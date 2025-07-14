@@ -308,7 +308,10 @@ class BurnParser(InstructionParser):
     def parse(self, instruction: Parsed_Instruction, context: TransactionContext, swap_parent_id: int = None, parent_router_swap_id: int = None) -> None:
         amount = int(instruction.parsed["info"]["amount"])
         account_address = str(instruction.parsed["info"]["account"])
-        authority = str(instruction.parsed["info"]["authority"])
+        if "authority" in instruction.parsed["info"]:
+            authority = str(instruction.parsed["info"]["authority"])
+        elif "multisigAuthority" in instruction.parsed["info"]:
+            authority = str(instruction.parsed["info"]["multisigAuthority"][0])
         mint_address = str(instruction.parsed["info"]["mint"])
         
         GraphBuilderService.burn(
