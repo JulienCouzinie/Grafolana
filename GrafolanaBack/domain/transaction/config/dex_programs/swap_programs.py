@@ -1421,6 +1421,31 @@ swap_programs_data = {
             }
         ]
     },
+    "PANCAKE_SWAP": {
+        PROGRAM_ADDRESS: "HpNfyc2Saw7RKkQd8nEL4khUcuPhQ7WwY1B2qjx8jxFq",
+        LABEL: "Pancake Swap",
+        ROUTER: False,
+        ICON: "https://pancakeswap.finance/favicon.ico",
+        WEBSITE: "https://pancakeswap.finance/",
+        INSTRUCTION_PARSE_PARAM: [
+            # Transaction : 2UgB2FKUewhAffbqvW6zdkXeGDmFDimk1MYn8jc5g13ALpPmeztQ8Vhdxs39N8mXE8eTzxFFCQdvrhRum28WLxSu
+            {
+                INSTRUCTION_NAME: "swap",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            },
+            # Transaction : 5xyqs3dAu3H2g52G7TtGFZVzw815dzoJ5MV498wshZr3by4GrXjnAChch5aaD5XQKgitmSJBf5aSV18di5VDPAxZ
+            {
+                INSTRUCTION_NAME: "swap_v2",
+                USER_SOURCE_TOKEN_ACCOUNT_INDEX: 3,
+                USER_DESTINATION_TOKEN_ACCOUNT_INDEX: 6,
+                POOL_SOURCE_TOKEN_ACCOUNT_INDEX: 4,
+                POOL_DESTINATION_TOKEN_ACCOUNT_INDEX: 5
+            }
+        ]
+    },
     # Transaction : 3z5MTXPciqCaDr2YwyNFn1GXPRZwYmDk6ULpetS5YVb6zu3ENy95KJvk1HLbtqWvBX62P2ycMPqLuiDcwvhhJAQj
     "PENGUIN": {
         PROGRAM_ADDRESS: "PSwapMdSai8tjrEXcxFeQth87xC4rRsa4VA5mhGhXkP",
