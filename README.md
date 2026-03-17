@@ -886,7 +886,7 @@ server {
     server_name your_domain_name;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -895,7 +895,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://localhost:5000/api;
+        proxy_pass http://127.0.0.1:5000/api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -948,6 +948,8 @@ sudo certbot --nginx -d your_domain_name
 - Replace `your_password` with a secure password
 - Set up proper RPC endpoints in the backend `.env` file
 - The first run will take 5-10 minutes to download and process SOL price history
+
+**Important**: The nginx configuration uses explicit IP addresses (`127.0.0.1`) instead of `localhost` to avoid DNS resolution issues. After a system reboot, `localhost` may resolve to IPv6 `[::1]` instead of IPv4 `127.0.0.1`, causing "Connection refused" errors. Using explicit IPs ensures consistent connectivity.
 
 You can check the application logs using:
 ```bash
